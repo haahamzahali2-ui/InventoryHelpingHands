@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pharmacy Inventory Portal</title>
+<title>Clinic Medication Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -13,88 +13,66 @@ body {
     color: #1a1a1a;
 }
 
-/* HEADER */
 header {
     text-align: center;
     padding: 40px 20px;
     font-size: 2.5em;
     font-weight: 700;
-    letter-spacing: 1px;
     color: #b68b2c;
     border-bottom: 2px solid rgba(212,175,55,0.3);
     background: linear-gradient(to right, #ffffff, #f3efe3);
 }
 
-/* GRID MATRIX */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 25px;
-    max-width: 1300px;
+    max-width: 1200px;
     margin: 50px auto;
     padding: 0 30px 60px 30px;
 }
 
-/* CARD */
 .card {
     background: #ffffff;
     border-radius: 14px;
     padding: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease;
     border: 1px solid rgba(212,175,55,0.35);
-    min-height: 120px;
     box-shadow: 0 8px 25px rgba(212,175,55,0.08);
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    border: 1px solid #d4af37;
-    box-shadow: 0 12px 35px rgba(212,175,55,0.18);
+    text-align: center;
 }
 
 .card-title {
-    font-size: 1.3em;
+    font-size: 1.2em;
     font-weight: 600;
     color: #b68b2c;
+    margin-bottom: 15px;
 }
 
-.card-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-    margin-top: 15px;
-    font-size: 0.95em;
-    color: #444;
+.quantity {
+    font-size: 2em;
+    font-weight: 700;
+    margin: 10px 0;
 }
 
-.card-content.open {
-    max-height: 1000px;
+.low-stock {
+    color: red;
+    font-weight: 600;
 }
 
-.card-content ul {
-    margin-left: 20px;
-}
-
-button {
+.controls button {
+    font-size: 1.5em;
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
     background-color: #b68b2c;
     color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 10px;
 }
 
-button:hover {
+.controls button:hover {
     background-color: #a67c1f;
-}
-
-input {
-    padding: 6px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    width: 90%;
 }
 
 @media (max-width: 600px) {
@@ -105,51 +83,13 @@ input {
 <body>
 
 <header>
-Pharmacy Inventory Management Portal
+Clinic Medication Inventory Tracker
 </header>
 
-<div class="grid">
-
-<!-- Add Item -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">➕ Add Medicine</div>
-<div class="card-content">
-<p>Add a new medicine to inventory.</p>
-<input type="text" id="itemName" placeholder="Medicine Name"><br><br>
-<input type="number" id="itemQty" placeholder="Quantity"><br>
-<button onclick="addItem(event)">Add Medicine</button>
-</div>
-</div>
-
-<!-- Current Inventory -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">💊 Current Inventory</div>
-<div class="card-content">
-<ul id="inventoryList"></ul>
-</div>
-</div>
-
-<!-- Low Stock -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">⚠ Low Stock (Below 10)</div>
-<div class="card-content">
-<ul id="lowStockList"></ul>
-</div>
-</div>
-
-<!-- Remove Item -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">➖ Remove Medicine</div>
-<div class="card-content">
-<input type="text" id="removeName" placeholder="Medicine Name">
-<button onclick="removeItem(event)">Remove Medicine</button>
-</div>
-</div>
-
-</div>
+<div class="grid" id="medGrid"></div>
 
 <script>
-let inventory = [
+let medications = [
     { name: "Metformin 500mg", qty: 25 },
     { name: "Advil (Ibuprofen 200mg)", qty: 40 },
     { name: "Tylenol (Acetaminophen 500mg)", qty: 8 },
@@ -157,52 +97,42 @@ let inventory = [
     { name: "Amoxicillin 500mg", qty: 6 }
 ];
 
-function toggleCard(card) {
-    const content = card.querySelector(".card-content");
-    content.classList.toggle("open");
-}
+function renderMeds() {
+    const grid = document.getElementById("medGrid");
+    grid.innerHTML = "";
 
-function addItem(event) {
-    event.stopPropagation();
-    const name = document.getElementById("itemName").value;
-    const qty = parseInt(document.getElementById("itemQty").value);
+    medications.forEach((med, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
 
-    if (!name || isNaN(qty)) return alert("Enter valid medicine details.");
+        const isLow = med.qty < 10 ? "low-stock" : "";
 
-    inventory.push({ name, qty });
-    document.getElementById("itemName").value = "";
-    document.getElementById("itemQty").value = "";
-    renderInventory();
-}
+        card.innerHTML = `
+            <div class="card-title">${med.name}</div>
+            <div class="quantity ${isLow}">${med.qty}</div>
+            <div class="controls">
+                <button onclick="decrease(${index})">−</button>
+                <button onclick="increase(${index})">+</button>
+            </div>
+        `;
 
-function removeItem(event) {
-    event.stopPropagation();
-    const name = document.getElementById("removeName").value;
-    inventory = inventory.filter(item => item.name !== name);
-    document.getElementById("removeName").value = "";
-    renderInventory();
-}
-
-function renderInventory() {
-    const list = document.getElementById("inventoryList");
-    const lowList = document.getElementById("lowStockList");
-    list.innerHTML = "";
-    lowList.innerHTML = "";
-
-    inventory.forEach(item => {
-        const li = document.createElement("li");
-        li.textContent = item.name + " - Qty: " + item.qty;
-        list.appendChild(li);
-
-        if (item.qty < 10) {
-            const lowLi = document.createElement("li");
-            lowLi.textContent = item.name + " - Qty: " + item.qty;
-            lowList.appendChild(lowLi);
-        }
+        grid.appendChild(card);
     });
 }
 
-renderInventory();
+function increase(index) {
+    medications[index].qty++;
+    renderMeds();
+}
+
+function decrease(index) {
+    if (medications[index].qty > 0) {
+        medications[index].qty--;
+    }
+    renderMeds();
+}
+
+renderMeds();
 </script>
 
 </body>
