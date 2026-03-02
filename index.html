@@ -1,132 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Pharmacy Inventory</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    h1 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    input[type="number"] { width: 60px; }
-    button { padding: 5px 10px; margin-left: 5px; }
-    .add-medicine { margin-top: 20px; }
-    .add-medicine input { margin-right: 10px; }
-  </style>
 </head>
 <body>
+  <h1>Pharmacy Inventory</h1>
 
-<h1>Pharmacy Inventory</h1>
-
-<!-- Medicine Table -->
-<table id="medicineTable">
-  <thead>
+  <table border="1" id="medTable">
     <tr>
-      <th>Name</th>
-      <th>Quantity</th>
-      <th>Expiry Date</th>
-      <th>Batch</th>
-      <th>Adjust Quantity</th>
+      <th>Name</th><th>Quantity</th><th>Expiry</th><th>Batch</th><th>Adjust</th>
     </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  </table>
 
-<!-- Add New Medicine -->
-<div class="add-medicine">
-  <input type="text" id="newName" placeholder="Medicine Name">
-  <input type="number" id="newQuantity" placeholder="Quantity">
-  <input type="text" id="newExpiry" placeholder="Expiry YYYY-MM-DD">
-  <input type="text" id="newBatch" placeholder="Batch Number">
-  <button onclick="addMedicine()">Add Medicine</button>
-</div>
+  <h3>Add New Medicine</h3>
+  Name: <input id="newName"><br>
+  Quantity: <input id="newQty" type="number"><br>
+  Expiry: <input id="newExpiry"><br>
+  Batch: <input id="newBatch"><br>
+  <button onclick="addMedicine()">Add</button>
 
-<!-- Firebase SDK -->
-<script type="module">
-  // Firebase setup
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBa7d4vvoeZuYqTHRpaYUV45Fsq2aHdm0c",
-    authDomain: "helping-hands-inventory.firebaseapp.com",
-    projectId: "helping-hands-inventory",
-    storageBucket: "helping-hands-inventory.firebasestorage.app",
-    messagingSenderId: "317180675923",
-    appId: "1:317180675923:web:2ab3f9f76e2525162a43a6"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBa7d4vvoeZuYqTHRpaYUV45Fsq2aHdm0c",
+      authDomain: "helping-hands-inventory.firebaseapp.com",
+      projectId: "helping-hands-inventory",
+      storageBucket: "helping-hands-inventory.firebasestorage.app",
+      messagingSenderId: "317180675923",
+      appId: "1:317180675923:web:2ab3f9f76e2525162a43a6"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const medicinesCol = collection(db, "medicines");
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const medicinesCol = collection(db, "medicines");
 
-  // Fetch and display medicines
-  async function loadMedicines() {
-    const tbody = document.querySelector("#medicineTable tbody");
-    tbody.innerHTML = ""; // Clear table
-    const snapshot = await getDocs(medicinesCol);
-    snapshot.forEach(docSnap => {
-      const med = docSnap.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${med.name}</td>
-        <td id="qty-${docSnap.id}">${med.quantity}</td>
-        <td>${med.expiry_date}</td>
-        <td>${med.batch_number}</td>
-        <td>
-          <input type="number" id="adjust-${docSnap.id}" value="1">
-          <button onclick="adjustQuantity('${docSnap.id}', true)">+Add</button>
-          <button onclick="adjustQuantity('${docSnap.id}', false)">-Subtract</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+    async function loadMedicines() {
+      const table = document.getElementById("medTable");
+      // remove old rows
+      table.innerHTML = "<tr><th>Name</th><th>Quantity</th><th>Expiry</th><th>Batch</th><th>Adjust</th></tr>";
 
-  // Add new medicine
-  async function addMedicine() {
-    const name = document.getElementById("newName").value.trim();
-    const quantity = parseInt(document.getElementById("newQuantity").value);
-    const expiry = document.getElementById("newExpiry").value.trim();
-    const batch = document.getElementById("newBatch").value.trim();
-    if (!name || isNaN(quantity) || !expiry || !batch) { alert("Fill all fields!"); return; }
+      const snapshot = await getDocs(medicinesCol);
+      snapshot.forEach(docSnap => {
+        const med = docSnap.data();
+        const id = docSnap.id;
+        const row = table.insertRow();
+        row.insertCell().innerText = med.name;
+        row.insertCell().innerText = med.quantity;
+        row.insertCell().innerText = med.expiry_date;
+        row.insertCell().innerText = med.batch_number;
+        row.insertCell().innerHTML = `
+          <input type="number" id="adjust-${id}" value="1">
+          <button onclick="adjustQuantity('${id}', true)">+Add</button>
+          <button onclick="adjustQuantity('${id}', false)">-Sub</button>
+        `;
+      });
+    }
 
-    await addDoc(medicinesCol, {
-      name,
-      quantity,
-      expiry_date: expiry,
-      batch_number: batch
-    });
+    async function addMedicine() {
+      const name = document.getElementById("newName").value;
+      const qty = parseInt(document.getElementById("newQty").value);
+      const expiry = document.getElementById("newExpiry").value;
+      const batch = document.getElementById("newBatch").value;
+      if(!name || isNaN(qty) || !expiry || !batch) return alert("Fill all fields!");
 
-    // Clear input fields
-    document.getElementById("newName").value = "";
-    document.getElementById("newQuantity").value = "";
-    document.getElementById("newExpiry").value = "";
-    document.getElementById("newBatch").value = "";
+      await addDoc(medicinesCol, {name, quantity: qty, expiry_date: expiry, batch_number: batch});
+      loadMedicines();
+    }
+
+    async function adjustQuantity(id, isAdd) {
+      const val = parseInt(document.getElementById(`adjust-${id}`).value);
+      if(isNaN(val)) return;
+      const docRef = doc(db, "medicines", id);
+      const docSnap = await getDoc(docRef);
+      const current = docSnap.data().quantity || 0;
+      const newQty = isAdd ? current + val : current - val;
+      await updateDoc(docRef, {quantity: newQty < 0 ? 0 : newQty});
+      loadMedicines();
+    }
 
     loadMedicines();
-  }
-
-  // Adjust quantity
-  async function adjustQuantity(id, isAdd) {
-    const input = document.getElementById(`adjust-${id}`);
-    const amount = parseInt(input.value);
-    if (isNaN(amount)) return;
-
-    const docRef = doc(db, "medicines", id);
-    const docSnap = await docRef.get();
-    // Firestore v12 modular does not have get() on docRef directly; we'll just update blindly
-    const currentQty = parseInt(document.getElementById(`qty-${id}`).innerText) || 0;
-    const newQty = isAdd ? currentQty + amount : currentQty - amount;
-
-    await updateDoc(docRef, { quantity: newQty < 0 ? 0 : newQty });
-
-    loadMedicines();
-  }
-
-  // Initial load
-  loadMedicines();
-</script>
-
+  </script>
 </body>
 </html>
