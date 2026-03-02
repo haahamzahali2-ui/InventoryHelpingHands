@@ -52,18 +52,11 @@ button:hover { background:#a67c1f; }
   border-radius:6px;
   border:1px solid #ccc;
 }
-.login { text-align:center; margin-top:20px; }
 </style>
 </head>
 <body>
 
 <header>Clinic Medication Inventory</header>
-
-<div class="login">
-  <button onclick="login()">Login with Google</button>
-  <button onclick="logout()">Logout</button>
-  <p id="userInfo">Not logged in</p>
-</div>
 
 <div class="search">
   <input type="text" id="searchInput" placeholder="Search medicine..." onkeyup="renderMeds()">
@@ -73,12 +66,10 @@ button:hover { background:#a67c1f; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, doc, getDocs, setDoc, onSnapshot } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔑 Replace this config with YOUR Firebase config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDuqQypNgUjNyiRaaVXeSaosd48-eCVAl0",
   authDomain: "pharm-inventory-6f2e0.firebaseapp.com",
@@ -89,30 +80,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
 let medications = [];
-
-// Login / Logout
-window.login = async function() {
-  await signInWithPopup(auth, provider);
-};
-window.logout = async function() {
-  await signOut(auth);
-};
-
-// Auth state listener
-onAuthStateChanged(auth, user => {
-  if(user){
-    document.getElementById("userInfo").innerText = "Logged in as: " + user.email;
-    loadData();
-  } else {
-    document.getElementById("userInfo").innerText = "Not logged in";
-    document.getElementById("medGrid").innerHTML = "";
-  }
-});
 
 // Load medications from Firestore
 async function loadData(){
@@ -132,6 +102,7 @@ async function loadData(){
     }
   }
 
+  // Real-time updates
   onSnapshot(collection(db,"medications"), snap=>{
     medications = snap.docs.map(doc=>({id:doc.id,...doc.data()}));
     renderMeds();
@@ -181,6 +152,9 @@ window.customAdjust = async function(id){
     qty:Math.max(0,med.qty+value)
   });
 };
+
+// Load data initially
+loadData();
 </script>
 
 </body>
