@@ -1,86 +1,300 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Pharmacy Inventory</title>
+<meta charset="UTF-8">
+<title>Helping Hands Referral System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #ffffff, #f8f6f0);
+    color: #1a1a1a;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 2.5em;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #b68b2c;
+    border-bottom: 2px solid rgba(212,175,55,0.3);
+    background: linear-gradient(to right, #ffffff, #f3efe3);
+}
+
+/* GRID MATRIX */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    max-width: 1300px;
+    margin: 50px auto;
+    padding: 0 30px 60px 30px;
+}
+
+/* CARD */
+.card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(212,175,55,0.35);
+    min-height: 120px;
+    box-shadow: 0 8px 25px rgba(212,175,55,0.08);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border: 1px solid #d4af37;
+    box-shadow: 0 12px 35px rgba(212,175,55,0.18);
+}
+
+/* TITLE */
+.card-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #b68b2c;
+}
+
+/* CONTENT */
+.card-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    margin-top: 15px;
+    font-size: 0.95em;
+    color: #444;
+}
+
+.card-content.open {
+    max-height: 1200px; /* increased for longer content */
+}
+
+.card-content ol,
+.card-content ul {
+    margin-left: 20px;
+}
+
+/* BUTTON */
+.button-link {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, #d4af37, #b68b2c);
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.button-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212,175,55,0.35);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+    header { font-size: 1.8em; }
+}
+</style>
 </head>
 <body>
-  <h1>Pharmacy Inventory</h1>
 
-  <table border="1" id="medTable">
-    <tr>
-      <th>Name</th><th>Quantity</th><th>Expiry</th><th>Batch</th><th>Adjust</th>
-    </tr>
-  </table>
+<header>
+Helping Hands Referral System
+</header>
 
-  <h3>Add New Medicine</h3>
-  Name: <input id="newName"><br>
-  Quantity: <input id="newQty" type="number"><br>
-  Expiry: <input id="newExpiry"><br>
-  Batch: <input id="newBatch"><br>
-  <button onclick="addMedicine()">Add</button>
+<div class="grid">
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+<!-- Important Notice -->
+<div class="card" onclick="toggleCard(this)" style="background: #ff4d4d; border: 2px solid #b30000;">
+  <div class="card-title" style="color: #b68b2c;">*Important* please read before doing any referral</div>
+  <div class="card-content">
+    <ul>
+      <li>Referrals no longer need to be printed, instead, they will be shared on Athena.</li>
+      <li>Please enable information sharing on Athena before doing any referral; ask someone if you do not know how to.</li>
+      <li>This will share the Athena profile of the patient with the provider they are being referred to.</li>
+    </ul>
+    <!-- asdfasfasfsafsafsdfggfsdgsdfsdf-->
+  </div>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBa7d4vvoeZuYqTHRpaYUV45Fsq2aHdm0c",
-      authDomain: "helping-hands-inventory.firebaseapp.com",
-      projectId: "helping-hands-inventory",
-      storageBucket: "helping-hands-inventory.firebasestorage.app",
-      messagingSenderId: "317180675923",
-      appId: "1:317180675923:web:2ab3f9f76e2525162a43a6"
-    };
+<!-- Gynecologist -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Gynecologist</div>
+<div class="card-content">
+<ol>
+<li>Ensure it’s not a preventive women’s health visit. Look for “pelvic pain, abdominal pain, chronic pain,” etc., on Athena.</li>
+<li>Print referral order and place in the bin.</li>
+<li>Go to the patient room and enter their information in the form below:</li>
+<a href="https://docs.google.com/forms/d/e/1FAIpQLScfPP-kScCPwDw2k0XSg5FdQltCnMUmdLOGg1q4c_NMcr7WWQ/viewform" target="_blank" class="button-link">Click here to access form</a>
+<li>Columbus Free Clinic will call the patient to make an appointment.</li>
+</ol>
+</div>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const medicinesCol = collection(db, "medicines");
+<!-- Women's Health -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Women’s Health</div>
+<div class="card-content">
+<ol>
+<li>Ensure it’s a preventative visit, not a gynecology referral.</li>
+<li>Grab the women’s health scheduling clipboard from the front.</li>
+<li>Go to patient room, ask what time works best, and record Athena ID, DOB, and phone number.</li>
+<li>Give the patient a reminder card (Available at front)</li>
+<li>Go to Athena and schedule the patient at the chosen time.</li>
+</ol>
+</div>
+</div>
 
-    async function loadMedicines() {
-      const table = document.getElementById("medTable");
-      // remove old rows
-      table.innerHTML = "<tr><th>Name</th><th>Quantity</th><th>Expiry</th><th>Batch</th><th>Adjust</th></tr>";
+<!-- Neurologist -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Neurologist</div>
+<div class="card-content">
+<ol>
+<li>Neurology visits are done here — check with leadership for neurologist availability, usually once a month on a Thursday.</li>
+<li>Once availability is confirmed, confirm with the patient and schedule them on Athena.</li>
+<li>Make sure to assign the patient to Dr Leon Rosenburg.</li>
+</ol>
+</div>
+</div>
 
-      const snapshot = await getDocs(medicinesCol);
-      snapshot.forEach(docSnap => {
-        const med = docSnap.data();
-        const id = docSnap.id;
-        const row = table.insertRow();
-        row.insertCell().innerText = med.name;
-        row.insertCell().innerText = med.quantity;
-        row.insertCell().innerText = med.expiry_date;
-        row.insertCell().innerText = med.batch_number;
-        row.insertCell().innerHTML = `
-          <input type="number" id="adjust-${id}" value="1">
-          <button onclick="adjustQuantity('${id}', true)">+Add</button>
-          <button onclick="adjustQuantity('${id}', false)">-Sub</button>
-        `;
-      });
-    }
+<!-- Cardiologist -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Cardiologist</div>
+<div class="card-content">
+<ol>
+<li>Print referral and place in the bin.</li>
+<li>Tell patients they will receive a phone call from PhysicianCareConnection to schedule an appointment.</li>
+<li>This is the only FREE cardiology option and appointments are usually booked; instruct patient to keep an eye on their phone.</li>
+</ol>
+</div>
+</div>
 
-    async function addMedicine() {
-      const name = document.getElementById("newName").value;
-      const qty = parseInt(document.getElementById("newQty").value);
-      const expiry = document.getElementById("newExpiry").value;
-      const batch = document.getElementById("newBatch").value;
-      if(!name || isNaN(qty) || !expiry || !batch) return alert("Fill all fields!");
+<!-- Mammograms -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Mammograms</div>
+<div class="card-content">
+<p>Done at OSU:</p>
+<ol>
+<li>Print order and place in bin.</li>
+<li>Ask Trena and she will take care of it.</li>
+</ol>
+</div>
+</div>
 
-      await addDoc(medicinesCol, {name, quantity: qty, expiry_date: expiry, batch_number: batch});
-      loadMedicines();
-    }
+<!-- Physical Therapy -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Physical Therapy</div>
+<div class="card-content">
+<ol>
+<li>Print referral and place in bin.</li>
+<li>Fill out the form below:</li>
+<a href="https://docs.google.com/forms/d/e/1FAIpQLScyVMEZP_o_p2joiEmPZEW0zW9HOZ2Jc5pq00L5yvMnt86DPg/viewform" target="_blank" class="button-link">Fill Out Form</a>
+<li>Instruct patients to wait for a phone call to confirm the schedule, and to not go to the clinic without confirmation.</li>
+</ol>
+</div>
+</div>
 
-    async function adjustQuantity(id, isAdd) {
-      const val = parseInt(document.getElementById(`adjust-${id}`).value);
-      if(isNaN(val)) return;
-      const docRef = doc(db, "medicines", id);
-      const docSnap = await getDoc(docRef);
-      const current = docSnap.data().quantity || 0;
-      const newQty = isAdd ? current + val : current - val;
-      await updateDoc(docRef, {quantity: newQty < 0 ? 0 : newQty});
-      loadMedicines();
-    }
+<!-- EKG -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">EKG</div>
+<div class="card-content">
+<ol>
+<li>Do NOT print.</li>
+<li>These are done in our clinic, take patient to lab.</li>
+</ol>
+</div>
+</div>
 
-    loadMedicines();
-  </script>
+<!-- Optometry -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Optometry</div>
+<div class="card-content">
+<ol>
+<li>Instruct patient to go to Dwell community clinic located at (1934 N. 4th Street, 43201).</li>
+<li>Only open on 1st and 3rd Monday of every month from 6PM to 7PM.</li>
+</ol>
+</div>
+</div>
+
+<!-- Dental Emergency -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Dental (Emergency)</div>
+<div class="card-content">
+<ol>
+<li>Print referral order and place in bin.</li>
+<li>Instruct patients that Grace Free Clinic will call them to schedule an appointment.</li>
+</ol>
+</div>
+</div>
+
+<!-- Dental (Non Emergency) -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Dental (Non Emergency)</div>
+<div class="card-content">
+<ol>
+<li>Print referral order and place in bin.</li>
+<li>Instruct patients that Grace Free Clinic will call them to schedule an appointment.</li>
+</ol>
+</div>
+</div>
+
+<!-- Diabetic Retinopathy -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Diabetic Retinopathy</div>
+<div class="card-content">
+<ol>
+<li>Print referral order and place in the bin.</li>
+<li>Click the link below and enter patient information:</li>
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSc7ucyZfCXiNSiewGULzYwm2-nFGnByaG4X1M2W7OZkF1KhQw/viewform" target="_blank" class="button-link">Enter Patient Info</a>
+<li>Columbus Free Clinic will call the patient to confirm the appointment.</li>
+<li>Tell patient to only go to the clinic once they receive a call or voicemail.</li>
+</ol>
+</div>
+</div>
+
+<!-- Ultrasound -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Ultrasound</div>
+<div class="card-content">
+<ol>
+<li>Print referral order and place in the bin.</li>
+<li>Click the link below and enter patient information:</li>
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSfndDqpeMhhH3r4a7HwabMsraMUrNcJV-DBDr5dOwk8wOPE5w/viewform" target="_blank" class="button-link">Enter Patient Info</a>
+<li>Columbus Free Clinic will call the patient to confirm the appointment.</li>
+<li>Tell patient to only go to the clinic once they receive a call or voicemail.</li>
+</ol>
+</div>
+</div>
+
+<!-- Physicals for work and school -->
+<div class="card" onclick="toggleCard(this)">
+<div class="card-title">Physicals for work and school</div>
+<div class="card-content">
+<ol>
+<li>These are done at Grace Free Clinic</li>
+<li>Click below for hours and locations, instruct patient to go there.</li>
+<li>No further action is needed:</li>
+<a href="https://graceclinicsoh.org/locations-hours/" target="_blank" class="button-link">Locations and hours</a>
+</ol>
+</div>
+</div>
+
+</div> <!-- end grid -->
+
+<script>
+function toggleCard(card) {
+    const content = card.querySelector(".card-content");
+    content.classList.toggle("open");
+}
+</script>
+
 </body>
 </html>
