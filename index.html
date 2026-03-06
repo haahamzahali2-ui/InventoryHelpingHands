@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Helping Hands Referral System</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
 <style>
 body {
     margin: 0;
@@ -26,13 +24,43 @@ header {
     background: linear-gradient(to right, #ffffff, #f3efe3);
 }
 
-/* GRID MATRIX */
+/* SEARCH BOX */
+.search-area {
+    text-align: center;
+    margin: 20px 0;
+}
+.search {
+    width: 500px;
+    max-width: 80%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #d4af37;
+    background: #fff8e1;
+    color: #1a1a1a;
+    font-size: 18px;
+}
+.clear-btn {
+    padding: 10px 18px;
+    margin-left: 10px;
+    border-radius: 6px;
+    border: none;
+    background: #b68b2c;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+.clear-btn:hover {
+    background: #d4af37;
+}
+
+/* GRID */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 25px;
     max-width: 1300px;
-    margin: 50px auto;
+    margin: 30px auto;
     padding: 0 30px 60px 30px;
 }
 
@@ -46,6 +74,9 @@ header {
     border: 1px solid rgba(212,175,55,0.35);
     min-height: 120px;
     box-shadow: 0 8px 25px rgba(212,175,55,0.08);
+    text-align: center;
+    font-weight: 600;
+    font-size: 18px;
 }
 
 .card:hover {
@@ -54,37 +85,66 @@ header {
     box-shadow: 0 12px 35px rgba(212,175,55,0.18);
 }
 
-/* TITLE */
-.card-title {
-    font-size: 1.3em;
-    font-weight: 600;
+/* MODAL */
+.modal {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s;
+}
+.modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+.modal-box {
+    background: #fff;
+    color: #1a1a1a;
+    padding: 40px;
+    width: 850px;
+    max-width: 95%;
+    border-radius: 14px;
+    overflow-y: auto;
+    max-height: 90%;
+    box-shadow: 0 10px 40px rgba(212,175,55,0.25);
+    position: relative;
+    font-size: 18px;
+    line-height: 1.6;
+}
+.modal-box h2 {
     color: #b68b2c;
+    font-size: 28px;
+    margin-bottom: 20px;
 }
-
-/* CONTENT */
-.card-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-    margin-top: 15px;
-    font-size: 0.95em;
-    color: #444;
+.close {
+    position: sticky;
+    top: 0;
+    float: right;
+    font-size: 32px;
+    cursor: pointer;
+    color: #b68b2c;
+    font-weight: bold;
+    background: rgba(255,255,255,0.9);
+    padding: 4px 12px;
+    border-radius: 6px;
+    z-index: 999;
+    margin-bottom: 20px;
 }
-
-.card-content.open {
-    max-height: 1200px; /* increased for longer content */
+.close:hover {
+    background: #d4af37;
+    color: #fff;
 }
-
-.card-content ol,
-.card-content ul {
-    margin-left: 20px;
-}
-
-/* BUTTON */
-.button-link {
+.modal-box a {
     display: inline-block;
     margin-top: 10px;
-    padding: 8px 14px;
+    padding: 10px 16px;
     background: linear-gradient(135deg, #d4af37, #b68b2c);
     color: #ffffff;
     text-decoration: none;
@@ -92,8 +152,7 @@ header {
     font-weight: 600;
     transition: 0.2s ease;
 }
-
-.button-link:hover {
+.modal-box a:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(212,175,55,0.35);
 }
@@ -101,200 +160,94 @@ header {
 /* MOBILE */
 @media (max-width: 600px) {
     header { font-size: 1.8em; }
+    .search { width: 90%; font-size: 16px; }
+    .card { font-size: 16px; }
+    .modal-box { font-size: 16px; padding: 25px; }
+    .modal-box h2 { font-size: 22px; }
 }
 </style>
 </head>
 <body>
 
-<header>
-Helping Hands Referral System
-</header>
+<header>Helping Hands Referral System</header>
 
-<div class="grid">
-
-<!-- Important Notice -->
-<div class="card" onclick="toggleCard(this)" style="background: #ff4d4d; border: 2px solid #b30000;">
-  <div class="card-title" style="color: #b68b2c;">*Important* please read before doing any referral</div>
-  <div class="card-content">
-    <ul>
-      <li>Referrals no longer need to be printed, instead, they will be shared on Athena.</li>
-      <li>Please enable information sharing on Athena before doing any referral; ask someone if you do not know how to.</li>
-      <li>This will share the Athena profile of the patient with the provider they are being referred to.</li>
-    </ul>
-    <!-- asdfasfasfsafsafsdfggfsdgsdfsdf-->
-  </div>
+<div class="search-area">
+    <input class="search" id="search" placeholder="Search referrals..." onkeyup="searchReferrals()">
+    <button class="clear-btn" onclick="clearSearch()">Clear</button>
 </div>
 
-<!-- Gynecologist -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Gynecologist</div>
-<div class="card-content">
-<ol>
-<li>Ensure it’s not a preventive women’s health visit. Look for “pelvic pain, abdominal pain, chronic pain,” etc., on Athena.</li>
-<li>Print referral order and place in the bin.</li>
-<li>Go to the patient room and enter their information in the form below:</li>
-<a href="https://docs.google.com/forms/d/e/1FAIpQLScfPP-kScCPwDw2k0XSg5FdQltCnMUmdLOGg1q4c_NMcr7WWQ/viewform" target="_blank" class="button-link">Click here to access form</a>
-<li>Columbus Free Clinic will call the patient to make an appointment.</li>
-</ol>
-</div>
-</div>
+<div class="grid" id="grid"></div>
 
-<!-- Women's Health -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Women’s Health</div>
-<div class="card-content">
-<ol>
-<li>Ensure it’s a preventative visit, not a gynecology referral.</li>
-<li>Grab the women’s health scheduling clipboard from the front.</li>
-<li>Go to patient room, ask what time works best, and record Athena ID, DOB, and phone number.</li>
-<li>Give the patient a reminder card (Available at front)</li>
-<li>Go to Athena and schedule the patient at the chosen time.</li>
-</ol>
+<div class="modal" id="modal">
+    <div class="modal-box" id="modalContent">
+        <div class="close" onclick="closeModal()">✕</div>
+    </div>
 </div>
-</div>
-
-<!-- Neurologist -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Neurologist</div>
-<div class="card-content">
-<ol>
-<li>Neurology visits are done here — check with leadership for neurologist availability, usually once a month on a Thursday.</li>
-<li>Once availability is confirmed, confirm with the patient and schedule them on Athena.</li>
-<li>Make sure to assign the patient to Dr Leon Rosenburg.</li>
-</ol>
-</div>
-</div>
-
-<!-- Cardiologist -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Cardiologist</div>
-<div class="card-content">
-<ol>
-<li>Print referral and place in the bin.</li>
-<li>Tell patients they will receive a phone call from PhysicianCareConnection to schedule an appointment.</li>
-<li>This is the only FREE cardiology option and appointments are usually booked; instruct patient to keep an eye on their phone.</li>
-</ol>
-</div>
-</div>
-
-<!-- Mammograms -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Mammograms</div>
-<div class="card-content">
-<p>Done at OSU:</p>
-<ol>
-<li>Print order and place in bin.</li>
-<li>Ask Trena and she will take care of it.</li>
-</ol>
-</div>
-</div>
-
-<!-- Physical Therapy -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Physical Therapy</div>
-<div class="card-content">
-<ol>
-<li>Print referral and place in bin.</li>
-<li>Fill out the form below:</li>
-<a href="https://docs.google.com/forms/d/e/1FAIpQLScyVMEZP_o_p2joiEmPZEW0zW9HOZ2Jc5pq00L5yvMnt86DPg/viewform" target="_blank" class="button-link">Fill Out Form</a>
-<li>Instruct patients to wait for a phone call to confirm the schedule, and to not go to the clinic without confirmation.</li>
-</ol>
-</div>
-</div>
-
-<!-- EKG -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">EKG</div>
-<div class="card-content">
-<ol>
-<li>Do NOT print.</li>
-<li>These are done in our clinic, take patient to lab.</li>
-</ol>
-</div>
-</div>
-
-<!-- Optometry -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Optometry</div>
-<div class="card-content">
-<ol>
-<li>Instruct patient to go to Dwell community clinic located at (1934 N. 4th Street, 43201).</li>
-<li>Only open on 1st and 3rd Monday of every month from 6PM to 7PM.</li>
-</ol>
-</div>
-</div>
-
-<!-- Dental Emergency -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Dental (Emergency)</div>
-<div class="card-content">
-<ol>
-<li>Print referral order and place in bin.</li>
-<li>Instruct patients that Grace Free Clinic will call them to schedule an appointment.</li>
-</ol>
-</div>
-</div>
-
-<!-- Dental (Non Emergency) -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Dental (Non Emergency)</div>
-<div class="card-content">
-<ol>
-<li>Print referral order and place in bin.</li>
-<li>Instruct patients that Grace Free Clinic will call them to schedule an appointment.</li>
-</ol>
-</div>
-</div>
-
-<!-- Diabetic Retinopathy -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Diabetic Retinopathy</div>
-<div class="card-content">
-<ol>
-<li>Print referral order and place in the bin.</li>
-<li>Click the link below and enter patient information:</li>
-<a href="https://docs.google.com/forms/d/e/1FAIpQLSc7ucyZfCXiNSiewGULzYwm2-nFGnByaG4X1M2W7OZkF1KhQw/viewform" target="_blank" class="button-link">Enter Patient Info</a>
-<li>Columbus Free Clinic will call the patient to confirm the appointment.</li>
-<li>Tell patient to only go to the clinic once they receive a call or voicemail.</li>
-</ol>
-</div>
-</div>
-
-<!-- Ultrasound -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Ultrasound</div>
-<div class="card-content">
-<ol>
-<li>Print referral order and place in the bin.</li>
-<li>Click the link below and enter patient information:</li>
-<a href="https://docs.google.com/forms/d/e/1FAIpQLSfndDqpeMhhH3r4a7HwabMsraMUrNcJV-DBDr5dOwk8wOPE5w/viewform" target="_blank" class="button-link">Enter Patient Info</a>
-<li>Columbus Free Clinic will call the patient to confirm the appointment.</li>
-<li>Tell patient to only go to the clinic once they receive a call or voicemail.</li>
-</ol>
-</div>
-</div>
-
-<!-- Physicals for work and school -->
-<div class="card" onclick="toggleCard(this)">
-<div class="card-title">Physicals for work and school</div>
-<div class="card-content">
-<ol>
-<li>These are done at Grace Free Clinic</li>
-<li>Click below for hours and locations, instruct patient to go there.</li>
-<li>No further action is needed:</li>
-<a href="https://graceclinicsoh.org/locations-hours/" target="_blank" class="button-link">Locations and hours</a>
-</ol>
-</div>
-</div>
-
-</div> <!-- end grid -->
 
 <script>
-function toggleCard(card) {
-    const content = card.querySelector(".card-content");
-    content.classList.toggle("open");
-}
-</script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyl9-CY70Y5HYpIbOmFlVU0vX2fVzRRi1nrqBBx_FBUnBReu-4klLK_D3y39310MRVI7Q/exec";
+let referralStats = JSON.parse(localStorage.getItem("referralStats")) || {};
 
-</body>
-</html>
+const referrals = [
+    // ORIGINAL REFERRALS 0–27
+    {id:0,name:"*Important* Please Read Before Doing Any Referral",instructions:["Referral forms no longer need to be printed, instead they will be sent electronically, please enable patient information sharing on Athena."]},
+    {id:1,name:"Gynecologist",instructions:["Ensure it’s not a preventive women’s health visit. Look for “pelvic pain, abdominal pain, chronic pain,” etc., on Athena.","Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLScfPP-kScCPwDw2k0XSg5FdQltCnMUmdLOGg1q4c_NMcr7WWQ/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
+    {id:2,name:"Women’s Health",instructions:["Ensure it’s a preventative visit, not a gynecology referral.","Grab the women’s health scheduling clipboard from the front, ask patient what time and date works best, write their information on the clipboard (Athena ID, name, phone number, DOB).","Give the patient an appointment reminder card (Available at front).","Go to Athena and schedule the patient at the chosen time."]},
+    {id:3,name:"Neurologist",instructions:["Neurology visits are done here, check with supervisor for neurologist availability.","Once availability is confirmed, confirm the date and time with the patient and schedule them on Athena.","Make sure to assign the patient to Dr Leon Rosenburg."]},
+    {id:4,name:"Cardiologist",instructions:["Tell the patient they will receive a phone call from PhysicianCareConnection (Free) to schedule an appointment.","It takes ~2 weeks to receive this call and there may be a long wait time. Instruct patient to pick up their phone when they call.","Back up option for urgent cases: Primary One Health, sliding scale, income proof needed and patient must be in their system. Check with shift lead."]},
+    {id:5,name:"Mammograms",instructions:["These are done at OSU.","Write down 'Mammogram' and the patient’s ID on a sticky note or a piece of paper and give it to Trena.","No further action needed."]},
+    {id:6,name:"Physical Therapy",instructions:["Option 1: Columbus Free Clinic (5:40-8pm Thursdays Only). Enter patient info in form: <a href='https://docs.google.com/forms/d/e/1FAIpQLScyVMEZP_o_p2joiEmPZEW0zW9HOZ2Jc5pq00L5yvMnt86DPg/viewform' target='_blank'>Click Here</a>. Clinic will call patient.","Option 2: Grace Linden location (1st & 3rd Wednesdays 11am-1pm, Saturdays 9-12pm). Write 'PT referral send to Grace' + patient ID on sticky note, give to shift lead. Patient will receive call from Grace Clinic."]},
+    {id:7,name:"EKG",instructions:["EKGs are done here. Take the patient to the lab.","No further action needed."]},
+    {id:8,name:"Annual Physicals for work or school",instructions:["Tell Patient to go to Grace Free Clinic during opening hours.","Refer to this website for hours and locations: <a href='https://graceclinicsoh.org/locations-hours/' target='_blank'>Click Here</a>."]},
+    {id:9,name:"Urology",instructions:["Tell the patient they will receive a phone call from PhysicianCareConnection (Free) to schedule an appointment.","Backup option: OhioHealth (Sliding Scale). Only use if provider requests it for a complex case."]},
+    {id:10,name:"Cancer Screening",instructions:["This includes Cancer-related mammograms, PSA, FIT, Colonoscopy.","Grab a Columbus Cancer Clinic from the front and give it to the patient. They will need to call to make an appointment.","In case a ½ sheet is not available, call 614-263-5006."]},
+    {id:11,name:"Podiatry",instructions:["Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
+    {id:12,name:"Optometry",instructions:["Grab a Dwell ½ sheet from the front and give it to the patient.","On the 1st and 3rd Monday of every month 6-7pm, Dwell provides free eye exams and glasses","Where? 1934 N. 4th Street (Dwell Community Church), No appointment needed."]},
+    {id:13,name:"Brain and Spine",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:14,name:"ENT",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:15,name:"Trauma Surgery",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:16,name:"Orthopedics",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:17,name:"Sports Medicine",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:18,name:"General Surgery",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:19,name:"Oncology",instructions:["Please refer to the OhioHealth Tab."]},
+    {id:20,name:"X-Ray",instructions:["Click the link and fill in information, refer to Athena: <a href='https://radiologyassist.com/' target='_blank'>Click Here</a>.","Grab a Radiology Assist ½ sheet, write price & location, give to patient."]},
+    {id:21,name:"CT Scans",instructions:["Click the link and fill in information, refer to Athena: <a href='https://radiologyassist.com/' target='_blank'>Click Here</a>.","Grab a Radiology Assist ½ sheet, write price & location, give to patient."]},
+    {id:22,name:"MRI",instructions:["Click the link and fill in information, refer to Athena: <a href='https://radiologyassist.com/' target='_blank'>Click Here</a>.","Grab a Radiology Assist ½ sheet, write price & location, give to patient."]},
+    {id:23,name:"OSU Referrals",instructions:["OSU is not free, but has financial assistance. Process may take weeks.","Get a HCAP form from front or online (multi-language). Emphasize proof of income needed.","Form can be emailed, faxed, or mailed to OhioHealth billing. Call 614-566-1546.","Patient will receive contact from OSU. Services not free."]},
+    {id:24,name:"OhioHealth Referrals",instructions:["OhioHealth is not free, financial assistance may take 6-8 weeks.","Get a HCAP form from front or online (multi-language). Emphasize proof of income needed.","Form can be emailed, faxed, or mailed to OhioHealth billing. Call 614-566-1546.","Patient will receive contact from OhioHealth. Services not free."]},
+    {id:25,name:"STD/STI Screenings",instructions:["Done at Columbus Department of Public Health, fees apply, sliding scale.","Click for hours/location: <a href='https://www.columbus.gov/Services/Public-Health/Health-Clinics-and-Services/Sexual-Health-and-Wellness-Center' target='_blank'>Click Here</a>."]},
+    {id:26,name:"Pregnancy Testing",instructions:["Done at Columbus Department of Public Health, fees apply, sliding scale.","Click for hours/location: <a href='https://www.columbus.gov/Services/Public-Health/Health-Clinics-and-Services/Sexual-Health-and-Wellness-Center' target='_blank'>Click Here</a>."]},
+    {id:27,name:"Immunization",instructions:["Done at Columbus Department of Public Health, fees apply, sliding scale.","Click for hours/location: <a href='https://www.columbus.gov/Services/Public-Health/Health-Clinics-and-Services/Sexual-Health-and-Wellness-Center' target='_blank'>Click Here</a>."]},
+    
+    // NEW REFERRALS 28–36
+    {id:28,name:"Colonoscopy",instructions:["Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLSezqgKW7HCSaD6bzLJU_Oie_WyP-M16261jbMKlD2zt_dS-rg/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
+    {id:29,name:"Retinopathy",instructions:["Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLSc7ucyZfCXiNSiewGULzYwm2-nFGnByaG4X1M2W7OZkF1KhQw/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
+    {id:30,name:"Ultrasound",instructions:["Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLSfndDqpeMhhH3r4a7HwabMsraMUrNcJV-DBDr5dOwk8wOPE5w/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
+    {id:31,name:"Dentist",instructions:["Option 1: PCC, the patient will need to call to make an appointment: <a href='https://www.pcchealth.org/medical' target='_blank'>Click Here</a>","Option 2: Grace Clinic Linden and Delaware ONLY, the patient will need to call to make an appointment: <a href='https://graceclinicsoh.org/locations-hours' target='_blank'>Click Here</a>","Option 3 (Not Free but reduced): PrimaryOne, the patient will need to call to make an appointment: <a href='https://www.primaryonehealth.org/services/dental' target='_blank'>Click Here</a>"]},
+    {id:32,name:"Psychiatry",instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
+    {id:33,name:"Pain Management",instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
+    {id:34,name:"Physiotherapy",instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
+    {id:35,name:"Dentistry – Extractions Only",instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
+    {id:36,name:"Pregnancy",instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]}
+];
+
+// RENDER CARDS
+function render(){
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    referrals.forEach(r => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.textContent = r.name;
+        card.onclick = () => openReferral(r.id);
+        grid.appendChild(card);
+    });
+}
+
+// SEARCH
+function searchReferrals(){
+    const q = document.getElementById("search").value.toLowerCase();
+    const results = referrals.filter(r => r.name.toLowerCase().includes(q) || r.instructions.join(" ").toLowerCase().includes(q));
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    results.forEach(r => {
