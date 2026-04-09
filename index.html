@@ -1,153 +1,593 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Helping Hands Referral System</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-body { margin:0; font-family:'Inter',sans-serif; background:linear-gradient(135deg,#ffffff,#f8f6f0); color:#1a1a1a; }
-header { text-align:center; padding:40px 20px; font-size:2.5em; font-weight:700; letter-spacing:1px; color:#b68b2c; border-bottom:2px solid rgba(212,175,55,0.3); background:linear-gradient(to right,#ffffff,#f3efe3); }
-.search-area { text-align:center; margin:20px 0; }
-.search { width:500px; max-width:80%; padding:12px; border-radius:6px; border:1px solid #d4af37; background:#fff8e1; color:#1a1a1a; font-size:18px; }
-.clear-btn { padding:10px 18px; margin-left:10px; border-radius:6px; border:none; background:#b68b2c; color:#fff; font-weight:600; cursor:pointer; transition:0.2s ease; }
-.clear-btn:hover { background:#d4af37; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:25px; max-width:1300px; margin:30px auto; padding:0 30px 60px 30px; }
-.card { background:#ffffff; border-radius:14px; padding:25px; cursor:pointer; transition:all 0.3s ease; border:1px solid rgba(212,175,55,0.35); min-height:120px; box-shadow:0 8px 25px rgba(212,175,55,0.08); text-align:center; font-weight:600; font-size:18px; display:flex; align-items:center; justify-content:center; }
-.card:hover { transform:translateY(-5px); border:1px solid #d4af37; box-shadow:0 12px 35px rgba(212,175,55,0.18); }
-.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
-.modal.active { opacity:1; pointer-events:auto; }
-.modal-box { background:#fff; color:#1a1a1a; padding:40px; width:850px; max-width:95%; border-radius:14px; overflow-y:auto; max-height:90%; box-shadow:0 10px 40px rgba(212,175,55,0.25); position:relative; font-size:18px; line-height:1.6; }
-.modal-box h2 { color:#b68b2c; font-size:28px; margin-bottom:20px; }
-.close { position:sticky; top:0; float:right; font-size:32px; cursor:pointer; color:#b68b2c; font-weight:bold; background:rgba(255,255,255,0.9); padding:4px 12px; border-radius:6px; z-index:999; margin-bottom:20px; }
-.close:hover { background:#d4af37; color:#fff; }
-.modal-box a { display:inline-block; margin:10px 8px 0 0; padding:10px 16px; background:linear-gradient(135deg,#d4af37,#b68b2c); color:#ffffff; text-decoration:none; border-radius:6px; font-weight:600; transition:0.2s ease; }
-.modal-box a:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(212,175,55,0.35); }
-@media (max-width:600px) { header{font-size:1.8em;} .search{width:90%;font-size:16px;} .card{font-size:16px;} .modal-box{font-size:16px;padding:25px;} .modal-box h2{font-size:22px;} }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Athena Patient Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #21262d;
+      --border:    #30363d;
+      --accent:    #2f81f7;
+      --accent2:   #388bfd;
+      --green:     #3fb950;
+      --yellow:    #d29922;
+      --red:       #f85149;
+      --text:      #e6edf3;
+      --muted:     #7d8590;
+      --sidebar-w: 280px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      height: 54px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    header .logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    header h1 { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+    header .tag {
+      margin-left: auto;
+      font-size: 0.72rem;
+      font-family: 'DM Mono', monospace;
+      background: rgba(47,129,247,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(47,129,247,0.3);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── LAYOUT ── */
+    .body-wrap {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-top {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-top label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 8px;
+    }
+    #search {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #search:focus { border-color: var(--accent); }
+    #search::placeholder { color: var(--muted); }
+
+    #patient-list { flex: 1; overflow-y: auto; padding: 8px; }
+    #patient-list::-webkit-scrollbar { width: 4px; }
+    #patient-list::-webkit-scrollbar-track { background: transparent; }
+    #patient-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .pt-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 3px;
+      transition: background 0.15s;
+      border: 1px solid transparent;
+    }
+    .pt-item:hover { background: var(--surface2); }
+    .pt-item.active { background: rgba(47,129,247,0.15); border-color: rgba(47,129,247,0.35); }
+    .pt-name { font-size: 0.9rem; font-weight: 500; }
+    .pt-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; font-family: 'DM Mono', monospace; }
+    .pt-item.active .pt-name { color: var(--accent2); }
+
+    /* ── MAIN ── */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    #main::-webkit-scrollbar { width: 4px; }
+    #main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    #placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      gap: 12px;
+    }
+    #placeholder .icon { font-size: 48px; opacity: 0.4; }
+    #placeholder p { font-size: 0.95rem; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .card-header .icon { font-size: 1rem; }
+    .card-header h2 { font-size: 0.88rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .card-body { padding: 18px; }
+
+    /* ── INFO GRID ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+    .info-item label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .info-item span {
+      font-size: 0.92rem;
+      font-weight: 500;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── VITALS ROW ── */
+    .vitals-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .vital-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .vital-box .vval {
+      font-size: 1.4rem;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+      color: var(--accent2);
+      line-height: 1;
+    }
+    .vital-box .vlabel {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 6px;
+    }
+    .vital-box .vtime {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── TABLE ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-green  { background: rgba(63,185,80,0.15);  color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .badge-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
+    .badge-red    { background: rgba(248,81,73,0.15);  color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge-blue   { background: rgba(47,129,247,0.15); color: var(--accent2); border: 1px solid rgba(47,129,247,0.3); }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 18px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── STATES ── */
+    .empty { color: var(--muted); font-size: 0.85rem; padding: 8px 0; font-style: italic; }
+    .loading-spin {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 0.88rem; padding: 20px 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── PATIENT HEADER CARD ── */
+    .pt-header-card {
+      background: linear-gradient(135deg, rgba(47,129,247,0.12) 0%, rgba(47,129,247,0.03) 100%);
+      border: 1px solid rgba(47,129,247,0.25);
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .pt-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .pt-header-name { font-size: 1.25rem; font-weight: 600; }
+    .pt-header-sub { font-size: 0.82rem; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+  </style>
 </head>
 <body>
 
-<header>Helping Hands Referral System</header>
+<header>
+  <div class="logo">🏥</div>
+  <h1>Patient Dashboard</h1>
+  <span class="tag">ATHENA SANDBOX</span>
+</header>
 
-<div class="search-area">
-    <input class="search" id="search" placeholder="Search referrals..." onkeyup="searchReferrals()">
-    <button class="clear-btn" onclick="clearSearch()">Clear</button>
-</div>
-
-<div class="grid" id="grid"></div>
-
-<div class="modal" id="modal">
-    <div class="modal-box" id="modalContent">
-        <div class="close" onclick="closeModal()">✕</div>
+<div class="body-wrap">
+  <div id="sidebar">
+    <div class="sidebar-top">
+      <label>Patients</label>
+      <input id="search" type="text" placeholder="Search by name…" oninput="filterPatients()"/>
     </div>
+    <div id="patient-list">
+      <div style="padding:16px" class="loading-spin"><div class="spinner"></div> Loading patients…</div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="placeholder">
+      <div class="icon">🩺</div>
+      <p>Select a patient from the sidebar to view their record</p>
+    </div>
+    <div id="dashboard" style="display:none"></div>
+  </div>
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyl9-CY70Y5HYpIbOmFlVU0vX2fVzRRi1nrqBBx_FBUnBReu-4klLK_D3y39310MRVI7Q/exec";
-// ↑↑↑ REPLACE THIS WITH YOUR ACTUAL DEPLOYED WEB APP URL ↑↑↑
+  const BACKEND = "https://script.google.com/macros/s/AKfycbz-JKCrabCJXV-nWHHmPMLJFZjtWaH87U6SqMoG1JYGZgTcfx-DkjUNDk73_sJIcdN0wg/exec";
 
-const referrals = [
-    {id:0, name:"*Important* Please Read Before Doing Any Referral", instructions:["Referral forms no longer need to be printed, instead they will be sent electronically, please enable patient information sharing on Athena."]},
-    {id:1, name:"Gynecologist", instructions:["Ensure it’s not a preventive women’s health visit. Look for “pelvic pain, abdominal pain, chronic pain,” etc., on Athena.","Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLScfPP-kScCPwDw2k0XSg5FdQltCnMUmdLOGg1q4c_NMcr7WWQ/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
-    {id:2, name:"Women’s Health", instructions:["Ensure it’s a preventative visit, not a gynecology referral.","Grab the women’s health scheduling clipboard from the front, ask patient what time and date works best, write their information on the clipboard (Athena ID, name, phone number, DOB).","Give the patient an appointment reminder card (Available at front).","Go to Athena and schedule the patient at the chosen time."]},
-    {id:3, name:"Neurologist", instructions:["Neurology visits are done here, check with supervisor for neurologist availability.","Once availability is confirmed, confirm the date and time with the patient and schedule them on Athena.","Make sure to assign the patient to Dr Leon Rosenburg."]},
-    {id:4, name:"Cardiologist", instructions:["Tell the patient they will receive a phone call from PhysicianCareConnection (Free) to schedule an appointment.","It takes ~2 weeks to receive this call and there may be a long wait time. Instruct patient to pick up their phone when they call.","Back up option for urgent cases: Primary One Health, sliding scale, income proof needed and patient must be in their system. Check with shift lead."]},
-    {id:5, name:"Mammograms", instructions:["These are done at OSU.","Write down 'Mammogram' and the patient’s ID on a sticky note or a piece of paper and give it to Trena.","No further action needed."]},
-    {id:6, name:"Physical Therapy", instructions:["Option 1: Columbus Free Clinic (5:40-8pm Thursdays Only). Enter patient info in form: <a href='https://docs.google.com/forms/d/e/1FAIpQLScyVMEZP_o_p2joiEmPZEW0zW9HOZ2Jc5pq00L5yvMnt86DPg/viewform' target='_blank'>Click Here</a>. Clinic will call patient.","Option 2: Grace Linden location (1st & 3rd Wednesdays 11am-1pm, Saturdays 9-12pm). Write 'PT referral send to Grace' + patient ID on sticky note, give to shift lead. Patient will receive call from Grace Clinic."]},
-    {id:7, name:"EKG", instructions:["EKGs are done here. Take the patient to the lab.","No further action needed."]},
-    {id:8, name:"Annual Physicals for work or school", instructions:["Tell Patient to go to Grace Free Clinic during opening hours.","Refer to this website for hours and locations: <a href='https://graceclinicsoh.org/locations-hours/' target='_blank'>Click Here</a>."]},
-    {id:9, name:"Urology", instructions:["Tell the patient they will receive a phone call from PhysicianCareConnection (Free) to schedule an appointment.","Backup option: OhioHealth (Sliding Scale). Only use if provider requests it for a complex case."]},
-    {id:10, name:"Cancer Screening", instructions:["This includes Cancer-related mammograms, PSA, FIT, Colonoscopy.","Grab a Columbus Cancer Clinic from the front and give it to the patient. They will need to call to make an appointment.","In case a ½ sheet is not available, call 614-263-5006."]},
-    {id:11, name:"Podiatry", instructions:["Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
-    {id:12, name:"Optometry", instructions:["Grab a Dwell ½ sheet from the front and give it to the patient.","On the 1st and 3rd Monday of every month 6-7pm, Dwell provides free eye exams and glasses","Where? 1934 N. 4th Street (Dwell Community Church), No appointment needed."]},
-    {id:13, name:"Brain and Spine", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:14, name:"ENT", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:15, name:"Trauma Surgery", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:16, name:"Orthopedics", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:17, name:"Sports Medicine", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:18, name:"General Surgery", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:19, name:"Oncology", instructions:["Please refer to the OhioHealth Tab."]},
-    {id:20, name:"X-Ray", instructions:["Click the link and fill in information, refer to Athena: <a href='https://radiologyassist.com/' target='_blank'>Click Here</a>.","Grab a Radiology Assist ½ sheet, write price & location, give to patient."]},
-    {id:21, name:"CT Scans", instructions:["Click the link and fill in information, refer to Athena: <a href='https://radiologyassist.com/' target='_blank'>Click Here</a>.","Grab a Radiology Assist ½ sheet, write price & location, give to patient."]},
-    {id:22, name:"MRI", instructions:["Click the link and fill in information, refer to Athena: <a href='https://radiologyassist.com/' target='_blank'>Click Here</a>.","Grab a Radiology Assist ½ sheet, write price & location, give to patient."]},
-    {id:23, name:"OSU Referrals", instructions:["OSU is not free, but has financial assistance. Process may take weeks.","Get a HCAP form from front or online (multi-language). Emphasize proof of income needed.","Form can be emailed, faxed, or mailed to OhioHealth billing. Call 614-566-1546.","Patient will receive contact from OSU. Services not free."]},
-    {id:24, name:"OhioHealth Referrals", instructions:["OhioHealth is not free, financial assistance may take 6-8 weeks.","Get a HCAP form from front or online (multi-language). Emphasize proof of income needed.","Form can be emailed, faxed, or mailed to OhioHealth billing. Call 614-566-1546.","Patient will receive contact from OhioHealth. Services not free."]},
-    {id:25, name:"STD/STI Screenings", instructions:["Done at Columbus Department of Public Health, fees apply, sliding scale.","Click for hours/location: <a href='https://www.columbus.gov/Services/Public-Health/Health-Clinics-and-Services/Sexual-Health-and-Wellness-Center' target='_blank'>Click Here</a>."]},
-    {id:26, name:"Pregnancy Testing", instructions:["Done at Columbus Department of Public Health, fees apply, sliding scale.","Click for hours/location: <a href='https://www.columbus.gov/Services/Public-Health/Health-Clinics-and-Services/Sexual-Health-and-Wellness-Center' target='_blank'>Click Here</a>."]},
-    {id:27, name:"Immunization", instructions:["Done at Columbus Department of Public Health, fees apply, sliding scale.","Click for hours/location: <a href='https://www.columbus.gov/Services/Public-Health/Health-Clinics-and-Services/Sexual-Health-and-Wellness-Center' target='_blank'>Click Here</a>."]},
-    {id:28, name:"Colonoscopy", instructions:["Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLSezqgKW7HCSaD6bzLJU_Oie_WyP-M16261jbMKlD2zt_dS-rg/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
-    {id:29, name:"Retinopathy", instructions:["Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLSc7ucyZfCXiNSiewGULzYwm2-nFGnByaG4X1M2W7OZkF1KhQw/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
-    {id:30, name:"Ultrasound", instructions:["Go to the patient room and enter their information in the form below: <a href='https://docs.google.com/forms/d/e/1FAIpQLSfndDqpeMhhH3r4a7HwabMsraMUrNcJV-DBDr5dOwk8wOPE5w/viewform' target='_blank'>Click Here</a>","Columbus Free Clinic will call the patient to make an appointment."]},
-    {id:31, name:"Dentist", instructions:["Option 1: PCC, the patient will need to call to make an appointment: <a href='https://www.pcchealth.org/medical' target='_blank'>Click Here</a>","Option 2: Grace Clinic Linden and Delaware ONLY, the patient will need to call to make an appointment: <a href='https://graceclinicsoh.org/locations-hours' target='_blank'>Click Here</a>","Option 3 (Not Free but reduced): PrimaryOne, the patient will need to call to make an appointment: <a href='https://www.primaryonehealth.org/services/dental' target='_blank'>Click Here</a>"]},
-    {id:32, name:"Psychiatry", instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
-    {id:33, name:"Pain Management", instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
-    {id:34, name:"Physiotherapy", instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
-    {id:35, name:"Dentistry – Extractions Only", instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]},
-    {id:36, name:"Pregnancy", instructions:["Referral required.","Tell patients they will receive a phone call from Primary Care Connection (Free) to schedule them."]}
-];
+  let allPatients = [];
 
-function render(filterResults = referrals) {
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-    filterResults.forEach(r => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.textContent = r.name;
-        card.onclick = () => openReferral(r.id, r.name);
-        grid.appendChild(card);
-    });
-}
+  async function call(params) {
+    const url = BACKEND + "?" + new URLSearchParams(params);
+    const res = await fetch(url);
+    return res.json();
+  }
 
-function searchReferrals() {
-    const q = document.getElementById("search").value.toLowerCase().trim();
-    if (!q) { render(); return; }
-    const results = referrals.filter(r =>
-        r.name.toLowerCase().includes(q) ||
-        r.instructions.some(inst => inst.toLowerCase().includes(q))
-    );
-    render(results);
-}
+  // ── Load patient list ──────────────────────────────────────
+  async function loadPatients() {
+    try {
+      const data = await call({ action: "getPatients" });
+      allPatients = data.patients || [];
+      renderList(allPatients);
+    } catch(e) {
+      document.getElementById("patient-list").innerHTML =
+        `<div style="padding:16px;color:var(--red);font-size:.85rem;">Failed to load patients.<br>Check Apps Script URL &amp; deployment.</div>`;
+    }
+  }
 
-function clearSearch() {
-    document.getElementById("search").value = "";
-    render();
-}
+  function renderList(pts) {
+    const el = document.getElementById("patient-list");
+    if (!pts.length) {
+      el.innerHTML = `<div style="padding:16px" class="empty">No patients found.</div>`;
+      return;
+    }
+    el.innerHTML = pts.map(p => `
+      <div class="pt-item" id="pt-${p.patientid}" onclick="loadPatient('${p.patientid}','${esc(p.firstname)}','${esc(p.lastname)}')">
+        <div class="pt-name">${esc(p.firstname)} ${esc(p.lastname)}</div>
+        <div class="pt-meta">DOB: ${p.dob || "—"} · ID: ${p.patientid}</div>
+      </div>
+    `).join("");
+  }
 
-function openReferral(id, name) {
-    const ref = referrals.find(r => r.id === id);
-    if (!ref) return;
+  function filterPatients() {
+    const q = document.getElementById("search").value.toLowerCase();
+    renderList(allPatients.filter(p =>
+      (p.firstname + " " + p.lastname).toLowerCase().includes(q)
+    ));
+  }
 
-    // Log to Google Sheet
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',           // Allows it to work from local file / simple pages
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            referral: name,
-            id: id
-        })
-    }).catch(err => console.log("Logging failed:", err));  // silent fail – doesn't block UI
+  // ── Load single patient ────────────────────────────────────
+  async function loadPatient(id, first, last) {
+    document.querySelectorAll(".pt-item").forEach(e => e.classList.remove("active"));
+    const el = document.getElementById("pt-" + id);
+    if (el) el.classList.add("active");
 
-    // Show modal
-    const content = document.getElementById("modalContent");
-    content.innerHTML = `
-        <div class="close" onclick="closeModal()">✕</div>
-        <h2>${ref.name}</h2>
-        ${ref.instructions.map(inst => `<p>${inst}</p>`).join("")}
-    `;
-    document.getElementById("modal").classList.add("active");
-}
+    document.getElementById("placeholder").style.display = "none";
+    const dash = document.getElementById("dashboard");
+    dash.style.display = "flex";
+    dash.style.flexDirection = "column";
+    dash.style.gap = "20px";
+    dash.innerHTML = `<div class="loading-spin"><div class="spinner"></div> Loading ${first} ${last}'s record…</div>`;
 
-function closeModal() {
-    document.getElementById("modal").classList.remove("active");
-}
+    const [patient, vitals, medHistory, medications, allergies] = await Promise.all([
+      call({ action: "getPatient",     patientId: id }),
+      call({ action: "getVitals",      patientId: id }),
+      call({ action: "getMedHistory",  patientId: id }),
+      call({ action: "getMedications", patientId: id }),
+      call({ action: "getAllergies",   patientId: id }),
+    ]);
 
-document.getElementById("modal").onclick = function(e) {
-    if (e.target === this) closeModal();
-};
+    const pt = Array.isArray(patient) ? patient[0] : patient;
 
-// Initial load
-render();
+    dash.innerHTML =
+      renderHeader(pt) +
+      renderDemographics(pt) +
+      renderVitals(vitals) +
+      renderMedications(medications) +
+      renderAllergies(allergies) +
+      renderMedHistory(medHistory);
+  }
+
+  // ── Renderers ──────────────────────────────────────────────
+  function renderHeader(pt) {
+    if (!pt) return "";
+    const initials = ((pt.firstname||"?")[0] + (pt.lastname||"?")[0]).toUpperCase();
+    const age = pt.dob ? calcAge(pt.dob) : "?";
+    return `
+      <div class="pt-header-card">
+        <div class="pt-avatar">${initials}</div>
+        <div>
+          <div class="pt-header-name">${esc(pt.firstname)} ${esc(pt.lastname)}</div>
+          <div class="pt-header-sub">
+            DOB: ${pt.dob || "—"} &nbsp;·&nbsp; Age: ${age}
+            &nbsp;·&nbsp; Sex: ${pt.sex || "—"}
+            &nbsp;·&nbsp; ID: ${pt.patientid || "—"}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderDemographics(pt) {
+    if (!pt) return card("👤", "Demographics", `<p class="empty">No data returned.</p>`);
+    const fields = [
+      ["Phone",    pt.mobilephone || pt.homephone || "—"],
+      ["Email",    pt.email || "—"],
+      ["Address",  [pt.address1, pt.city, pt.state, pt.zip].filter(Boolean).join(", ") || "—"],
+      ["Language", pt.language6392code || pt.preferredlanguage || "—"],
+      ["Race",     pt.race || "—"],
+      ["Ethnicity",pt.ethnicity || "—"],
+      ["Marital",  pt.maritalstatus || "—"],
+      ["Emp. Status", pt.employmentstatus || "—"],
+    ];
+    return card("👤", "Demographics", `
+      <div class="info-grid">
+        ${fields.map(([l,v]) => `
+          <div class="info-item">
+            <label>${l}</label>
+            <span>${esc(String(v))}</span>
+          </div>`).join("")}
+      </div>`);
+  }
+
+  function renderVitals(data) {
+    const vitals = data?.vitals || [];
+    if (!vitals.length) return card("❤️", "Vitals", `<p class="empty">No vitals on record.</p>`);
+
+    const latest = vitals[0];
+    const boxes = [
+      ["BP",      latest.bloodpressure,  "mmHg"],
+      ["HR",      latest.pulse,          "bpm"],
+      ["Temp",    latest.temperature,    "°F"],
+      ["Weight",  latest.weight,         "lbs"],
+      ["Height",  latest.height,         ""],
+      ["O₂ Sat",  latest.o2saturation,   "%"],
+    ].map(([l, v, u]) => `
+      <div class="vital-box">
+        <div class="vval">${v ? v + (u ? '<span style="font-size:.8rem;opacity:.7">' + u + '</span>' : '') : "—"}</div>
+        <div class="vlabel">${l}</div>
+        <div class="vtime">${latest.readingdatetime || ""}</div>
+      </div>`).join("");
+
+    let histTable = "";
+    if (vitals.length > 1) {
+      histTable = `
+        <div class="section-title">Vital History</div>
+        <table class="data-table">
+          <thead><tr>
+            <th>Date/Time</th><th>BP</th><th>HR</th><th>Temp</th><th>Wt</th><th>O₂</th>
+          </tr></thead>
+          <tbody>
+            ${vitals.slice(1).map(v => `<tr>
+              <td>${v.readingdatetime || "—"}</td>
+              <td>${v.bloodpressure || "—"}</td>
+              <td>${v.pulse ? v.pulse + " bpm" : "—"}</td>
+              <td>${v.temperature ? v.temperature + " °F" : "—"}</td>
+              <td>${v.weight ? v.weight + " lbs" : "—"}</td>
+              <td>${v.o2saturation ? v.o2saturation + "%" : "—"}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    return card("❤️", "Vitals", `
+      <div class="section-title">Most Recent</div>
+      <div class="vitals-row">${boxes}</div>
+      ${histTable}`);
+  }
+
+  function renderMedications(data) {
+    const meds = data?.medications?.[0]?.medication || [];
+    if (!meds.length) return card("💊", "Medications", `<p class="empty">No medications on record.</p>`);
+    return card("💊", "Medications", `
+      <table class="data-table">
+        <thead><tr><th>Medication</th><th>Dosage</th><th>Route</th><th>Frequency</th><th>Status</th></tr></thead>
+        <tbody>
+          ${meds.map(m => `<tr>
+            <td>${esc(m.medicationname || "—")}</td>
+            <td>${esc(m.dosage || "—")}</td>
+            <td>${esc(m.route || "—")}</td>
+            <td>${esc(m.frequency || "—")}</td>
+            <td>${badgeStatus(m.medicationentrytype || "active")}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`);
+  }
+
+  function renderAllergies(data) {
+    const allergies = data?.allergies || [];
+    if (!allergies.length) return card("⚠️", "Allergies", `<p class="empty">No known allergies.</p>`);
+    return card("⚠️", "Allergies", `
+      <table class="data-table">
+        <thead><tr><th>Allergen</th><th>Reaction(s)</th><th>Severity</th><th>Type</th></tr></thead>
+        <tbody>
+          ${allergies.map(a => `<tr>
+            <td>${esc(a.allergenname || "—")}</td>
+            <td>${(a.reactions || []).map(r => r.reactionname).join(", ") || "—"}</td>
+            <td>${a.severity ? `<span class="badge badge-red">${esc(a.severity)}</span>` : "—"}</td>
+            <td>${esc(a.allergentype || "—")}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`);
+  }
+
+  function renderMedHistory(data) {
+    const problems = data?.problems || [];
+    if (!problems.length) return card("📋", "Problem List / Medical History", `<p class="empty">No problems on record.</p>`);
+    return card("📋", "Problem List / Medical History", `
+      <table class="data-table">
+        <thead><tr><th>Condition</th><th>ICD-10</th><th>Status</th><th>Onset</th><th>Last Updated</th></tr></thead>
+        <tbody>
+          ${problems.map(p => `<tr>
+            <td>${esc(p.name || p.codedescription || "—")}</td>
+            <td style="color:var(--muted)">${esc(p.icd10code || "—")}</td>
+            <td>${badgeStatus(p.status || "active")}</td>
+            <td>${p.onsetdate || "—"}</td>
+            <td>${p.lastupdated || "—"}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+  function card(icon, title, body) {
+    return `<div class="card">
+      <div class="card-header"><span class="icon">${icon}</span><h2>${title}</h2></div>
+      <div class="card-body">${body}</div>
+    </div>`;
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function calcAge(dob) {
+    const [m,d,y] = dob.split("/").map(Number);
+    const bd = new Date(y, m-1, d);
+    const now = new Date();
+    let age = now.getFullYear() - bd.getFullYear();
+    const mo = now.getMonth() - bd.getMonth();
+    if (mo < 0 || (mo === 0 && now.getDate() < bd.getDate())) age--;
+    return age;
+  }
+
+  function badgeStatus(s) {
+    const lc = (s||"").toLowerCase();
+    if (["active","current"].includes(lc))     return `<span class="badge badge-green">${esc(s)}</span>`;
+    if (["inactive","resolved"].includes(lc))  return `<span class="badge badge-yellow">${esc(s)}</span>`;
+    if (["deleted","discontinued"].includes(lc)) return `<span class="badge badge-red">${esc(s)}</span>`;
+    return `<span class="badge badge-blue">${esc(s)}</span>`;
+  }
+
+  loadPatients();
 </script>
 </body>
 </html>
