@@ -340,7 +340,8 @@
 </div>
 
 <script>
-  const BACKEND = "https://script.google.com/macros/s/AKfycbz-JKCrabCJXV-nWHHmPMLJFZjtWaH87U6SqMoG1JYGZgTcfx-DkjUNDk73_sJIcdN0wg/exec";
+  const BACKEND = "zYGj0McjJqd6GVJ09vxqEsFq5ZgjJXy20O1kJZ1oSmRNqIgHZ2cCyI3cGnt98NK9hcqA/exec
+";
 
   let allPatients = [];
 
