@@ -868,6 +868,114 @@
     .topbar-center { display: none; }
     .home-hero h1 { font-size: 42px; }
   }
+
+  /* ═══════════════════════════════════
+     DARK MODE
+  ═══════════════════════════════════ */
+  body.dark-mode {
+    --white: #1E1A12;
+    --off-white: #161109;
+    --cream: #2A2218;
+    --text-dark: #F5EDD6;
+    --text-mid: #C8B98A;
+    --text-light: #8C7D60;
+    --border: #3A3020;
+    --shadow: rgba(0,0,0,0.3);
+    --shadow-md: rgba(0,0,0,0.4);
+    --topbar-bg: #0D0A05;
+    --topbar-border: rgba(201,168,76,0.25);
+    --alert-red-bg: #2d1412;
+    --alert-amber-bg: #2a1e08;
+    --alert-green-bg: #0e2218;
+  }
+  body.dark-mode .topbar { background: #0D0A05; }
+  body.dark-mode .form-row input,
+  body.dark-mode .form-row textarea { background: #2A2218; color: var(--text-dark); border-color: #3A3020; }
+  body.dark-mode .modal { background: #1E1A12; }
+  body.dark-mode .setup-banner { background: linear-gradient(135deg, #2A2218, #1E1A12); }
+
+  .dark-toggle {
+    background: none; border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    color: rgba(245,237,214,0.6); font-size: 16px; line-height: 1;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .dark-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ═══════════════════════════════════
+     LAST SEEN BADGE
+  ═══════════════════════════════════ */
+  .patient-last-seen {
+    font-size: 11px; color: var(--text-light);
+    display: flex; align-items: center; gap: 4px;
+    margin-top: 2px;
+  }
+  .patient-last-seen-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--alert-green); flex-shrink: 0;
+  }
+  .patient-last-seen-dot.old { background: var(--text-light); }
+  .patient-last-seen-dot.recent { background: var(--gold); }
+
+  /* ═══════════════════════════════════
+     PDF EXPORT BUTTON
+  ═══════════════════════════════════ */
+  .export-pdf-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: none;
+    border: 1.5px solid var(--border); border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--text-mid); cursor: pointer; transition: all 0.2s;
+    margin-bottom: 24px; margin-left: 8px;
+  }
+  .export-pdf-btn:hover { border-color: var(--gold-light); color: var(--gold-dim); background: var(--gold-pale); }
+
+  /* ═══════════════════════════════════
+     CONFETTI
+  ═══════════════════════════════════ */
+  #confetti-canvas {
+    position: fixed; inset: 0; pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ═══════════════════════════════════
+     KEYBOARD SHORTCUT HINT
+  ═══════════════════════════════════ */
+  .kbd-hint {
+    position: fixed; bottom: 32px; left: 32px;
+    background: var(--topbar-bg); color: rgba(245,237,214,0.45);
+    border: 1px solid var(--topbar-border);
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 11px; font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.06em; pointer-events: none;
+    opacity: 0; transform: translateY(6px);
+    transition: all 0.3s;
+  }
+  .kbd-hint.show { opacity: 1; transform: translateY(0); }
+  kbd {
+    background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 4px; padding: 1px 5px; font-size: 10px;
+    font-family: monospace; color: var(--gold-dim);
+  }
+
+  /* ═══════════════════════════════════
+     PRINT STYLES (PDF export)
+  ═══════════════════════════════════ */
+  @media print {
+    .topbar, .back-btn, .add-data-btn, .export-pdf-btn,
+    .add-patient-btn, .metric-tabs, .chart-toggle,
+    .row-actions, .dark-toggle, .kbd-hint, .toast { display: none !important; }
+    .page { display: block !important; }
+    #page-home, #page-patients, #page-analytics { display: none !important; }
+    body { background: white; color: black; font-size: 13px; }
+    .layout { padding-top: 0; }
+    .main { padding: 20px; }
+    .detail-card, .medications-wrap { border: 1px solid #ccc; break-inside: avoid; }
+    .chart-container { height: 180px !important; }
+    .print-header { display: block !important; }
+  }
+  .print-header { display: none; }
 </style>
 </head>
 <body>
@@ -897,8 +1005,12 @@
       <div class="topbar-stat-val" id="stat-alerts" style="color:#e87070">—</div>
       <div class="topbar-stat-lbl">Alerts</div>
     </div>
+    <button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" id="darkToggleBtn">🌙</button>
   </div>
 </div>
+
+<!-- CONFETTI CANVAS -->
+<canvas id="confetti-canvas"></canvas>
 
 <!-- LAYOUT -->
 <div class="layout">
@@ -982,8 +1094,11 @@
 
       <div id="patientAlertPanel"></div>
 
+      <div class="print-header" id="printHeader"></div>
+
       <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
       <button class="add-data-btn" style="margin-left:8px;" onclick="openAddMedicationModal()">+ Add Medication</button>
+      <button class="export-pdf-btn" onclick="exportPatientPDF()">⬇ Export PDF</button>
 
       <div class="metric-tabs">
         <button class="metric-tab active" id="metric-tab-bp" onclick="setDetailMetric('bp')">Blood Pressure</button>
@@ -1200,6 +1315,9 @@
     </div>
   </div>
 </div>
+
+<!-- KEYBOARD HINT -->
+<div class="kbd-hint" id="kbdHint"></div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -1435,6 +1553,19 @@ function renderPatientsGrid(filter = '') {
 
     const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
 
+    // Last seen badge
+    const allDates = [...(p.bpReadings||[]), ...(p.a1cReadings||[])].map(r => r.datetime).filter(Boolean).sort();
+    const lastDate = allDates.slice(-1)[0];
+    let lastSeenHtml = '';
+    if (lastDate) {
+      const daysDiff = Math.floor((Date.now() - new Date(lastDate)) / 86400000);
+      const dotClass = daysDiff <= 7 ? 'recent' : daysDiff <= 30 ? '' : 'old';
+      const label = daysDiff === 0 ? 'Today' : daysDiff === 1 ? 'Yesterday' : daysDiff < 30 ? `${daysDiff}d ago` : `${Math.floor(daysDiff/30)}mo ago`;
+      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot ${dotClass}"></div>Last visit: ${label}</div>`;
+    } else {
+      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot old"></div>No visits yet</div>`;
+    }
+
     return `<div class="patient-card ${cardClass}" onclick="openPatient('${id}')">
       <div class="patient-card-stripe"></div>
       <div class="patient-card-body">
@@ -1458,7 +1589,10 @@ function renderPatientsGrid(filter = '') {
           </div>
         </div>
         <div class="patient-card-footer">
-          <div class="patient-reading-count">${totalReadings} reading${totalReadings !== 1 ? 's' : ''}</div>
+          <div>
+            <div class="patient-reading-count">${totalReadings} reading${totalReadings !== 1 ? 's' : ''}</div>
+            ${lastSeenHtml}
+          </div>
           <div class="patient-card-arrow-icon">&#8594;</div>
         </div>
       </div>
@@ -1718,6 +1852,7 @@ function openEditReading(type, idx) {
 function saveEditedReading() {
   if (editReadingIndex === null || !currentPatientId) return;
   const p = db.patients[currentPatientId];
+  const oldReading = editReadingType === 'bp' ? { ...p.bpReadings[editReadingIndex] } : { ...p.a1cReadings[editReadingIndex] };
   if (editReadingType === 'bp') {
     const sys = parseFloat(document.getElementById('edit-bp-systolic').value);
     const dia = parseFloat(document.getElementById('edit-bp-diastolic').value);
@@ -1735,21 +1870,38 @@ function saveEditedReading() {
   p.bpReadings.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   p.a1cReadings.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   saveDB();
+  // Sync edit to sheet: delete old then add new
+  const newReading = editReadingType === 'bp' ? p.bpReadings.find(r => r !== oldReading) || p.bpReadings[editReadingIndex] : p.a1cReadings[editReadingIndex];
+  postToSheetBackend('delete_reading', { patientId: currentPatientId, type: editReadingType, datetime: oldReading.datetime })
+    .then(() => postToSheetBackend('add_reading', { patientId: currentPatientId, type: editReadingType, ...( editReadingType === 'bp' ? p.bpReadings.find(r => r.datetime === document.getElementById('edit-bp-datetime').value) || p.bpReadings.slice(-1)[0] : p.a1cReadings.find(r => r.datetime === document.getElementById('edit-a1c-datetime')?.value) || p.a1cReadings.slice(-1)[0] ) }))
+    .catch(() => showToast('Reading updated locally; sheet sync failed'));
   closeModal('editReadingModal');
   openPatient(currentPatientId);
-  showToast('Reading updated');
+  showToast('Reading updated ✓');
 }
 
-function confirmDeleteReading() {
+async function confirmDeleteReading() {
   if (editReadingIndex === null || !currentPatientId) return;
   const p = db.patients[currentPatientId];
+  const deletedReading = editReadingType === 'bp' ? p.bpReadings[editReadingIndex] : p.a1cReadings[editReadingIndex];
+  const deletedDatetime = deletedReading?.datetime || '';
   if (editReadingType === 'bp') p.bpReadings.splice(editReadingIndex, 1);
   else p.a1cReadings.splice(editReadingIndex, 1);
   saveDB();
   closeModal('editReadingModal');
   openPatient(currentPatientId);
   renderHomeStats();
-  showToast('Reading deleted');
+  showToast('Reading deleted ✓');
+  // Sync deletion to sheet
+  try {
+    await postToSheetBackend('delete_reading', {
+      patientId: currentPatientId,
+      type: editReadingType,
+      datetime: deletedDatetime
+    });
+  } catch(e) {
+    showToast('Deleted locally — sheet sync failed. Re-open and retry.');
+  }
 }
 
 // ── EDIT / DELETE MEDICATIONS ────────────────────────
@@ -1769,14 +1921,20 @@ function openEditMedication(idx) {
   document.getElementById('addMedicationModal').classList.add('open');
 }
 
-function confirmDeleteMedication() {
+async function confirmDeleteMedication() {
   if (editMedicationIndex === null || !currentPatientId) return;
+  const med = db.patients[currentPatientId].medications[editMedicationIndex];
   db.patients[currentPatientId].medications.splice(editMedicationIndex, 1);
   saveDB();
   closeModal('addMedicationModal');
   renderMedicationsList(db.patients[currentPatientId].medications);
-  showToast('Medication removed');
+  showToast('Medication removed ✓');
   editMedicationIndex = null;
+  try {
+    await postToSheetBackend('delete_medication', { patientId: currentPatientId, name: med.name, startDate: med.startDate });
+  } catch(e) {
+    showToast('Removed locally — sheet sync failed.');
+  }
 }
 
 // ═══════════════════════════════════
@@ -2160,8 +2318,212 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 });
 
 // ═══════════════════════════════════
-// INIT
+// DARK MODE
 // ═══════════════════════════════════
+function toggleDarkMode() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('hh_dark_mode', isDark ? '1' : '0');
+  document.getElementById('darkToggleBtn').textContent = isDark ? '☀️' : '🌙';
+}
+if (localStorage.getItem('hh_dark_mode') === '1') {
+  document.body.classList.add('dark-mode');
+  document.getElementById('darkToggleBtn').textContent = '☀️';
+}
+
+// ═══════════════════════════════════
+// CONFETTI — fires when a patient shows improvement trend
+// ═══════════════════════════════════
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+let confettiPieces = [];
+let confettiRunning = false;
+
+function launchConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+  const colors = ['#C9A84C','#F0D98A','#2E7D52','#4caf78','#E8D5A3','#ffffff'];
+  confettiPieces = Array.from({length: 120}, () => ({
+    x: Math.random() * confettiCanvas.width,
+    y: Math.random() * -200,
+    w: Math.random() * 10 + 5,
+    h: Math.random() * 6 + 3,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * 360,
+    rotSpeed: (Math.random() - 0.5) * 4,
+    vx: (Math.random() - 0.5) * 3,
+    vy: Math.random() * 3 + 2,
+    opacity: 1
+  }));
+  if (!confettiRunning) animateConfetti();
+}
+
+function animateConfetti() {
+  confettiRunning = true;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiPieces.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.rot += p.rotSpeed;
+    if (p.y > confettiCanvas.height * 0.7) p.opacity -= 0.02;
+    confettiCtx.save();
+    confettiCtx.globalAlpha = Math.max(0, p.opacity);
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rot * Math.PI / 180);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    confettiCtx.restore();
+  });
+  confettiPieces = confettiPieces.filter(p => p.opacity > 0);
+  if (confettiPieces.length > 0) requestAnimationFrame(animateConfetti);
+  else { confettiRunning = false; confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); }
+}
+
+// Auto-launch confetti when opening a patient with an improving trend
+const _origOpenPatient = openPatient;
+// Wrap openPatient to check for improving trend and celebrate
+function openPatientWithCelebration(id) {
+  openPatient(id);
+  const p = db.patients[id];
+  if (!p) return;
+  const bpTrend = getBPTrend(p.bpReadings || []);
+  const a1cTrend = getA1CTrend(p.a1cReadings || []);
+  if (bpTrend === 'improving' || a1cTrend === 'improving') {
+    setTimeout(() => {
+      launchConfetti();
+      showToast('🎉 This patient is improving!');
+    }, 400);
+  }
+}
+
+// Override patient card clicks and breakdown table clicks to use celebration wrapper
+// (Patient cards already call openPatient directly via inline onclick, so we patch openPatient globally)
+window.__openPatient_orig = openPatient;
+window.openPatient = function(id) {
+  window.__openPatient_orig(id);
+  const p = db.patients[id];
+  if (!p) return;
+  if (getBPTrend(p.bpReadings||[]) === 'improving' || getA1CTrend(p.a1cReadings||[]) === 'improving') {
+    setTimeout(() => { launchConfetti(); showToast('🎉 Patient is on an improving trend!'); }, 500);
+  }
+};
+
+// ═══════════════════════════════════
+// PDF EXPORT
+// ═══════════════════════════════════
+function exportPatientPDF() {
+  if (!currentPatientId) return;
+  const p = db.patients[currentPatientId];
+  const ph = document.getElementById('printHeader');
+  const bpReadings = p.bpReadings || [];
+  const a1cReadings = p.a1cReadings || [];
+  const lastBP = bpReadings.slice(-1)[0];
+  const lastA1C = a1cReadings.slice(-1)[0];
+  ph.innerHTML = `
+    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:4px;">Helping Hands Free Clinic — Patient Report</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#8C7D60;margin-bottom:16px;">Patient #${currentPatientId} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+    <div style="display:flex;gap:24px;margin-bottom:16px;font-family:'DM Sans',sans-serif;font-size:13px;">
+      <div><strong>BP Readings:</strong> ${bpReadings.length}</div>
+      <div><strong>Last BP:</strong> ${lastBP ? lastBP.sys+'/'+lastBP.dia+' mmHg' : '—'}</div>
+      <div><strong>A1C Readings:</strong> ${a1cReadings.length}</div>
+      <div><strong>Last A1C:</strong> ${lastA1C ? lastA1C.val+'%' : '—'}</div>
+      <div><strong>Medications:</strong> ${(p.medications||[]).length}</div>
+    </div>
+    <hr style="border:none;border-top:1px solid #E8D9B8;margin-bottom:16px;">
+  `;
+  // Show both cards for print
+  document.getElementById('bpDetailCard').classList.remove('hidden');
+  document.getElementById('a1cDetailCard').classList.remove('hidden');
+  window.print();
+  // Restore metric view after print
+  setTimeout(() => {
+    setDetailMetric(currentDetailMetric);
+    ph.innerHTML = '';
+  }, 1000);
+}
+
+// ═══════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════
+const kbdHint = document.getElementById('kbdHint');
+let kbdHintTimeout;
+
+function showKbdHint(text) {
+  kbdHint.innerHTML = text;
+  kbdHint.classList.add('show');
+  clearTimeout(kbdHintTimeout);
+  kbdHintTimeout = setTimeout(() => kbdHint.classList.remove('show'), 2200);
+}
+
+document.addEventListener('keydown', e => {
+  // Don't fire shortcuts when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  // Esc — close any open modal
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    return;
+  }
+
+  // ? — show shortcuts cheat sheet
+  if (e.key === '?') {
+    showKbdHint('<kbd>?</kbd> Help &nbsp; <kbd>/</kbd> Search &nbsp; <kbd>H</kbd> Home &nbsp; <kbd>P</kbd> Patients &nbsp; <kbd>A</kbd> Analytics &nbsp; <kbd>N</kbd> New reading &nbsp; <kbd>Esc</kbd> Close modal');
+    return;
+  }
+
+  const activePage = document.querySelector('.page.active')?.id;
+
+  if (e.key === '/' || e.key === 'f') {
+    e.preventDefault();
+    const searchInput = document.getElementById('patientSearch');
+    if (activePage === 'page-patients' && searchInput) {
+      searchInput.focus();
+      showKbdHint('<kbd>/</kbd> Search patients');
+    } else {
+      showPage('patients');
+      setTimeout(() => { document.getElementById('patientSearch')?.focus(); }, 300);
+      showKbdHint('<kbd>/</kbd> Search patients');
+    }
+    return;
+  }
+
+  if (e.key === 'h' || e.key === 'H') {
+    showPage('home');
+    showKbdHint('<kbd>H</kbd> Home');
+    return;
+  }
+  if (e.key === 'p' || e.key === 'P') {
+    showPage('patients');
+    showKbdHint('<kbd>P</kbd> Patient Lookup');
+    return;
+  }
+  if (e.key === 'a' || e.key === 'A') {
+    showPage('analytics');
+    showKbdHint('<kbd>A</kbd> Analytics');
+    return;
+  }
+  if ((e.key === 'n' || e.key === 'N') && activePage === 'page-detail') {
+    openAddDataModal();
+    showKbdHint('<kbd>N</kbd> New reading');
+    return;
+  }
+  if ((e.key === 'm' || e.key === 'M') && activePage === 'page-detail') {
+    openAddMedicationModal();
+    showKbdHint('<kbd>M</kbd> Add medication');
+    return;
+  }
+  if ((e.key === 'e' || e.key === 'E') && activePage === 'page-detail') {
+    exportPatientPDF();
+    showKbdHint('<kbd>E</kbd> Export PDF');
+    return;
+  }
+  if (e.key === 'd' || e.key === 'D') {
+    toggleDarkMode();
+    showKbdHint('<kbd>D</kbd> Dark mode');
+    return;
+  }
+});
+
+// Show hint on first load
+setTimeout(() => showKbdHint('Press <kbd>?</kbd> for keyboard shortcuts'), 2000);
+
 loadDB();
 
 if (HARDCODED_SCRIPT_URL && !sheetWriteUrl) {
