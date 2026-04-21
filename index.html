@@ -1739,6 +1739,7 @@ function renderPatientsGrid(filter = '') {
     const stickyHtml = sticky ? `<div class="sticky-flag" onclick="event.stopPropagation();openStickyModal('${id}')" title="${escapeHtml(sticky.note)}">📌</div>` : `<div class="sticky-flag" onclick="event.stopPropagation();openStickyModal('${id}')" title="Add staff note" style="opacity:0.25">📌</div>`;
 
     // Milestone badges
+    const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
     const badges = getMilestoneBadges(id);
     const badgesHtml = badges.length ? `<div class="milestone-badges">${badges.map(b=>`<span class="milestone-badge" title="${b.title}">${b.icon} ${b.label}</span>`).join('')}</div>` : '';
 
@@ -2415,15 +2416,24 @@ async function fetchFromSheet() {
   if (sheetWriteUrl) {
     try {
       const res = await fetch(sheetWriteUrl);
+      console.log('Sheet fetch status:', res.status);
       if (res.ok) {
-        const bundle = await res.json();
+        const text = await res.text();
+        console.log('Raw sheet response (first 500 chars):', text.slice(0, 500));
+        const bundle = JSON.parse(text);
+        console.log('Bundle ok:', bundle.ok);
+        console.log('Patients from sheet:', bundle.patients);
+        console.log('Readings count:', (bundle.readings||[]).length);
         if (bundle && bundle.ok !== false) {
           parseBackendBundle(bundle);
+          console.log('db.patients after parse:', Object.keys(db.patients));
           showToast('✓ Synced with Google Sheets');
           return;
         }
       }
-    } catch(e) { /* fall through */ }
+    } catch(e) {
+      console.error('fetchFromSheet error:', e);
+    }
   }
   if (!sheetId) return;
   try {
