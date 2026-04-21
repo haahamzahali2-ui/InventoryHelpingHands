@@ -960,22 +960,140 @@
   }
 
   /* ═══════════════════════════════════
-     PRINT STYLES (PDF export)
+     STICKY NOTES
+  ═══════════════════════════════════ */
+  .sticky-flag {
+    position: absolute; top: 12px; right: 46px;
+    font-size: 15px; cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 2;
+  }
+  .sticky-flag:hover { transform: scale(1.3); }
+  .sticky-modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,18,8,0.5);
+    z-index: 300; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .sticky-modal-overlay.open { display: flex; }
+  .sticky-modal {
+    background: #FFF9D6;
+    border-radius: 4px 18px 18px 18px;
+    padding: 24px 28px;
+    width: 100%; max-width: 380px;
+    box-shadow: 4px 6px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
+    animation: modalIn 0.25s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+  .sticky-modal::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 40px; height: 12px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 0 0 4px 4px;
+  }
+  .sticky-modal h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 600;
+    color: #5C4F38; margin-bottom: 12px;
+  }
+  .sticky-modal textarea {
+    width: 100%; min-height: 120px; resize: vertical;
+    background: transparent; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 15px;
+    color: #3a3018; line-height: 1.7;
+    placeholder-color: #b0a070;
+  }
+  .sticky-colors { display: flex; gap: 8px; margin: 12px 0; }
+  .sticky-color-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    cursor: pointer; border: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .sticky-color-dot.active { border-color: #5C4F38; transform: scale(1.2); }
+  .sticky-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+  .sticky-save-btn {
+    padding: 8px 20px; background: #A8893C; border: none;
+    border-radius: 8px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: white; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sticky-save-btn:hover { background: #8a7030; }
+  .sticky-del-btn {
+    padding: 8px 14px; background: none;
+    border: 1px solid rgba(0,0,0,0.12); border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: #8C7D60; cursor: pointer;
+  }
+
+  /* ═══════════════════════════════════
+     MILESTONE BADGES
+  ═══════════════════════════════════ */
+  .milestone-badges {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .milestone-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    background: linear-gradient(135deg, #FFF9D6, #F5EDD6);
+    border: 1px solid var(--gold-light);
+    color: var(--gold-dim);
+    cursor: default;
+    title: attr(data-tooltip);
+  }
+
+  /* ═══════════════════════════════════
+     ANALYTICS PDF / CONFETTI BUTTON
+  ═══════════════════════════════════ */
+  .analytics-actions {
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .analytics-export-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px;
+    background: linear-gradient(135deg, var(--gold-pale), var(--cream));
+    border: 1.5px solid var(--gold-light); border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--gold-dim); cursor: pointer; transition: all 0.2s;
+  }
+  .analytics-export-btn:hover { background: var(--gold-pale); border-color: var(--gold); box-shadow: 0 4px 16px var(--shadow); }
+  .confetti-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px;
+    background: none;
+    border: 1.5px solid var(--border); border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--text-mid); cursor: pointer; transition: all 0.2s;
+  }
+  .confetti-btn:hover { border-color: var(--gold-light); color: var(--gold-dim); background: var(--gold-pale); }
+
+  /* ═══════════════════════════════════
+     ANALYTICS PRINT STYLES
   ═══════════════════════════════════ */
   @media print {
     .topbar, .back-btn, .add-data-btn, .export-pdf-btn,
     .add-patient-btn, .metric-tabs, .chart-toggle,
-    .row-actions, .dark-toggle, .kbd-hint, .toast { display: none !important; }
+    .row-actions, .dark-toggle, .kbd-hint, .toast,
+    .analytics-actions, .confetti-btn, .analytics-export-btn,
+    .breakdown-tabs { display: none !important; }
     .page { display: block !important; }
-    #page-home, #page-patients, #page-analytics { display: none !important; }
-    body { background: white; color: black; font-size: 13px; }
-    .layout { padding-top: 0; }
-    .main { padding: 20px; }
-    .detail-card, .medications-wrap { border: 1px solid #ccc; break-inside: avoid; }
-    .chart-container { height: 180px !important; }
-    .print-header { display: block !important; }
+    body { background: white !important; color: black !important; font-size: 13px; }
+    .layout { padding-top: 0 !important; }
+    .main { padding: 20px !important; max-width: 100% !important; }
+    .detail-card, .medications-wrap, .analytics-card { border: 1px solid #ccc !important; break-inside: avoid; }
+    .chart-container, .analytics-chart-container { height: 200px !important; }
+    .print-header, .analytics-print-header { display: block !important; }
+    .analytics-summary-row { grid-template-columns: repeat(4,1fr) !important; }
+    .analytics-grid { grid-template-columns: 1fr 1fr !important; }
+    /* Hide non-printing pages */
+    #page-home, #page-patients { display: none !important; }
+    /* For patient PDF: hide analytics; for analytics PDF: hide detail */
+    body.printing-patient #page-analytics { display: none !important; }
+    body.printing-analytics #page-detail { display: none !important; }
   }
-  .print-header { display: none; }
+  .print-header, .analytics-print-header { display: none; }
 </style>
 </head>
 <body>
@@ -1161,6 +1279,13 @@
         <h2>Population Analytics</h2>
       </div>
 
+      <div class="analytics-actions">
+        <button class="analytics-export-btn" onclick="exportAnalyticsPDF()">⬇ Export Donor PDF</button>
+        <button class="confetti-btn" onclick="launchConfetti();showToast('🎉 Looking good!')">🎉 Celebrate</button>
+      </div>
+
+      <div class="analytics-print-header" id="analyticsPrintHeaderInPage"></div>
+
       <div class="analytics-summary-row" id="analyticsKPIs"></div>
 
       <div class="analytics-grid">
@@ -1316,6 +1441,28 @@
   </div>
 </div>
 
+<!-- STICKY NOTE MODAL -->
+<div class="sticky-modal-overlay" id="stickyModal">
+  <div class="sticky-modal" id="stickyModalInner">
+    <h4 id="stickyModalTitle">📌 Staff Note — Patient #—</h4>
+    <textarea id="stickyText" placeholder="Add a note for staff… e.g. 'Needs follow-up call', 'Caregiver is daughter'"></textarea>
+    <div class="sticky-colors">
+      <div class="sticky-color-dot active" style="background:#FFF9D6" data-color="gold" onclick="setStickyColor('gold',this)" title="Gold"></div>
+      <div class="sticky-color-dot" style="background:#E8F5EE" data-color="green" onclick="setStickyColor('green',this)" title="Green"></div>
+      <div class="sticky-color-dot" style="background:#FDECEA" data-color="red" onclick="setStickyColor('red',this)" title="Red"></div>
+      <div class="sticky-color-dot" style="background:#EEF2FF" data-color="blue" onclick="setStickyColor('blue',this)" title="Blue"></div>
+    </div>
+    <div class="sticky-modal-actions">
+      <button class="sticky-del-btn" onclick="deleteSticky()">Remove</button>
+      <button class="sticky-del-btn" onclick="document.getElementById('stickyModal').classList.remove('open')">Cancel</button>
+      <button class="sticky-save-btn" onclick="saveSticky()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYTICS PRINT HEADER -->
+<div class="analytics-print-header" id="analyticsPrintHeader"></div>
+
 <!-- KEYBOARD HINT -->
 <div class="kbd-hint" id="kbdHint"></div>
 
@@ -1332,7 +1479,7 @@ const SHEET_WRITE_URL_KEY = 'hh_sheet_write_url';
 
 const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4q6s8zbgbw7kgvr3pnqw-TRf7ijEAgoAbsMUQaRLA08nNaFiqumiyO1rZqkjYZvEj/exec';
 
-let db = { patients: {}, alerts: [], seenAlerts: [] };
+let db = { patients: {}, alerts: [], seenAlerts: [], stickies: {} };
 let sheetId = localStorage.getItem(SHEET_ID_KEY) || '';
 let sheetWriteUrl = localStorage.getItem(SHEET_WRITE_URL_KEY) || '';
 let currentPatientId = null;
@@ -1350,6 +1497,7 @@ function loadDB() {
   if (!db.patients) db.patients = {};
   if (!db.alerts) db.alerts = [];
   if (!db.seenAlerts) db.seenAlerts = [];
+  if (!db.stickies) db.stickies = {};
   for (const pid in db.patients) {
     if (!db.patients[pid].medications) db.patients[pid].medications = [];
     db.patients[pid].medications.forEach(m => { if (!('endDate' in m)) m.endDate = ''; });
@@ -1404,6 +1552,10 @@ function parseBackendBundle(bundle) {
     type: String(a.type||'general'), msg: String(a.msg||''), time: String(a.time||''),
     seen: String(a.seen).toLowerCase() === 'true' || a.seen === true, level: String(a.level||'warning')
   }));
+  db.stickies = {};
+  (bundle.stickies || []).forEach(s => {
+    if (s.patientId) db.stickies[String(s.patientId)] = { note: s.note||'', color: s.color||'gold', createdAt: s.createdAt||'' };
+  });
   saveDB(); renderPatientsGrid(); renderHomeStats(); renderAlertsList();
 }
 
@@ -1551,7 +1703,13 @@ function renderPatientsGrid(filter = '') {
       ? `<div class="patient-reading-value ${a1cValClass}">${lastA1C.val}%</div><div class="patient-reading-unit">A1C</div>`
       : `<div class="patient-reading-value" style="font-size:15px;color:var(--text-light);font-family:'DM Sans'">—</div><div class="patient-reading-unit">No data</div>`;
 
-    const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
+    // Sticky note flag
+    const sticky = db.stickies && db.stickies[id];
+    const stickyHtml = sticky ? `<div class="sticky-flag" onclick="event.stopPropagation();openStickyModal('${id}')" title="${escapeHtml(sticky.note)}">📌</div>` : `<div class="sticky-flag" onclick="event.stopPropagation();openStickyModal('${id}')" title="Add staff note" style="opacity:0.25">📌</div>`;
+
+    // Milestone badges
+    const badges = getMilestoneBadges(id);
+    const badgesHtml = badges.length ? `<div class="milestone-badges">${badges.map(b=>`<span class="milestone-badge" title="${b.title}">${b.icon} ${b.label}</span>`).join('')}</div>` : '';
 
     // Last seen badge
     const allDates = [...(p.bpReadings||[]), ...(p.a1cReadings||[])].map(r => r.datetime).filter(Boolean).sort();
@@ -1568,6 +1726,7 @@ function renderPatientsGrid(filter = '') {
 
     return `<div class="patient-card ${cardClass}" onclick="openPatient('${id}')">
       <div class="patient-card-stripe"></div>
+      ${stickyHtml}
       <div class="patient-card-body">
         <div class="patient-card-top">
           <div class="patient-id-badge">
@@ -1588,6 +1747,7 @@ function renderPatientsGrid(filter = '') {
             ${a1cDisplay}
           </div>
         </div>
+        ${badgesHtml}
         <div class="patient-card-footer">
           <div>
             <div class="patient-reading-count">${totalReadings} reading${totalReadings !== 1 ? 's' : ''}</div>
@@ -2523,6 +2683,139 @@ document.addEventListener('keydown', e => {
 
 // Show hint on first load
 setTimeout(() => showKbdHint('Press <kbd>?</kbd> for keyboard shortcuts'), 2000);
+
+// ═══════════════════════════════════
+// MILESTONE BADGES
+// ═══════════════════════════════════
+function getMilestoneBadges(pid) {
+  const p = db.patients[pid];
+  if (!p) return [];
+  const badges = [];
+  const bp   = p.bpReadings  || [];
+  const a1c  = p.a1cReadings || [];
+  const meds = p.medications || [];
+  const total = bp.length + a1c.length;
+
+  if (bp.length >= 3) {
+    const last3 = bp.slice(-3);
+    if (last3[2].sys < last3[1].sys && last3[1].sys < last3[0].sys)
+      badges.push({ icon:'🏆', label:'BP Streak', title:'3 consecutive BP improvements' });
+  }
+  if (a1c.length >= 3) {
+    const last3 = a1c.slice(-3);
+    if (last3[2].val < last3[1].val && last3[1].val < last3[0].val)
+      badges.push({ icon:'⭐', label:'A1C Streak', title:'3 consecutive A1C improvements' });
+  }
+  if (bp.length >= 2) {
+    const last = bp.slice(-1)[0]; const prev = bp.slice(-2)[0];
+    if (getBPStatus(last.sys, last.dia) === 'normal' && getBPStatus(prev.sys, prev.dia) !== 'normal')
+      badges.push({ icon:'💚', label:'BP Normal', title:'BP returned to normal range' });
+  }
+  if (a1c.length >= 2) {
+    const last = a1c.slice(-1)[0]; const prev = a1c.slice(-2)[0];
+    if (getA1CStatus(last.val) === 'normal' && getA1CStatus(prev.val) !== 'normal')
+      badges.push({ icon:'🎯', label:'A1C Target', title:'A1C reached target range' });
+  }
+  if (total >= 5) badges.push({ icon:'📅', label:`${total} Visits`, title:`${total} total readings recorded` });
+  const activeMeds = meds.filter(m => !m.endDate || new Date(m.endDate) >= new Date());
+  if (activeMeds.length > 0) badges.push({ icon:'💊', label:'On Meds', title: activeMeds.map(m=>m.name).join(', ') });
+  return badges;
+}
+
+// ═══════════════════════════════════
+// STICKY NOTES
+// ═══════════════════════════════════
+let currentStickyPatientId = null;
+let currentStickyColor = 'gold';
+const stickyBgMap = { gold:'#FFF9D6', green:'#E8F5EE', red:'#FDECEA', blue:'#EEF2FF' };
+
+function openStickyModal(pid) {
+  currentStickyPatientId = pid;
+  document.getElementById('stickyModalTitle').textContent = `📌 Staff Note — Patient #${pid}`;
+  const existing = db.stickies && db.stickies[pid];
+  document.getElementById('stickyText').value = existing ? existing.note : '';
+  const color = existing ? (existing.color || 'gold') : 'gold';
+  const dot = document.querySelector(`.sticky-color-dot[data-color="${color}"]`);
+  setStickyColor(color, dot);
+  document.getElementById('stickyModal').classList.add('open');
+}
+
+function setStickyColor(color, el) {
+  currentStickyColor = color;
+  document.querySelectorAll('.sticky-color-dot').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('stickyModalInner').style.background = stickyBgMap[color] || '#FFF9D6';
+}
+
+async function saveSticky() {
+  if (!currentStickyPatientId) return;
+  const note = document.getElementById('stickyText').value.trim();
+  if (!note) { await deleteSticky(); return; }
+  if (!db.stickies) db.stickies = {};
+  db.stickies[currentStickyPatientId] = { note, color: currentStickyColor, createdAt: new Date().toISOString() };
+  saveDB();
+  document.getElementById('stickyModal').classList.remove('open');
+  renderPatientsGrid();
+  showToast('📌 Note saved');
+  try { await postToSheetBackend('save_sticky', { patientId: currentStickyPatientId, note, color: currentStickyColor }); }
+  catch(e) { showToast('Note saved locally; sheet sync failed'); }
+}
+
+async function deleteSticky() {
+  if (!currentStickyPatientId) return;
+  if (db.stickies) delete db.stickies[currentStickyPatientId];
+  saveDB();
+  document.getElementById('stickyModal').classList.remove('open');
+  renderPatientsGrid();
+  showToast('Note removed');
+  try { await postToSheetBackend('delete_sticky', { patientId: currentStickyPatientId }); }
+  catch(e) {}
+}
+
+// ═══════════════════════════════════
+// ANALYTICS PDF — DONOR READY
+// ═══════════════════════════════════
+function exportAnalyticsPDF() {
+  const totalPts    = Object.keys(db.patients).length;
+  const bpOutcomes  = computeBPOutcomes();
+  const a1cOutcomes = computeA1COutcomes();
+  const pct = (n,d) => d > 0 ? Math.round((n/d)*100) : 0;
+  const dateStr = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const hdr = document.getElementById('analyticsPrintHeaderInPage');
+  hdr.innerHTML = `
+    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;margin-bottom:4px;color:#2C2416;">Helping Hands Free Clinic</div>
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:#A8893C;margin-bottom:6px;">Population Health Outcomes Report</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#8C7D60;margin-bottom:20px;">Generated ${dateStr} &nbsp;·&nbsp; Columbus, OH</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+      <div style="border:1px solid #E8D9B8;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:#A8893C;">${totalPts}</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8C7D60;margin-top:4px;">Patients Served</div>
+      </div>
+      <div style="border:1px solid #E8D9B8;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:#2E7D52;">${pct(bpOutcomes.improving,totalPts)}%</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8C7D60;margin-top:4px;">BP Improving</div>
+      </div>
+      <div style="border:1px solid #E8D9B8;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:#2E7D52;">${pct(a1cOutcomes.improving,totalPts)}%</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8C7D60;margin-top:4px;">A1C Improving</div>
+      </div>
+      <div style="border:1px solid #E8D9B8;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:#C0392B;">${bpOutcomes.worsening+a1cOutcomes.worsening}</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#8C7D60;margin-top:4px;">Needs Attention</div>
+      </div>
+    </div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#5C4F38;line-height:1.75;margin-bottom:20px;padding:16px;background:#F5EDD6;border-radius:10px;border-left:4px solid #C9A84C;">
+      <strong>Summary:</strong> As of ${dateStr}, Helping Hands has tracked outcomes for <strong>${totalPts} patients</strong>.
+      ${pct(bpOutcomes.improving,totalPts)}% of patients with multiple BP readings show improvement in systolic blood pressure.
+      ${pct(a1cOutcomes.improving,totalPts)}% of patients with multiple A1C readings show improved glycemic control.
+      ${bpOutcomes.worsening+a1cOutcomes.worsening > 0 ? `<strong>${bpOutcomes.worsening+a1cOutcomes.worsening} patient(s)</strong> show worsening trends and are being closely monitored.` : 'No patients currently show worsening trends.'}
+    </div>
+    <hr style="border:none;border-top:1px solid #E8D9B8;margin-bottom:20px;">
+  `;
+  document.body.classList.add('printing-analytics');
+  window.print();
+  setTimeout(() => { document.body.classList.remove('printing-analytics'); hdr.innerHTML = ''; }, 1200);
+}
 
 loadDB();
 
