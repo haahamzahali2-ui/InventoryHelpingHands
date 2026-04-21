@@ -1477,7 +1477,7 @@ const STORAGE_KEY = 'hh_clinic_data';
 const SHEET_ID_KEY = 'hh_sheet_id';
 const SHEET_WRITE_URL_KEY = 'hh_sheet_write_url';
 
-const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwWJfHdJM4bF9HoZBd89EEOfaIo5ipTMNzobQC4nu9Ou2H7wOpGvc-dkfgicTsO45D/exec';
+const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4q6s8zbgbw7kgvr3pnqw-TRf7ijEAgoAbsMUQaRLA08nNaFiqumiyO1rZqkjYZvEj/exec';
 
 let db = { patients: {}, alerts: [], seenAlerts: [], stickies: {} };
 let sheetId = localStorage.getItem(SHEET_ID_KEY) || '';
@@ -1525,16 +1525,42 @@ async function postToSheetBackend(action, payload = {}) {
   return text ? JSON.parse(text) : { ok: true };
 }
 
+function normalizeDate(val) {
+  if (!val) return '';
+  const s = String(val);
+  // Already a plain date string YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // ISO timestamp — slice to date portion
+  if (s.includes('T')) return s.slice(0, 10);
+  // Google Sheets serial date number (days since Dec 30 1899)
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const d = new Date(Math.round((parseFloat(s) - 25569) * 86400000));
+    return d.toISOString().slice(0, 10);
+  }
+  // Try parsing anything else
+  const d = new Date(s);
+  return isNaN(d) ? s : d.toISOString().slice(0, 10);
+}
+
 function parseBackendBundle(bundle) {
   if (!bundle || typeof bundle !== 'object') return;
   const rebuilt = {};
-  (bundle.patients || []).forEach(pid => { rebuilt[String(pid)] = { bpReadings: [], a1cReadings: [], medications: [] }; });
+  (bundle.patients || []).forEach(pid => {
+    const key = String(pid).trim();
+    if (key) rebuilt[key] = { bpReadings: [], a1cReadings: [], medications: [] };
+  });
   (bundle.readings || []).forEach(r => {
     const pid = String(r.patientId || '').trim();
     if (!pid) return;
     if (!rebuilt[pid]) rebuilt[pid] = { bpReadings: [], a1cReadings: [], medications: [] };
-    if (r.type === 'bp') rebuilt[pid].bpReadings.push({ sys: Number(r.value1), dia: Number(r.value2), datetime: String(r.datetime||''), note: String(r.note||'') });
-    else if (r.type === 'a1c') rebuilt[pid].a1cReadings.push({ val: Number(r.value1), datetime: String(r.datetime||''), note: String(r.note||'') });
+    const dt = normalizeDate(r.datetime);
+    if (r.type === 'bp') {
+      const sys = Number(r.value1), dia = Number(r.value2);
+      if (sys && dia) rebuilt[pid].bpReadings.push({ sys, dia, datetime: dt, note: String(r.note||'') });
+    } else if (r.type === 'a1c') {
+      const val = Number(r.value1);
+      if (val) rebuilt[pid].a1cReadings.push({ val, datetime: dt, note: String(r.note||'') });
+    }
   });
   Object.values(rebuilt).forEach(p => {
     p.bpReadings.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
@@ -1544,12 +1570,17 @@ function parseBackendBundle(bundle) {
     const pid = String(m.patientId || '').trim();
     if (!pid) return;
     if (!rebuilt[pid]) rebuilt[pid] = { bpReadings: [], a1cReadings: [], medications: [] };
-    rebuilt[pid].medications.push({ name: String(m.name||''), dosage: String(m.dosage||''), startDate: String(m.startDate||''), endDate: String(m.endDate||'') });
+    rebuilt[pid].medications.push({
+      name:      String(m.name||''),
+      dosage:    String(m.dosage||''),
+      startDate: normalizeDate(m.startDate),
+      endDate:   normalizeDate(m.endDate)
+    });
   });
   db.patients = rebuilt;
   db.alerts = (bundle.alerts || []).map(a => ({
     id: a.id || (Date.now() + Math.random()), patientId: String(a.patientId||''),
-    type: String(a.type||'general'), msg: String(a.msg||''), time: String(a.time||''),
+    type: String(a.type||'general'), msg: String(a.msg||''), time: normalizeDate(a.time),
     seen: String(a.seen).toLowerCase() === 'true' || a.seen === true, level: String(a.level||'warning')
   }));
   db.stickies = {};
