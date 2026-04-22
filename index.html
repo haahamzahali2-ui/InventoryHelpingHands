@@ -1070,8 +1070,253 @@
   .confetti-btn:hover { border-color: var(--gold-light); color: var(--gold-dim); background: var(--gold-pale); }
 
   /* ═══════════════════════════════════
-     ANALYTICS PRINT STYLES
+     LIVE CLOCK + SYNC DOT
   ═══════════════════════════════════ */
+  .topbar-clock {
+    text-align: center;
+    border-left: 1px solid rgba(201,168,76,0.15);
+    padding-left: 20px;
+  }
+  .topbar-clock-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 600;
+    color: var(--gold); line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  .topbar-clock-date {
+    font-size: 10px; font-weight: 400;
+    color: rgba(201,168,76,0.5);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .sync-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4caf78;
+    box-shadow: 0 0 6px #4caf78;
+    flex-shrink: 0;
+    transition: all 0.4s;
+    cursor: pointer;
+    title: 'Sheet connected';
+  }
+  .sync-dot.syncing {
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    animation: pulse-sync 1s infinite;
+  }
+  .sync-dot.error {
+    background: var(--alert-red);
+    box-shadow: 0 0 6px var(--alert-red);
+  }
+  @keyframes pulse-sync {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  /* ═══════════════════════════════════
+     SORT + FILTER BAR
+  ═══════════════════════════════════ */
+  .patient-controls {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .sort-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .sort-label {
+    font-size: 12px; font-weight: 500; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
+  }
+  .sort-btn {
+    padding: 7px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white); color: var(--text-mid);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .sort-btn:hover { border-color: var(--gold-light); color: var(--gold-dim); }
+  .sort-btn.active {
+    background: var(--gold-pale); border-color: var(--gold);
+    color: var(--gold-dim); font-weight: 600;
+  }
+  .patient-count-label {
+    margin-left: auto;
+    font-size: 13px; color: var(--text-light); font-style: italic;
+  }
+
+  /* ═══════════════════════════════════
+     OVERDUE BADGE
+  ═══════════════════════════════════ */
+  .overdue-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    background: #FEF3E2; color: var(--alert-amber);
+    border: 1px solid #f5d09a;
+  }
+
+  /* ═══════════════════════════════════
+     LIVE BP PREVIEW
+  ═══════════════════════════════════ */
+  .bp-live-preview {
+    margin-top: 10px; padding: 12px 16px;
+    border-radius: 12px; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    display: none; transition: all 0.25s;
+    border: 1.5px solid transparent;
+  }
+  .bp-live-preview.normal  { background: var(--alert-green-bg); color: var(--alert-green); border-color: #a3d9bc; display: block; }
+  .bp-live-preview.stage1  { background: #FEF3E2; color: #b06a00; border-color: #f5d09a; display: block; }
+  .bp-live-preview.stage2  { background: var(--alert-amber-bg); color: var(--alert-amber); border-color: #f5d09a; display: block; }
+  .bp-live-preview.crisis  { background: var(--alert-red-bg); color: var(--alert-red); border-color: #f3b0aa; display: block; }
+
+  /* ═══════════════════════════════════
+     EASTER EGG
+  ═══════════════════════════════════ */
+  .easter-egg-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(26,18,8,0.92);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column;
+    backdrop-filter: blur(8px);
+  }
+  .easter-egg-overlay.show { display: flex; }
+  .easter-egg-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px; font-weight: 700;
+    color: var(--gold);
+    text-align: center; line-height: 1.2;
+    animation: eggPop 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .easter-egg-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px; font-weight: 300;
+    color: var(--gold-light); margin-top: 16px;
+    text-align: center; letter-spacing: 0.08em;
+  }
+  .easter-egg-close {
+    margin-top: 36px; padding: 10px 28px;
+    background: var(--gold); border: none; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--topbar-bg); cursor: pointer;
+  }
+  @keyframes eggPop {
+    from { opacity:0; transform: scale(0.7) translateY(20px); }
+    to   { opacity:1; transform: scale(1) translateY(0); }
+  }
+  /* ═══════════════════════════════════
+     AI PANELS
+  ═══════════════════════════════════ */
+  .ai-panel {
+    background: linear-gradient(135deg, #1A1208 0%, #2C2010 100%);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 18px; padding: 24px 28px;
+    margin-bottom: 28px; position: relative; overflow: hidden;
+  }
+  .ai-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-shine), var(--gold));
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .ai-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+  }
+  .ai-panel-title {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 600; color: var(--gold-light);
+  }
+  .ai-badge {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: #1A1208; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .ai-panel-body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; line-height: 1.85;
+    color: rgba(245,237,214,0.88); min-height: 48px;
+  }
+  .ai-panel-body.loading {
+    display: flex; align-items: center; gap: 12px;
+    color: rgba(245,237,214,0.45); font-style: italic; font-size: 14px;
+  }
+  .ai-spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.2);
+    border-top-color: var(--gold);
+    animation: spin 0.8s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-run-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border: none; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    color: #1A1208; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  }
+  .ai-run-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(168,137,60,0.5); }
+  .ai-run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .ai-panel-meta { font-size: 11px; color: rgba(245,237,214,0.3); margin-top: 10px; font-style: italic; }
+
+  /* ═══════════════════════════════════
+     TIME FILTER TABS
+  ═══════════════════════════════════ */
+  .time-filter-bar {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .time-filter-label {
+    font-size: 12px; font-weight: 500; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .time-filter-btn {
+    padding: 6px 16px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white); color: var(--text-mid);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .time-filter-btn:hover { border-color: var(--gold-light); color: var(--gold-dim); }
+  .time-filter-btn.active { background: var(--gold-pale); border-color: var(--gold); color: var(--gold-dim); font-weight: 600; }
+  .time-filter-stats { margin-left: auto; font-size: 13px; color: var(--text-light); font-style: italic; }
+
+  /* ═══════════════════════════════════
+     ANIMATED HOME IMPACT COUNTERS
+  ═══════════════════════════════════ */
+  .home-impact-row {
+    display: flex; gap: 18px; justify-content: center;
+    max-width: 960px; margin: 40px auto 0; flex-wrap: wrap;
+  }
+  .impact-chip {
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 18px; padding: 22px 28px;
+    text-align: center; flex: 1; min-width: 130px;
+    position: relative; overflow: hidden; transition: all 0.25s;
+  }
+  .impact-chip::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .impact-chip.gold::before  { background: linear-gradient(90deg, var(--gold), var(--gold-dim)); }
+  .impact-chip.green::before { background: linear-gradient(90deg, var(--alert-green), #4caf78); }
+  .impact-chip.red::before   { background: linear-gradient(90deg, var(--alert-red), #e05c50); }
+  .impact-chip.blue::before  { background: linear-gradient(90deg, #4338CA, #6366f1); }
+  .impact-chip:hover { transform: translateY(-3px); box-shadow: 0 12px 32px var(--shadow-md); }
+  .impact-chip-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 40px; font-weight: 700; line-height: 1; margin-bottom: 6px;
+  }
+  .impact-chip.gold  .impact-chip-val { color: var(--gold-dim); }
+  .impact-chip.green .impact-chip-val { color: var(--alert-green); }
+  .impact-chip.red   .impact-chip-val { color: var(--alert-red); }
+  .impact-chip.blue  .impact-chip-val { color: #4338CA; }
+  .impact-chip-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-light); }
+  .impact-chip-sub { font-size: 11px; color: var(--text-light); font-style: italic; margin-top: 3px; }
+
+  /* Population trend chart */
+  .pop-trend-container { position: relative; height: 260px; }
+
   @media print {
     .topbar, .back-btn, .add-data-btn, .export-pdf-btn,
     .add-patient-btn, .metric-tabs, .chart-toggle,
@@ -1123,8 +1368,23 @@
       <div class="topbar-stat-val" id="stat-alerts" style="color:#e87070">—</div>
       <div class="topbar-stat-lbl">Alerts</div>
     </div>
+    <div class="topbar-clock">
+      <div class="topbar-clock-time" id="topbarClock">--:--</div>
+      <div class="topbar-clock-date" id="topbarDate">---</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;border-left:1px solid rgba(201,168,76,0.15);padding-left:16px;">
+      <div class="sync-dot" id="syncDot" title="Sheet sync status" onclick="fetchFromSheet()"></div>
+      <div style="font-size:9px;color:rgba(201,168,76,0.4);letter-spacing:0.1em;text-transform:uppercase;" id="syncLabel">Synced</div>
+    </div>
     <button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" id="darkToggleBtn">🌙</button>
   </div>
+</div>
+
+<!-- EASTER EGG -->
+<div class="easter-egg-overlay" id="easterEggOverlay">
+  <div class="easter-egg-text">💛 Helping Hands 💛</div>
+  <div class="easter-egg-sub">Thank you for serving the community</div>
+  <button class="easter-egg-close" onclick="document.getElementById('easterEggOverlay').classList.remove('show')">Keep Going ›</button>
 </div>
 
 <!-- CONFETTI CANVAS -->
@@ -1161,6 +1421,29 @@
           <div class="home-card-arrow">&#8594;</div>
         </div>
       </div>
+
+      <div class="home-impact-row" id="homeImpactRow">
+        <div class="impact-chip gold">
+          <div class="impact-chip-val" id="imp-patients">0</div>
+          <div class="impact-chip-lbl">Patients</div>
+          <div class="impact-chip-sub">enrolled</div>
+        </div>
+        <div class="impact-chip blue">
+          <div class="impact-chip-val" id="imp-readings">0</div>
+          <div class="impact-chip-lbl">Readings</div>
+          <div class="impact-chip-sub">total logged</div>
+        </div>
+        <div class="impact-chip green">
+          <div class="impact-chip-val" id="imp-improving">0</div>
+          <div class="impact-chip-lbl">Improving</div>
+          <div class="impact-chip-sub">BP or A1C trend</div>
+        </div>
+        <div class="impact-chip red" style="cursor:pointer" onclick="openAlertsModal()">
+          <div class="impact-chip-val" id="imp-alerts">0</div>
+          <div class="impact-chip-lbl">Active Alerts</div>
+          <div class="impact-chip-sub">click to review</div>
+        </div>
+      </div>
     </div>
 
     <!-- PATIENTS PAGE -->
@@ -1187,11 +1470,34 @@
         </div>
       </div>
 
+      <div class="time-filter-bar">
+        <span class="time-filter-label">Period:</span>
+        <button class="time-filter-btn active" onclick="setTimeFilter('all',this)">All Time</button>
+        <button class="time-filter-btn" onclick="setTimeFilter('thismonth',this)">This Month</button>
+        <button class="time-filter-btn" onclick="setTimeFilter('lastmonth',this)">Last Month</button>
+        <button class="time-filter-btn" onclick="setTimeFilter('3months',this)">Last 3 Months</button>
+        <span class="time-filter-stats" id="timeFilterStats"></span>
+      </div>
+
       <div class="search-wrap">
         <span class="search-icon">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </span>
         <input type="text" id="patientSearch" placeholder="Search by patient ID (e.g. 1042)…" oninput="filterPatients()" />
+      </div>
+
+      <div class="patient-controls">
+        <div class="sort-bar">
+          <span class="sort-label">Sort:</span>
+          <button class="sort-btn active" onclick="setSort('id',this)">ID</button>
+          <button class="sort-btn" onclick="setSort('critical',this)">🔴 Critical First</button>
+          <button class="sort-btn" onclick="setSort('overdue',this)">⏰ Overdue First</button>
+          <button class="sort-btn" onclick="setSort('worsening',this)">📉 Worsening</button>
+          <button class="sort-btn" onclick="setSort('improving',this)">📈 Improving</button>
+          <button class="sort-btn" onclick="setSort('readings',this)">📋 Most Readings</button>
+          <button class="sort-btn" onclick="setSort('lastseen',this)">🕐 Last Seen</button>
+        </div>
+        <div class="patient-count-label" id="patientCountLabel"></div>
       </div>
 
       <div class="patients-grid" id="patientsGrid">
@@ -1211,6 +1517,22 @@
       </div>
 
       <div id="patientAlertPanel"></div>
+
+      <!-- AI PATIENT RISK SUMMARY -->
+      <div class="ai-panel" id="aiPatientPanel">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title">
+            <span>🤖</span>
+            <span>AI Clinical Assessment</span>
+            <span class="ai-badge">Claude AI</span>
+          </div>
+          <button class="ai-run-btn" id="aiPatientBtn" onclick="runPatientAI()">✨ Generate Assessment</button>
+        </div>
+        <div class="ai-panel-body" id="aiPatientBody">
+          Click "Generate Assessment" to get an AI-powered clinical summary for this patient — trends, medication correlation, and recommended follow-up actions.
+        </div>
+        <div class="ai-panel-meta" id="aiPatientMeta"></div>
+      </div>
 
       <div class="print-header" id="printHeader"></div>
 
@@ -1284,8 +1606,49 @@
         <button class="confetti-btn" onclick="launchConfetti();showToast('🎉 Looking good!')">🎉 Celebrate</button>
       </div>
 
-      <div class="analytics-print-header" id="analyticsPrintHeaderInPage"></div>
+      <!-- AI POPULATION NARRATIVE -->
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title">
+            <span>🤖</span>
+            <span>AI Population Narrative</span>
+            <span class="ai-badge">Claude AI</span>
+          </div>
+          <button class="ai-run-btn" id="aiNarrativeBtn" onclick="runPopulationAI()">✨ Generate Narrative</button>
+        </div>
+        <div class="ai-panel-body" id="aiNarrativeBody">
+          Generate a grant-ready paragraph summarizing your clinic's population health outcomes. Pulls live data — ready to copy into applications and donor reports.
+        </div>
+        <div class="ai-panel-meta" id="aiNarrativeMeta"></div>
+      </div>
 
+      <!-- SMART ALERT SUMMARY -->
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title">
+            <span>🚨</span>
+            <span>AI Alert Prioritization</span>
+            <span class="ai-badge">Claude AI</span>
+          </div>
+          <button class="ai-run-btn" id="aiAlertsBtn" onclick="runAlertAI()">✨ Prioritize Alerts</button>
+        </div>
+        <div class="ai-panel-body" id="aiAlertsBody">
+          Claude will read all active alerts and write a prioritized action plan for your team — who to see first and why.
+        </div>
+        <div class="ai-panel-meta" id="aiAlertsMeta"></div>
+      </div>
+
+      <!-- TIME FILTER -->
+      <div class="time-filter-bar">
+        <span class="time-filter-label">Period:</span>
+        <button class="time-filter-btn active" onclick="setAnalyticsTimeFilter('all',this)">All Time</button>
+        <button class="time-filter-btn" onclick="setAnalyticsTimeFilter('thismonth',this)">This Month</button>
+        <button class="time-filter-btn" onclick="setAnalyticsTimeFilter('lastmonth',this)">Last Month</button>
+        <button class="time-filter-btn" onclick="setAnalyticsTimeFilter('3months',this)">Last 3 Months</button>
+        <span class="time-filter-stats" id="analyticsTimeStats"></span>
+      </div>
+
+      <div class="analytics-print-header" id="analyticsPrintHeaderInPage"></div>
       <div class="analytics-summary-row" id="analyticsKPIs"></div>
 
       <div class="analytics-grid">
@@ -1302,6 +1665,15 @@
           <div class="analytics-chart-container">
             <canvas id="a1cOutcomesChart"></canvas>
           </div>
+        </div>
+      </div>
+
+      <!-- POPULATION TREND LINE -->
+      <div class="analytics-card" style="margin-bottom:28px;">
+        <div class="analytics-card-title">Population Trends Over Time</div>
+        <div class="analytics-card-sub">Average systolic BP and A1C across all patients by month. Shows the clinic's overall health impact trajectory.</div>
+        <div class="pop-trend-container">
+          <canvas id="popTrendChart"></canvas>
         </div>
       </div>
 
@@ -1344,10 +1716,11 @@
     <div class="modal-form-section active" id="modal-bp">
       <div class="form-row"><label>Date</label><input type="date" id="bp-datetime" /></div>
       <div class="form-row-pair">
-        <div class="form-row"><label>Systolic (mmHg)</label><input type="number" id="bp-systolic" placeholder="e.g. 128" /></div>
-        <div class="form-row"><label>Diastolic (mmHg)</label><input type="number" id="bp-diastolic" placeholder="e.g. 82" /></div>
+        <div class="form-row"><label>Systolic (mmHg)</label><input type="number" id="bp-systolic" placeholder="e.g. 128" oninput="updateBPPreview()" /></div>
+        <div class="form-row"><label>Diastolic (mmHg)</label><input type="number" id="bp-diastolic" placeholder="e.g. 82" oninput="updateBPPreview()" /></div>
       </div>
-      <div class="form-row"><label>Notes (optional)</label><textarea id="bp-note" placeholder="Add notes for this BP reading..."></textarea></div>
+      <div class="bp-live-preview" id="bpLivePreview"></div>
+      <div class="form-row" style="margin-top:12px;"><label>Notes (optional)</label><textarea id="bp-note" placeholder="Add notes for this BP reading..."></textarea></div>
     </div>
     <div class="modal-form-section" id="modal-a1c">
       <div class="form-row"><label>Date</label><input type="date" id="a1c-datetime" /></div>
@@ -1692,24 +2065,29 @@ function markSeen(id) {
 // ═══════════════════════════════════
 // HOME STATS
 // ═══════════════════════════════════
-function renderHomeStats() {
-  const pCount = Object.keys(db.patients).length;
-  let rCount = 0;
-  for (const pid in db.patients) rCount += (db.patients[pid].bpReadings||[]).length + (db.patients[pid].a1cReadings||[]).length;
-  const aCount = db.alerts.filter(a => !a.seen).length;
-  document.getElementById('stat-patients').textContent = pCount;
-  document.getElementById('stat-readings').textContent = rCount;
-  document.getElementById('stat-alerts').textContent = aCount;
-}
-
 function openAlertsModal() { renderAlertsList(); document.getElementById('alertsModal').classList.add('open'); }
 
 // ═══════════════════════════════════
 // PATIENTS GRID
 // ═══════════════════════════════════
-function renderPatientsGrid(filter = '') {
+function renderPatientsGrid(filter = '', range = null) {
   const grid = document.getElementById('patientsGrid');
-  const ids = Object.keys(db.patients).filter(id => !filter || id.includes(filter));
+  let ids = Object.keys(db.patients).filter(id => {
+    if (filter && !id.includes(filter)) return false;
+    if (range && !patientHasReadingInRange(id, range)) return false;
+    return true;
+  });
+
+  // Sort
+  if (currentSort === 'id') {
+    ids.sort((a,b) => Number(a) - Number(b) || a.localeCompare(b));
+  } else {
+    ids.sort((a,b) => getPatientSortScore(b) - getPatientSortScore(a));
+  }
+
+  // Update count label
+  const countEl = document.getElementById('patientCountLabel');
+  if (countEl) countEl.textContent = `${ids.length} patient${ids.length !== 1 ? 's' : ''}`;
 
   const cards = ids.map(id => {
     const p = db.patients[id];
@@ -1751,9 +2129,10 @@ function renderPatientsGrid(filter = '') {
       const daysDiff = Math.floor((Date.now() - new Date(lastDate)) / 86400000);
       const dotClass = daysDiff <= 7 ? 'recent' : daysDiff <= 30 ? '' : 'old';
       const label = daysDiff === 0 ? 'Today' : daysDiff === 1 ? 'Yesterday' : daysDiff < 30 ? `${daysDiff}d ago` : `${Math.floor(daysDiff/30)}mo ago`;
-      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot ${dotClass}"></div>Last visit: ${label}</div>`;
+      const overdueHtml = daysDiff >= 60 ? `<span class="overdue-badge">⏰ Overdue ${daysDiff}d</span>` : '';
+      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot ${dotClass}"></div>Last visit: ${label} ${overdueHtml}</div>`;
     } else {
-      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot old"></div>No visits yet</div>`;
+      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot old"></div>No visits yet <span class="overdue-badge">⏰ Never seen</span></div>`;
     }
 
     return `<div class="patient-card ${cardClass}" onclick="openPatient('${id}')">
@@ -2143,6 +2522,8 @@ function openAddDataModal() {
   document.getElementById('a1c-value').value = '';
   document.getElementById('bp-note').value = '';
   document.getElementById('a1c-note').value = '';
+  const prev = document.getElementById('bpLivePreview');
+  if (prev) { prev.className = 'bp-live-preview'; prev.textContent = ''; }
   activeModalTab = 'bp';
   document.querySelectorAll('.modal-tab').forEach((t,i) => t.classList.toggle('active', i===0));
   document.getElementById('modal-bp').classList.add('active');
@@ -2254,6 +2635,16 @@ function renderAnalytics() {
   renderBPOutcomesChart(bpOutcomes);
   renderA1COutcomesChart(a1cOutcomes);
   renderPatientBreakdownTable(currentBreakdownMetric);
+  renderPopulationTrendChart(currentAnalyticsTimeFilter);
+  // Update time filter stats
+  const range = getTimeFilterRange(currentAnalyticsTimeFilter);
+  const statsEl = document.getElementById('analyticsTimeStats');
+  if (statsEl && range) {
+    const filtered = Object.keys(db.patients).filter(pid => patientHasReadingInRange(pid, range));
+    statsEl.textContent = `${filtered.length} patients with readings in period`;
+  } else if (statsEl) {
+    statsEl.textContent = '';
+  }
 }
 
 function computeBPOutcomes() {
@@ -2856,6 +3247,575 @@ function exportAnalyticsPDF() {
   document.body.classList.add('printing-analytics');
   window.print();
   setTimeout(() => { document.body.classList.remove('printing-analytics'); hdr.innerHTML = ''; }, 1200);
+}
+
+// ═══════════════════════════════════
+// LIVE CLOCK
+// ═══════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const timeEl = document.getElementById('topbarClock');
+  const dateEl = document.getElementById('topbarDate');
+  if (!timeEl) return;
+  const h = now.getHours(), m = now.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hh = h % 12 || 12;
+  const mm = String(m).padStart(2, '0');
+  timeEl.textContent = `${hh}:${mm} ${ampm}`;
+  dateEl.textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ═══════════════════════════════════
+// SYNC STATUS DOT
+// ═══════════════════════════════════
+function setSyncStatus(status) {
+  // status: 'syncing' | 'ok' | 'error'
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (status !== 'ok' ? ` ${status}` : '');
+  lbl.textContent = status === 'syncing' ? 'Syncing…' : status === 'error' ? 'Error' : 'Synced';
+  dot.title = status === 'ok' ? 'Sheet connected — click to re-sync' : status === 'error' ? 'Sync failed — click to retry' : 'Syncing…';
+}
+
+// Wrap fetchFromSheet to update sync dot
+const _origFetchFromSheet = fetchFromSheet;
+window.fetchFromSheet = async function() {
+  setSyncStatus('syncing');
+  try {
+    await _origFetchFromSheet();
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('error');
+  }
+};
+
+// ═══════════════════════════════════
+// SORT
+// ═══════════════════════════════════
+let currentSort = 'id';
+
+function setSort(sort, btn) {
+  currentSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPatientsGrid(document.getElementById('patientSearch')?.value.trim() || '');
+}
+
+function getDaysSinceLastReading(pid) {
+  const p = db.patients[pid];
+  if (!p) return 9999;
+  const allDates = [...(p.bpReadings||[]), ...(p.a1cReadings||[])].map(r => r.datetime).filter(Boolean).sort();
+  const last = allDates.slice(-1)[0];
+  if (!last) return 9999;
+  return Math.floor((Date.now() - new Date(last)) / 86400000);
+}
+
+function getPatientSortScore(pid) {
+  const p = db.patients[pid];
+  if (!p) return 0;
+  const lastBP  = (p.bpReadings||[]).slice(-1)[0];
+  const lastA1C = (p.a1cReadings||[]).slice(-1)[0];
+  const bpStatus  = lastBP  ? getBPStatus(lastBP.sys, lastBP.dia)  : 'normal';
+  const a1cStatus = lastA1C ? getA1CStatus(lastA1C.val)            : 'normal';
+  const bpTrend  = getBPTrend(p.bpReadings||[]);
+  const a1cTrend = getA1CTrend(p.a1cReadings||[]);
+  const total = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
+  const days  = getDaysSinceLastReading(pid);
+
+  switch(currentSort) {
+    case 'critical':
+      if (bpStatus === 'critical' || a1cStatus === 'critical') return 3;
+      if (bpStatus === 'warning'  || a1cStatus === 'warning')  return 2;
+      return 1;
+    case 'overdue':
+      return days; // higher = more overdue = first
+    case 'worsening':
+      if (bpTrend === 'worsening' || a1cTrend === 'worsening') return 2;
+      return 1;
+    case 'improving':
+      if (bpTrend === 'improving' || a1cTrend === 'improving') return 2;
+      return 1;
+    case 'readings':
+      return total;
+    case 'lastseen':
+      return days;
+    case 'id':
+    default:
+      return 0;
+  }
+}
+
+// ═══════════════════════════════════
+// OVERDUE LOGIC
+// ═══════════════════════════════════
+function isOverdue(pid) {
+  return getDaysSinceLastReading(pid) >= 60;
+}
+
+// ═══════════════════════════════════
+// LIVE BP PREVIEW
+// ═══════════════════════════════════
+function updateBPPreview() {
+  const sys = parseFloat(document.getElementById('bp-systolic')?.value);
+  const dia = parseFloat(document.getElementById('bp-diastolic')?.value);
+  const el  = document.getElementById('bpLivePreview');
+  if (!el) return;
+  if (!sys || !dia) { el.className = 'bp-live-preview'; el.textContent = ''; return; }
+
+  let cls, icon, label, detail;
+  if (sys >= 180 || dia >= 120) {
+    cls = 'crisis'; icon = '🚨'; label = 'Hypertensive Crisis';
+    detail = 'Immediate medical attention required';
+  } else if (sys >= 140 || dia >= 90) {
+    cls = 'stage2'; icon = '⚠️'; label = 'Stage 2 Hypertension';
+    detail = 'Systolic ≥140 or Diastolic ≥90';
+  } else if (sys >= 130 || dia >= 80) {
+    cls = 'stage1'; icon = '🟡'; label = 'Stage 1 Hypertension';
+    detail = 'Systolic 130–139 or Diastolic 80–89';
+  } else if (sys >= 120 && dia < 80) {
+    cls = 'stage1'; icon = '🟡'; label = 'Elevated';
+    detail = 'Systolic 120–129, Diastolic <80';
+  } else {
+    cls = 'normal'; icon = '✅'; label = 'Normal';
+    detail = 'Systolic <120 and Diastolic <80';
+  }
+  el.className = `bp-live-preview ${cls}`;
+  el.innerHTML = `${icon} <strong>${label}</strong> &nbsp;·&nbsp; <span style="font-weight:400;opacity:0.8">${detail}</span>`;
+}
+
+// ═══════════════════════════════════
+// EASTER EGG
+// ═══════════════════════════════════
+let eggBuffer = '';
+const EGG_CODE = 'HELPINGHANDS';
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  eggBuffer = (eggBuffer + e.key.toUpperCase()).slice(-EGG_CODE.length);
+  if (eggBuffer === EGG_CODE) {
+    document.getElementById('easterEggOverlay').classList.add('show');
+    launchConfetti();
+    eggBuffer = '';
+  }
+});
+
+// ═══════════════════════════════════
+// ANIMATED COUNTERS
+// ═══════════════════════════════════
+function animateCount(el, target, duration = 1200) {
+  if (!el) return;
+  const start = 0;
+  const startTime = performance.now();
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (target - start) * eased);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function renderHomeStats() {
+  const pCount = Object.keys(db.patients).length;
+  let rCount = 0;
+  for (const pid in db.patients) rCount += (db.patients[pid].bpReadings||[]).length + (db.patients[pid].a1cReadings||[]).length;
+  const aCount = db.alerts.filter(a => !a.seen).length;
+  let improving = 0;
+  for (const pid in db.patients) {
+    const p = db.patients[pid];
+    if (getBPTrend(p.bpReadings||[]) === 'improving' || getA1CTrend(p.a1cReadings||[]) === 'improving') improving++;
+  }
+
+  // Topbar stats (plain)
+  document.getElementById('stat-patients').textContent = pCount;
+  document.getElementById('stat-readings').textContent = rCount;
+  document.getElementById('stat-alerts').textContent = aCount;
+
+  // Animated impact chips on home page
+  animateCount(document.getElementById('imp-patients'), pCount);
+  animateCount(document.getElementById('imp-readings'), rCount);
+  animateCount(document.getElementById('imp-improving'), improving);
+  animateCount(document.getElementById('imp-alerts'), aCount);
+}
+
+// ═══════════════════════════════════
+// TIME FILTER
+// ═══════════════════════════════════
+let currentTimeFilter = 'all';
+let currentAnalyticsTimeFilter = 'all';
+
+function getTimeFilterRange(filter) {
+  const now = new Date();
+  if (filter === 'all') return null;
+  if (filter === 'thismonth') {
+    return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
+  }
+  if (filter === 'lastmonth') {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end   = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { start, end };
+  }
+  if (filter === '3months') {
+    return { start: new Date(now.getFullYear(), now.getMonth() - 3, 1), end: now };
+  }
+  return null;
+}
+
+function patientHasReadingInRange(pid, range) {
+  if (!range) return true;
+  const p = db.patients[pid];
+  if (!p) return false;
+  const all = [...(p.bpReadings||[]), ...(p.a1cReadings||[])];
+  return all.some(r => {
+    const d = new Date(r.datetime);
+    return d >= range.start && d <= range.end;
+  });
+}
+
+function setTimeFilter(filter, btn) {
+  currentTimeFilter = filter;
+  document.querySelectorAll('.time-filter-bar .time-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const range = getTimeFilterRange(filter);
+  const allIds = Object.keys(db.patients);
+  const filtered = range ? allIds.filter(pid => patientHasReadingInRange(pid, range)) : allIds;
+  const statsEl = document.getElementById('timeFilterStats');
+  if (statsEl) statsEl.textContent = filter !== 'all' ? `${filtered.length} patient${filtered.length !== 1 ? 's' : ''} with readings in period` : '';
+  renderPatientsGrid(document.getElementById('patientSearch')?.value.trim() || '', range);
+}
+
+function setAnalyticsTimeFilter(filter, btn) {
+  currentAnalyticsTimeFilter = filter;
+  document.querySelectorAll('#page-analytics .time-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalytics();
+}
+
+// ═══════════════════════════════════
+// POPULATION TREND CHART
+// ═══════════════════════════════════
+let popTrendChartInst = null;
+
+function renderPopulationTrendChart(timeFilter = 'all') {
+  if (popTrendChartInst) { popTrendChartInst.destroy(); popTrendChartInst = null; }
+  const ctx = document.getElementById('popTrendChart');
+  if (!ctx) return;
+
+  // Collect all readings with month labels
+  const bpByMonth = {}, a1cByMonth = {};
+  const range = getTimeFilterRange(timeFilter);
+
+  for (const pid in db.patients) {
+    const p = db.patients[pid];
+    (p.bpReadings||[]).forEach(r => {
+      if (!r.datetime) return;
+      const d = new Date(r.datetime);
+      if (range && (d < range.start || d > range.end)) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if (!bpByMonth[key]) bpByMonth[key] = [];
+      bpByMonth[key].push(r.sys);
+    });
+    (p.a1cReadings||[]).forEach(r => {
+      if (!r.datetime) return;
+      const d = new Date(r.datetime);
+      if (range && (d < range.start || d > range.end)) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if (!a1cByMonth[key]) a1cByMonth[key] = [];
+      a1cByMonth[key].push(r.val);
+    });
+  }
+
+  const allMonths = [...new Set([...Object.keys(bpByMonth), ...Object.keys(a1cByMonth)])].sort();
+  if (allMonths.length === 0) {
+    ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);
+    return;
+  }
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length * 10) / 10 : null;
+  const bpData  = allMonths.map(m => avg(bpByMonth[m]  || []));
+  const a1cData = allMonths.map(m => avg(a1cByMonth[m] || []));
+  const labels  = allMonths.map(m => {
+    const [y, mo] = m.split('-');
+    return new Date(y, mo-1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+  });
+
+  popTrendChartInst = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Avg Systolic BP (mmHg)',
+          data: bpData,
+          borderColor: goldPalette.red,
+          backgroundColor: 'rgba(192,57,43,0.08)',
+          tension: 0.4, fill: true,
+          pointRadius: 5, pointHoverRadius: 7,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Avg A1C (%)',
+          data: a1cData,
+          borderColor: goldPalette.gold,
+          backgroundColor: 'rgba(201,168,76,0.08)',
+          tension: 0.4, fill: false,
+          pointRadius: 5, pointHoverRadius: 7,
+          yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { font: { family: "'DM Sans'", size: 13 }, color: goldPalette.text } },
+        tooltip: { backgroundColor: '#1A1208', bodyFont: { family: "'DM Sans'", size: 13 }, padding: 14, cornerRadius: 10 }
+      },
+      scales: {
+        x: { ticks: { font: { family: "'DM Sans'", size: 11 }, color: goldPalette.text }, grid: { color: goldPalette.grid } },
+        y: {
+          type: 'linear', position: 'left',
+          ticks: { font: { family: "'DM Sans'", size: 11 }, color: goldPalette.red },
+          grid: { color: goldPalette.grid },
+          title: { display: true, text: 'Systolic BP (mmHg)', color: goldPalette.red, font: { size: 11 } }
+        },
+        y2: {
+          type: 'linear', position: 'right',
+          ticks: { font: { family: "'DM Sans'", size: 11 }, color: goldPalette.gold },
+          grid: { drawOnChartArea: false },
+          title: { display: true, text: 'A1C %', color: goldPalette.gold, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════
+// MEDICATION OVERLAY ON CHARTS
+// ═══════════════════════════════════
+function getMedAnnotations(medications, readings) {
+  if (!medications || !medications.length || !readings || !readings.length) return [];
+  const labels = readings.map(r => r.datetime);
+  return medications
+    .filter(m => m.startDate)
+    .map(m => {
+      const idx = labels.findIndex(d => d >= m.startDate);
+      return idx >= 0 ? { medName: m.name, idx, date: m.startDate } : null;
+    })
+    .filter(Boolean);
+}
+
+// Patch renderBPChart and renderA1CChart to include med annotation lines
+const _origRenderBPChart = renderBPChart;
+window.renderBPChart = function(readings) {
+  _origRenderBPChart(readings);
+  if (!bpChartInst || !currentPatientId) return;
+  const meds = db.patients[currentPatientId]?.medications || [];
+  const annotations = getMedAnnotations(meds, readings);
+  if (!annotations.length) return;
+  annotations.forEach(ann => {
+    bpChartInst.data.datasets.push({
+      label: `💊 ${ann.medName} started`,
+      data: readings.map((_, i) => i === ann.idx ? null : null),
+      borderColor: 'rgba(168,137,60,0.6)',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      type: 'line',
+      xAxisID: 'x'
+    });
+  });
+  bpChartInst.update();
+  // Draw vertical annotation lines manually via plugin
+  addMedLines(bpChartInst, annotations, readings.map(r => formatDateTime(r.datetime)));
+};
+
+function addMedLines(chart, annotations, labels) {
+  const plugin = {
+    id: 'medLines',
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const xAxis = chart.scales['x'];
+      const yAxis = chart.scales['y'] || chart.scales['y1'];
+      if (!xAxis || !yAxis) return;
+      annotations.forEach(ann => {
+        const label = formatDateTime(ann.date);
+        const labelIdx = labels.indexOf(label);
+        if (labelIdx < 0) return;
+        const x = xAxis.getPixelForValue(labelIdx);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, yAxis.top);
+        ctx.lineTo(x, yAxis.bottom);
+        ctx.strokeStyle = 'rgba(168,137,60,0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(168,137,60,0.85)';
+        ctx.font = '11px DM Sans, sans-serif';
+        ctx.fillText(`💊 ${ann.medName}`, x + 4, yAxis.top + 14);
+        ctx.restore();
+      });
+    }
+  };
+  Chart.register(plugin);
+  chart.update();
+}
+
+// ═══════════════════════════════════
+// AI FEATURES
+// ═══════════════════════════════════
+async function callClaude(prompt, systemPrompt = '') {
+  const messages = [{ role: 'user', content: prompt }];
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1000,
+    messages
+  };
+  if (systemPrompt) body.system = systemPrompt;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  return data.content?.[0]?.text || 'No response generated.';
+}
+
+function setAILoading(bodyId, btnId, loading, btnText = '✨ Generate') {
+  const body = document.getElementById(bodyId);
+  const btn  = document.getElementById(btnId);
+  if (loading) {
+    body.className = 'ai-panel-body loading';
+    body.innerHTML = '<div class="ai-spinner"></div> Claude is thinking…';
+    if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+  } else {
+    body.className = 'ai-panel-body';
+    if (btn) { btn.disabled = false; btn.textContent = btnText; }
+  }
+}
+
+// AI: Patient Risk Summary
+async function runPatientAI() {
+  if (!currentPatientId) return;
+  const p = db.patients[currentPatientId];
+  if (!p) return;
+  setAILoading('aiPatientBody', 'aiPatientBtn', true, '✨ Generate Assessment');
+
+  const bpReadings  = (p.bpReadings||[]).slice(-6).map(r => `${r.datetime}: ${r.sys}/${r.dia} mmHg${r.note ? ` (note: ${r.note})` : ''}`).join('\n');
+  const a1cReadings = (p.a1cReadings||[]).slice(-6).map(r => `${r.datetime}: ${r.val}%${r.note ? ` (note: ${r.note})` : ''}`).join('\n');
+  const meds = (p.medications||[]).map(m => `${m.name} ${m.dosage} (started ${m.startDate}${m.endDate ? ', ended '+m.endDate : ''})`).join('\n');
+  const bpTrend  = getBPTrend(p.bpReadings||[]);
+  const a1cTrend = getA1CTrend(p.a1cReadings||[]);
+
+  const prompt = `You are a clinical informatics assistant at a free community health clinic. Analyze this patient's data and write a concise clinical assessment (3-4 sentences max). Be specific with numbers. Mention medication correlation if relevant. Flag anything urgent.
+
+Patient #${currentPatientId}
+BP Trend: ${bpTrend} | A1C Trend: ${a1cTrend}
+
+Recent BP Readings:
+${bpReadings || 'None recorded'}
+
+Recent A1C Readings:
+${a1cReadings || 'None recorded'}
+
+Current Medications:
+${meds || 'None recorded'}
+
+Write a brief, professional clinical assessment focusing on trends, medication effectiveness, and recommended next steps.`;
+
+  try {
+    const text = await callClaude(prompt, 'You are a clinical informatics assistant. Be concise, specific, and clinically precise. Do not give medical diagnoses. Focus on data trends and care coordination.');
+    document.getElementById('aiPatientBody').className = 'ai-panel-body';
+    document.getElementById('aiPatientBody').textContent = text;
+    document.getElementById('aiPatientMeta').textContent = `Generated ${new Date().toLocaleTimeString()} · Patient #${currentPatientId}`;
+  } catch(e) {
+    document.getElementById('aiPatientBody').className = 'ai-panel-body';
+    document.getElementById('aiPatientBody').textContent = 'AI assessment unavailable. Check your connection and try again.';
+  }
+  setAILoading('aiPatientBody', 'aiPatientBtn', false, '✨ Regenerate');
+}
+
+// AI: Population Narrative
+async function runPopulationAI() {
+  setAILoading('aiNarrativeBody', 'aiNarrativeBtn', true, '✨ Generate Narrative');
+  const totalPts    = Object.keys(db.patients).length;
+  const bpOutcomes  = computeBPOutcomes();
+  const a1cOutcomes = computeA1COutcomes();
+  const pct = (n,d) => d > 0 ? Math.round((n/d)*100) : 0;
+
+  // Compute avg BP drop among improving patients
+  let bpDrops = [], a1cDrops = [];
+  for (const pid in db.patients) {
+    const p = db.patients[pid];
+    const bp = p.bpReadings||[];
+    if (bp.length >= 2) { const diff = bp.slice(-2)[0].sys - bp.slice(-1)[0].sys; if (diff > 0) bpDrops.push(diff); }
+    const a1c = p.a1cReadings||[];
+    if (a1c.length >= 2) { const diff = a1c.slice(-2)[0].val - a1c.slice(-1)[0].val; if (diff > 0) a1cDrops.push(diff); }
+  }
+  const avgBPDrop  = bpDrops.length  ? Math.round(bpDrops.reduce((a,b)=>a+b,0)/bpDrops.length)      : null;
+  const avgA1CDrop = a1cDrops.length ? (a1cDrops.reduce((a,b)=>a+b,0)/a1cDrops.length).toFixed(1) : null;
+  const totalReadings = Object.values(db.patients).reduce((s,p)=>(s+(p.bpReadings||[]).length+(p.a1cReadings||[]).length),0);
+
+  const prompt = `Write a 3-4 sentence grant-ready outcomes paragraph for a free community health clinic. Use these exact statistics:
+- ${totalPts} patients enrolled
+- ${totalReadings} total readings tracked
+- ${pct(bpOutcomes.improving,totalPts)}% of patients show improving blood pressure trends
+- ${pct(a1cOutcomes.improving,totalPts)}% of patients show improving A1C trends
+${avgBPDrop ? `- Among improving BP patients, average systolic reduction: ${avgBPDrop} mmHg` : ''}
+${avgA1CDrop ? `- Among improving A1C patients, average reduction: ${avgA1CDrop}%` : ''}
+- ${bpOutcomes.worsening + a1cOutcomes.worsening} patients currently show worsening trends and are being monitored
+
+Write in a warm, professional tone suitable for a grant application or donor report. Start with the clinic name "Helping Hands Free Clinic". Be specific with numbers. Make it compelling.`;
+
+  try {
+    const text = await callClaude(prompt, 'You write grant-ready clinical outcomes narratives. Be specific with numbers, warm but professional, and compelling for donors.');
+    document.getElementById('aiNarrativeBody').className = 'ai-panel-body';
+    document.getElementById('aiNarrativeBody').textContent = text;
+    document.getElementById('aiNarrativeMeta').textContent = `Generated ${new Date().toLocaleTimeString()} · Based on ${totalPts} patients, ${totalReadings} readings`;
+  } catch(e) {
+    document.getElementById('aiNarrativeBody').className = 'ai-panel-body';
+    document.getElementById('aiNarrativeBody').textContent = 'AI narrative unavailable. Check your connection and try again.';
+  }
+  setAILoading('aiNarrativeBody', 'aiNarrativeBtn', false, '✨ Regenerate');
+}
+
+// AI: Alert Prioritization
+async function runAlertAI() {
+  setAILoading('aiAlertsBody', 'aiAlertsBtn', true, '✨ Prioritize Alerts');
+  const active = db.alerts.filter(a => !a.seen);
+  if (!active.length) {
+    document.getElementById('aiAlertsBody').className = 'ai-panel-body';
+    document.getElementById('aiAlertsBody').textContent = 'No active alerts to prioritize — great work! 🎉';
+    setAILoading('aiAlertsBody', 'aiAlertsBtn', false, '✨ Prioritize Alerts');
+    return;
+  }
+
+  const alertSummary = active.map(a =>
+    `Patient #${a.patientId}: ${a.level.toUpperCase()} — ${a.msg} (${a.time})`
+  ).join('\n');
+
+  const prompt = `You are a clinical coordinator at a free community health clinic. Review these active patient alerts and write a brief prioritized action plan. Tell the team who to see first and why. Be direct and practical. 3-5 sentences max.
+
+Active Alerts:
+${alertSummary}
+
+Write a prioritized action plan for today's clinic team.`;
+
+  try {
+    const text = await callClaude(prompt, 'You are a clinical coordinator writing brief, actionable daily briefings for volunteer clinic staff. Be direct, warm, and specific.');
+    document.getElementById('aiAlertsBody').className = 'ai-panel-body';
+    document.getElementById('aiAlertsBody').textContent = text;
+    document.getElementById('aiAlertsMeta').textContent = `Generated ${new Date().toLocaleTimeString()} · ${active.length} active alert${active.length !== 1 ? 's' : ''} analyzed`;
+  } catch(e) {
+    document.getElementById('aiAlertsBody').className = 'ai-panel-body';
+    document.getElementById('aiAlertsBody').textContent = 'AI prioritization unavailable. Check your connection and try again.';
+  }
+  setAILoading('aiAlertsBody', 'aiAlertsBtn', false, '✨ Regenerate');
 }
 
 loadDB();
