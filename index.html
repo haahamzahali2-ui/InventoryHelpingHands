@@ -1518,22 +1518,6 @@
 
       <div id="patientAlertPanel"></div>
 
-      <!-- AI PATIENT RISK SUMMARY -->
-      <div class="ai-panel" id="aiPatientPanel">
-        <div class="ai-panel-header">
-          <div class="ai-panel-title">
-            <span>🤖</span>
-            <span>AI Clinical Assessment</span>
-            <span class="ai-badge">Claude AI</span>
-          </div>
-          <button class="ai-run-btn" id="aiPatientBtn" onclick="runPatientAI()">✨ Generate Assessment</button>
-        </div>
-        <div class="ai-panel-body" id="aiPatientBody">
-          Click "Generate Assessment" to get an AI-powered clinical summary for this patient — trends, medication correlation, and recommended follow-up actions.
-        </div>
-        <div class="ai-panel-meta" id="aiPatientMeta"></div>
-      </div>
-
       <div class="print-header" id="printHeader"></div>
 
       <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
@@ -1606,38 +1590,6 @@
         <button class="confetti-btn" onclick="launchConfetti();showToast('🎉 Looking good!')">🎉 Celebrate</button>
       </div>
 
-      <!-- AI POPULATION NARRATIVE -->
-      <div class="ai-panel">
-        <div class="ai-panel-header">
-          <div class="ai-panel-title">
-            <span>🤖</span>
-            <span>AI Population Narrative</span>
-            <span class="ai-badge">Claude AI</span>
-          </div>
-          <button class="ai-run-btn" id="aiNarrativeBtn" onclick="runPopulationAI()">✨ Generate Narrative</button>
-        </div>
-        <div class="ai-panel-body" id="aiNarrativeBody">
-          Generate a grant-ready paragraph summarizing your clinic's population health outcomes. Pulls live data — ready to copy into applications and donor reports.
-        </div>
-        <div class="ai-panel-meta" id="aiNarrativeMeta"></div>
-      </div>
-
-      <!-- SMART ALERT SUMMARY -->
-      <div class="ai-panel">
-        <div class="ai-panel-header">
-          <div class="ai-panel-title">
-            <span>🚨</span>
-            <span>AI Alert Prioritization</span>
-            <span class="ai-badge">Claude AI</span>
-          </div>
-          <button class="ai-run-btn" id="aiAlertsBtn" onclick="runAlertAI()">✨ Prioritize Alerts</button>
-        </div>
-        <div class="ai-panel-body" id="aiAlertsBody">
-          Claude will read all active alerts and write a prioritized action plan for your team — who to see first and why.
-        </div>
-        <div class="ai-panel-meta" id="aiAlertsMeta"></div>
-      </div>
-
       <!-- TIME FILTER -->
       <div class="time-filter-bar">
         <span class="time-filter-label">Period:</span>
@@ -1665,15 +1617,6 @@
           <div class="analytics-chart-container">
             <canvas id="a1cOutcomesChart"></canvas>
           </div>
-        </div>
-      </div>
-
-      <!-- POPULATION TREND LINE -->
-      <div class="analytics-card" style="margin-bottom:28px;">
-        <div class="analytics-card-title">Population Trends Over Time</div>
-        <div class="analytics-card-sub">Average systolic BP and A1C across all patients by month. Shows the clinic's overall health impact trajectory.</div>
-        <div class="pop-trend-container">
-          <canvas id="popTrendChart"></canvas>
         </div>
       </div>
 
@@ -2635,7 +2578,6 @@ function renderAnalytics() {
   renderBPOutcomesChart(bpOutcomes);
   renderA1COutcomesChart(a1cOutcomes);
   renderPatientBreakdownTable(currentBreakdownMetric);
-  renderPopulationTrendChart(currentAnalyticsTimeFilter);
   // Update time filter stats
   const range = getTimeFilterRange(currentAnalyticsTimeFilter);
   const statsEl = document.getElementById('analyticsTimeStats');
@@ -2967,35 +2909,6 @@ function animateConfetti() {
   if (confettiPieces.length > 0) requestAnimationFrame(animateConfetti);
   else { confettiRunning = false; confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); }
 }
-
-// Auto-launch confetti when opening a patient with an improving trend
-const _origOpenPatient = openPatient;
-// Wrap openPatient to check for improving trend and celebrate
-function openPatientWithCelebration(id) {
-  openPatient(id);
-  const p = db.patients[id];
-  if (!p) return;
-  const bpTrend = getBPTrend(p.bpReadings || []);
-  const a1cTrend = getA1CTrend(p.a1cReadings || []);
-  if (bpTrend === 'improving' || a1cTrend === 'improving') {
-    setTimeout(() => {
-      launchConfetti();
-      showToast('🎉 This patient is improving!');
-    }, 400);
-  }
-}
-
-// Override patient card clicks and breakdown table clicks to use celebration wrapper
-// (Patient cards already call openPatient directly via inline onclick, so we patch openPatient globally)
-window.__openPatient_orig = openPatient;
-window.openPatient = function(id) {
-  window.__openPatient_orig(id);
-  const p = db.patients[id];
-  if (!p) return;
-  if (getBPTrend(p.bpReadings||[]) === 'improving' || getA1CTrend(p.a1cReadings||[]) === 'improving') {
-    setTimeout(() => { launchConfetti(); showToast('🎉 Patient is on an improving trend!'); }, 500);
-  }
-};
 
 // ═══════════════════════════════════
 // PDF EXPORT
@@ -3495,105 +3408,6 @@ function setAnalyticsTimeFilter(filter, btn) {
 }
 
 // ═══════════════════════════════════
-// POPULATION TREND CHART
-// ═══════════════════════════════════
-let popTrendChartInst = null;
-
-function renderPopulationTrendChart(timeFilter = 'all') {
-  if (popTrendChartInst) { popTrendChartInst.destroy(); popTrendChartInst = null; }
-  const ctx = document.getElementById('popTrendChart');
-  if (!ctx) return;
-
-  // Collect all readings with month labels
-  const bpByMonth = {}, a1cByMonth = {};
-  const range = getTimeFilterRange(timeFilter);
-
-  for (const pid in db.patients) {
-    const p = db.patients[pid];
-    (p.bpReadings||[]).forEach(r => {
-      if (!r.datetime) return;
-      const d = new Date(r.datetime);
-      if (range && (d < range.start || d > range.end)) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-      if (!bpByMonth[key]) bpByMonth[key] = [];
-      bpByMonth[key].push(r.sys);
-    });
-    (p.a1cReadings||[]).forEach(r => {
-      if (!r.datetime) return;
-      const d = new Date(r.datetime);
-      if (range && (d < range.start || d > range.end)) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-      if (!a1cByMonth[key]) a1cByMonth[key] = [];
-      a1cByMonth[key].push(r.val);
-    });
-  }
-
-  const allMonths = [...new Set([...Object.keys(bpByMonth), ...Object.keys(a1cByMonth)])].sort();
-  if (allMonths.length === 0) {
-    ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);
-    return;
-  }
-
-  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length * 10) / 10 : null;
-  const bpData  = allMonths.map(m => avg(bpByMonth[m]  || []));
-  const a1cData = allMonths.map(m => avg(a1cByMonth[m] || []));
-  const labels  = allMonths.map(m => {
-    const [y, mo] = m.split('-');
-    return new Date(y, mo-1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-  });
-
-  popTrendChartInst = new Chart(ctx.getContext('2d'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Avg Systolic BP (mmHg)',
-          data: bpData,
-          borderColor: goldPalette.red,
-          backgroundColor: 'rgba(192,57,43,0.08)',
-          tension: 0.4, fill: true,
-          pointRadius: 5, pointHoverRadius: 7,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Avg A1C (%)',
-          data: a1cData,
-          borderColor: goldPalette.gold,
-          backgroundColor: 'rgba(201,168,76,0.08)',
-          tension: 0.4, fill: false,
-          pointRadius: 5, pointHoverRadius: 7,
-          yAxisID: 'y2'
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { labels: { font: { family: "'DM Sans'", size: 13 }, color: goldPalette.text } },
-        tooltip: { backgroundColor: '#1A1208', bodyFont: { family: "'DM Sans'", size: 13 }, padding: 14, cornerRadius: 10 }
-      },
-      scales: {
-        x: { ticks: { font: { family: "'DM Sans'", size: 11 }, color: goldPalette.text }, grid: { color: goldPalette.grid } },
-        y: {
-          type: 'linear', position: 'left',
-          ticks: { font: { family: "'DM Sans'", size: 11 }, color: goldPalette.red },
-          grid: { color: goldPalette.grid },
-          title: { display: true, text: 'Systolic BP (mmHg)', color: goldPalette.red, font: { size: 11 } }
-        },
-        y2: {
-          type: 'linear', position: 'right',
-          ticks: { font: { family: "'DM Sans'", size: 11 }, color: goldPalette.gold },
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'A1C %', color: goldPalette.gold, font: { size: 11 } }
-        }
-      }
-    }
-  });
-}
-
-// ═══════════════════════════════════
 // MEDICATION OVERLAY ON CHARTS
 // ═══════════════════════════════════
 function getMedAnnotations(medications, readings) {
@@ -3664,158 +3478,6 @@ function addMedLines(chart, annotations, labels) {
   };
   Chart.register(plugin);
   chart.update();
-}
-
-// ═══════════════════════════════════
-// AI FEATURES
-// ═══════════════════════════════════
-async function callClaude(prompt, systemPrompt = '') {
-  const messages = [{ role: 'user', content: prompt }];
-  const body = {
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1000,
-    messages
-  };
-  if (systemPrompt) body.system = systemPrompt;
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  return data.content?.[0]?.text || 'No response generated.';
-}
-
-function setAILoading(bodyId, btnId, loading, btnText = '✨ Generate') {
-  const body = document.getElementById(bodyId);
-  const btn  = document.getElementById(btnId);
-  if (loading) {
-    body.className = 'ai-panel-body loading';
-    body.innerHTML = '<div class="ai-spinner"></div> Claude is thinking…';
-    if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
-  } else {
-    body.className = 'ai-panel-body';
-    if (btn) { btn.disabled = false; btn.textContent = btnText; }
-  }
-}
-
-// AI: Patient Risk Summary
-async function runPatientAI() {
-  if (!currentPatientId) return;
-  const p = db.patients[currentPatientId];
-  if (!p) return;
-  setAILoading('aiPatientBody', 'aiPatientBtn', true, '✨ Generate Assessment');
-
-  const bpReadings  = (p.bpReadings||[]).slice(-6).map(r => `${r.datetime}: ${r.sys}/${r.dia} mmHg${r.note ? ` (note: ${r.note})` : ''}`).join('\n');
-  const a1cReadings = (p.a1cReadings||[]).slice(-6).map(r => `${r.datetime}: ${r.val}%${r.note ? ` (note: ${r.note})` : ''}`).join('\n');
-  const meds = (p.medications||[]).map(m => `${m.name} ${m.dosage} (started ${m.startDate}${m.endDate ? ', ended '+m.endDate : ''})`).join('\n');
-  const bpTrend  = getBPTrend(p.bpReadings||[]);
-  const a1cTrend = getA1CTrend(p.a1cReadings||[]);
-
-  const prompt = `You are a clinical informatics assistant at a free community health clinic. Analyze this patient's data and write a concise clinical assessment (3-4 sentences max). Be specific with numbers. Mention medication correlation if relevant. Flag anything urgent.
-
-Patient #${currentPatientId}
-BP Trend: ${bpTrend} | A1C Trend: ${a1cTrend}
-
-Recent BP Readings:
-${bpReadings || 'None recorded'}
-
-Recent A1C Readings:
-${a1cReadings || 'None recorded'}
-
-Current Medications:
-${meds || 'None recorded'}
-
-Write a brief, professional clinical assessment focusing on trends, medication effectiveness, and recommended next steps.`;
-
-  try {
-    const text = await callClaude(prompt, 'You are a clinical informatics assistant. Be concise, specific, and clinically precise. Do not give medical diagnoses. Focus on data trends and care coordination.');
-    document.getElementById('aiPatientBody').className = 'ai-panel-body';
-    document.getElementById('aiPatientBody').textContent = text;
-    document.getElementById('aiPatientMeta').textContent = `Generated ${new Date().toLocaleTimeString()} · Patient #${currentPatientId}`;
-  } catch(e) {
-    document.getElementById('aiPatientBody').className = 'ai-panel-body';
-    document.getElementById('aiPatientBody').textContent = 'AI assessment unavailable. Check your connection and try again.';
-  }
-  setAILoading('aiPatientBody', 'aiPatientBtn', false, '✨ Regenerate');
-}
-
-// AI: Population Narrative
-async function runPopulationAI() {
-  setAILoading('aiNarrativeBody', 'aiNarrativeBtn', true, '✨ Generate Narrative');
-  const totalPts    = Object.keys(db.patients).length;
-  const bpOutcomes  = computeBPOutcomes();
-  const a1cOutcomes = computeA1COutcomes();
-  const pct = (n,d) => d > 0 ? Math.round((n/d)*100) : 0;
-
-  // Compute avg BP drop among improving patients
-  let bpDrops = [], a1cDrops = [];
-  for (const pid in db.patients) {
-    const p = db.patients[pid];
-    const bp = p.bpReadings||[];
-    if (bp.length >= 2) { const diff = bp.slice(-2)[0].sys - bp.slice(-1)[0].sys; if (diff > 0) bpDrops.push(diff); }
-    const a1c = p.a1cReadings||[];
-    if (a1c.length >= 2) { const diff = a1c.slice(-2)[0].val - a1c.slice(-1)[0].val; if (diff > 0) a1cDrops.push(diff); }
-  }
-  const avgBPDrop  = bpDrops.length  ? Math.round(bpDrops.reduce((a,b)=>a+b,0)/bpDrops.length)      : null;
-  const avgA1CDrop = a1cDrops.length ? (a1cDrops.reduce((a,b)=>a+b,0)/a1cDrops.length).toFixed(1) : null;
-  const totalReadings = Object.values(db.patients).reduce((s,p)=>(s+(p.bpReadings||[]).length+(p.a1cReadings||[]).length),0);
-
-  const prompt = `Write a 3-4 sentence grant-ready outcomes paragraph for a free community health clinic. Use these exact statistics:
-- ${totalPts} patients enrolled
-- ${totalReadings} total readings tracked
-- ${pct(bpOutcomes.improving,totalPts)}% of patients show improving blood pressure trends
-- ${pct(a1cOutcomes.improving,totalPts)}% of patients show improving A1C trends
-${avgBPDrop ? `- Among improving BP patients, average systolic reduction: ${avgBPDrop} mmHg` : ''}
-${avgA1CDrop ? `- Among improving A1C patients, average reduction: ${avgA1CDrop}%` : ''}
-- ${bpOutcomes.worsening + a1cOutcomes.worsening} patients currently show worsening trends and are being monitored
-
-Write in a warm, professional tone suitable for a grant application or donor report. Start with the clinic name "Helping Hands Free Clinic". Be specific with numbers. Make it compelling.`;
-
-  try {
-    const text = await callClaude(prompt, 'You write grant-ready clinical outcomes narratives. Be specific with numbers, warm but professional, and compelling for donors.');
-    document.getElementById('aiNarrativeBody').className = 'ai-panel-body';
-    document.getElementById('aiNarrativeBody').textContent = text;
-    document.getElementById('aiNarrativeMeta').textContent = `Generated ${new Date().toLocaleTimeString()} · Based on ${totalPts} patients, ${totalReadings} readings`;
-  } catch(e) {
-    document.getElementById('aiNarrativeBody').className = 'ai-panel-body';
-    document.getElementById('aiNarrativeBody').textContent = 'AI narrative unavailable. Check your connection and try again.';
-  }
-  setAILoading('aiNarrativeBody', 'aiNarrativeBtn', false, '✨ Regenerate');
-}
-
-// AI: Alert Prioritization
-async function runAlertAI() {
-  setAILoading('aiAlertsBody', 'aiAlertsBtn', true, '✨ Prioritize Alerts');
-  const active = db.alerts.filter(a => !a.seen);
-  if (!active.length) {
-    document.getElementById('aiAlertsBody').className = 'ai-panel-body';
-    document.getElementById('aiAlertsBody').textContent = 'No active alerts to prioritize — great work! 🎉';
-    setAILoading('aiAlertsBody', 'aiAlertsBtn', false, '✨ Prioritize Alerts');
-    return;
-  }
-
-  const alertSummary = active.map(a =>
-    `Patient #${a.patientId}: ${a.level.toUpperCase()} — ${a.msg} (${a.time})`
-  ).join('\n');
-
-  const prompt = `You are a clinical coordinator at a free community health clinic. Review these active patient alerts and write a brief prioritized action plan. Tell the team who to see first and why. Be direct and practical. 3-5 sentences max.
-
-Active Alerts:
-${alertSummary}
-
-Write a prioritized action plan for today's clinic team.`;
-
-  try {
-    const text = await callClaude(prompt, 'You are a clinical coordinator writing brief, actionable daily briefings for volunteer clinic staff. Be direct, warm, and specific.');
-    document.getElementById('aiAlertsBody').className = 'ai-panel-body';
-    document.getElementById('aiAlertsBody').textContent = text;
-    document.getElementById('aiAlertsMeta').textContent = `Generated ${new Date().toLocaleTimeString()} · ${active.length} active alert${active.length !== 1 ? 's' : ''} analyzed`;
-  } catch(e) {
-    document.getElementById('aiAlertsBody').className = 'ai-panel-body';
-    document.getElementById('aiAlertsBody').textContent = 'AI prioritization unavailable. Check your connection and try again.';
-  }
-  setAILoading('aiAlertsBody', 'aiAlertsBtn', false, '✨ Regenerate');
 }
 
 loadDB();
