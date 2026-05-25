@@ -157,7 +157,7 @@
           token: response.credential
         }));
         // Redirect to the protected dashboard
-        window.location.href = "dashboard.html";
+        window.location.href = "index.html";
       } else {
         showError(`Access denied. "${email}" is not an authorized clinic account. Please sign in with your @helpinghandsfreeclinic.org address.`);
       }
@@ -183,7 +183,7 @@
 
     // If someone lands on login.html already logged in, skip straight to dashboard
     if (sessionStorage.getItem("clinic_user")) {
-      window.location.href = "dashboard.html";
+      window.location.href = "index.html";
     }
   </script>
 </body>
