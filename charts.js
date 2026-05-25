@@ -282,3 +282,9 @@ function renderPatientBreakdownTable(metric) {
     </tr>
   `).join('');
 }
+function setAnalyticsSubTab(tab, btn) {
+  document.querySelectorAll('.analytics-sub-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('analyticsPane-outcomes').style.display = tab === 'outcomes' ? '' : 'none';
+  document.getElementById('analyticsPane-fam').style.display = tab === 'fam' ? '' : 'none';
+}
