@@ -1490,3 +1490,32 @@ body.dark-mode .fam-analytics-section {
   color: var(--text-dark); margin-bottom: 8px;
 }
   .print-header, .analytics-print-header { display: none; }
+/* Analytics sub-tabs */
+.analytics-sub-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 24px 0;
+}
+.analytics-sub-tab {
+  padding: 10px 22px;
+  border-radius: 30px;
+  border: 1.5px solid rgba(201,168,76,0.3);
+  background: transparent;
+  color: var(--text-mid);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.analytics-sub-tab:hover {
+  border-color: var(--gold);
+  color: var(--text-dark);
+}
+.analytics-sub-tab.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  border-color: var(--gold);
+  color: #1A1208;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(201,168,76,0.3);
+}
