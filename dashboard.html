@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff Dashboard — Helping Hands Free Clinic</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    /* ── Top nav ── */
+    nav {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #1a2e1a;
+      font-size: 1rem;
+    }
+
+    .nav-brand svg { width: 24px; height: 24px; }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f3f4f6;
+      border-radius: 999px;
+      padding: 4px 14px 4px 4px;
+      font-size: 0.85rem;
+      color: #374151;
+    }
+
+    .user-pill img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-pill .avatar-fallback {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #2e7d32;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .btn-signout {
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      color: #6b7280;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-signout:hover { background: #f9fafb; color: #374151; }
+
+    /* ── Page body ── */
+    main {
+      max-width: 900px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .welcome-banner {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .welcome-banner h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #1a2e1a;
+      margin-bottom: 0.3rem;
+    }
+
+    .welcome-banner p {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 1.5rem;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #e8f5e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon svg { width: 20px; height: 20px; stroke: #2e7d32; }
+
+    .card h2 { font-size: 0.95rem; font-weight: 600; color: #1a2e1a; margin-bottom: 0.25rem; }
+    .card p  { font-size: 0.82rem; color: #6b7280; line-height: 1.5; }
+
+    /* ── Hidden until JS runs ── */
+    body { visibility: hidden; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+      Helping Hands Free Clinic
+    </div>
+    <div class="nav-right">
+      <div class="user-pill">
+        <div class="avatar-fallback" id="avatarFallback"></div>
+        <img id="avatarImg" src="" alt="" style="display:none;" />
+        <span id="userName">Staff</span>
+      </div>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="welcome-banner">
+      <span class="badge">✓ Verified Staff Access</span>
+      <h1 id="welcomeHeading">Welcome back!</h1>
+      <p id="welcomeSub">You are signed in as a verified clinic team member.</p>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h2>Appointments</h2>
+        <p>View and manage today's patient schedule.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h2>Patients</h2>
+        <p>Access patient records and intake forms.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h2>Documents</h2>
+        <p>Clinic forms, policies, and resources.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        </div>
+        <h2>Settings</h2>
+        <p>Manage your account and preferences.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ── Guard: redirect to login if not authenticated ──────────────────
+    const raw = sessionStorage.getItem("clinic_user");
+    if (!raw) {
+      window.location.href = "login.html";
+    } else {
+      // Make page visible now that we know the user is authenticated
+      document.body.style.visibility = "visible";
+
+      const user = JSON.parse(raw);
+
+      // Populate nav
+      document.getElementById("userName").textContent = user.name || user.email;
+      document.getElementById("welcomeHeading").textContent = "Welcome back, " + (user.name ? user.name.split(" ")[0] : "there") + "!";
+      document.getElementById("welcomeSub").textContent = "Signed in as " + user.email;
+
+      // Avatar: try photo, fallback to initials
+      if (user.picture) {
+        const img = document.getElementById("avatarImg");
+        img.src = user.picture;
+        img.style.display = "block";
+        document.getElementById("avatarFallback").style.display = "none";
+      } else {
+        const initials = (user.name || user.email).split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase();
+        document.getElementById("avatarFallback").textContent = initials;
+      }
+    }
+
+    function signOut() {
+      sessionStorage.removeItem("clinic_user");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
