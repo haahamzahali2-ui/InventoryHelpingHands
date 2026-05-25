@@ -560,6 +560,12 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<script>
+  if (!sessionStorage.getItem("clinic_user")) {
+    window.location.href = "login.html";
+  }
+</script>
+
 <script src="core.js"></script>
 <script src="charts.js"></script>
 <script src="medications.js"></script>
