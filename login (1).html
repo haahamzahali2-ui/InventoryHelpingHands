@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff Login — Helping Hands Free Clinic</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      background: #e8f5e9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .logo svg { width: 32px; height: 32px; }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #1a2e1a;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 1.75rem 0;
+    }
+
+    .notice {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    .notice strong { color: #6b7280; }
+
+    /* Center the Google button */
+    #g_id_onload { display: none; }
+    .g_id_signin { display: flex; justify-content: center; }
+
+    .error-box {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: #b91c1c;
+      margin-top: 1rem;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Google Identity: renders the button and handles the callback -->
+  <div id="g_id_onload"
+    data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"
+    data-callback="handleCredentialResponse"
+    data-auto_prompt="false">
+  </div>
+
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+    </div>
+
+    <h1>Helping Hands Free Clinic</h1>
+    <p class="subtitle">Staff &amp; Volunteer Portal<br>Sign in with your clinic Google account to continue.</p>
+
+    <!-- Google Sign-In Button -->
+    <div class="g_id_signin"
+      data-type="standard"
+      data-shape="rectangular"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-size="large"
+      data-logo_alignment="left">
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <hr class="divider" />
+    <p class="notice">
+      <strong>Access restricted.</strong> Only <strong>@helpinghandsfreeclinic.org</strong> accounts are permitted.
+      Contact your administrator if you need access.
+    </p>
+  </div>
+
+  <script>
+    // ─── CONFIGURATION ───────────────────────────────────────────────
+    const ALLOWED_DOMAIN = "helpinghandsfreeclinic.org";
+
+    // Add your personal test email here so it also gets through
+    const ALLOWED_INDIVIDUALS = [
+      "yourpersonalgmail@gmail.com"   // <-- replace with your Gmail
+    ];
+    // ─────────────────────────────────────────────────────────────────
+
+    function handleCredentialResponse(response) {
+      // Decode the JWT token Google returns
+      const payload = parseJwt(response.credential);
+      const email = payload.email || "";
+      const emailVerified = payload.email_verified;
+
+      // Check domain or individual allowlist
+      const domainOk = email.endsWith("@" + ALLOWED_DOMAIN);
+      const individualOk = ALLOWED_INDIVIDUALS.includes(email.toLowerCase());
+
+      if (!emailVerified) {
+        showError("Your Google account email is not verified. Please verify it and try again.");
+        return;
+      }
+
+      if (domainOk || individualOk) {
+        // Save a simple session token so the dashboard knows they're logged in
+        sessionStorage.setItem("clinic_user", JSON.stringify({
+          name: payload.name,
+          email: payload.email,
+          picture: payload.picture,
+          token: response.credential
+        }));
+        // Redirect to the protected dashboard
+        window.location.href = "dashboard.html";
+      } else {
+        showError(`Access denied. "${email}" is not an authorized clinic account. Please sign in with your @helpinghandsfreeclinic.org address.`);
+      }
+    }
+
+    function showError(msg) {
+      const box = document.getElementById("errorBox");
+      box.textContent = msg;
+      box.style.display = "block";
+    }
+
+    // Decode Google's JWT without a library
+    function parseJwt(token) {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64).split('').map(c =>
+          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join('')
+      );
+      return JSON.parse(jsonPayload);
+    }
+
+    // If someone lands on login.html already logged in, skip straight to dashboard
+    if (sessionStorage.getItem("clinic_user")) {
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>
