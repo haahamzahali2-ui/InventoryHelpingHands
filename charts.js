@@ -440,11 +440,44 @@ function renderA1COutcomesChart(outcomes) {
 // ═══════════════════════════════════
 // BREAKDOWN PAGE
 // ═══════════════════════════════════
+let currentBreakdownSort = 'default';
+
 function setBreakdownMetric(metric, btn) {
   currentBreakdownMetric = metric;
   document.querySelectorAll('.breakdown-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   renderPatientBreakdownTable(metric);
+}
+
+function setBreakdownSort(sort, btn) {
+  currentBreakdownSort = sort;
+  document.querySelectorAll('#page-breakdown .sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPatientBreakdownTable(currentBreakdownMetric);
+}
+
+// Returns days since the most recent reading for this patient (any type)
+function getBreakdownLastSeenDays(pid) {
+  const p = db.patients[pid];
+  if (!p) return 9999;
+  const allDates = [...(p.bpReadings||[]), ...(p.a1cReadings||[])]
+    .map(r => r.datetime).filter(Boolean).sort();
+  const last = allDates.slice(-1)[0];
+  if (!last) return 9999;
+  return Math.floor((Date.now() - new Date(last + 'T00:00:00')) / 86400000);
+}
+
+// Returns the numeric value of the most recent reading for sorting by value
+function getBreakdownLastValue(pid, metric) {
+  const p = db.patients[pid];
+  if (!p) return null;
+  if (metric === 'bp') {
+    const last = (p.bpReadings || []).slice(-1)[0];
+    return last ? last.sys : null; // sort by systolic
+  } else {
+    const last = (p.a1cReadings || []).slice(-1)[0];
+    return last ? last.val : null;
+  }
 }
 
 function renderPatientBreakdownTable(metric) {
@@ -454,6 +487,7 @@ function renderPatientBreakdownTable(metric) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:28px;font-style:italic;">No patient data</td></tr>';
     return;
   }
+
   const rows = patients.map(pid => {
     const p = db.patients[pid];
     const readings = metric === 'bp' ? (p.bpReadings || []) : (p.a1cReadings || []);
@@ -476,10 +510,60 @@ function renderPatientBreakdownTable(metric) {
       stable:    '<span class="trend-badge stable">Stable</span>',
       new:       '<span class="trend-badge new">Insufficient Data</span>'
     };
-    return { pid, prevStr, lastStr, changeStr, trend, badge: badgeMap[trend] || '' };
+    const lastSeenDays = getBreakdownLastSeenDays(pid);
+    const lastVal      = getBreakdownLastValue(pid, metric);
+    return { pid, prevStr, lastStr, changeStr, trend, badge: badgeMap[trend] || '', lastSeenDays, lastVal };
   });
-  const order = { worsening: 0, stable: 1, improving: 2, new: 3 };
-  rows.sort((a, b) => (order[a.trend] || 99) - (order[b.trend] || 99));
+
+  // ── Apply sort ──────────────────────────────────────────────────────────
+  switch (currentBreakdownSort) {
+    case 'lastseen':
+      // Most recently seen first (fewest days ago = smallest number first)
+      rows.sort((a, b) => a.lastSeenDays - b.lastSeenDays);
+      break;
+
+    case 'improving':
+      rows.sort((a, b) => {
+        const order = { improving: 0, stable: 1, new: 2, worsening: 3 };
+        return (order[a.trend] ?? 99) - (order[b.trend] ?? 99);
+      });
+      break;
+
+    case 'worsening':
+      rows.sort((a, b) => {
+        const order = { worsening: 0, stable: 1, new: 2, improving: 3 };
+        return (order[a.trend] ?? 99) - (order[b.trend] ?? 99);
+      });
+      break;
+
+    case 'highest':
+      // Highest BP (systolic) or A1C first; nulls go to the bottom
+      rows.sort((a, b) => {
+        if (a.lastVal === null && b.lastVal === null) return 0;
+        if (a.lastVal === null) return 1;
+        if (b.lastVal === null) return -1;
+        return b.lastVal - a.lastVal;
+      });
+      break;
+
+    case 'lowest':
+      // Lowest BP (systolic) or A1C first; nulls go to the bottom
+      rows.sort((a, b) => {
+        if (a.lastVal === null && b.lastVal === null) return 0;
+        if (a.lastVal === null) return 1;
+        if (b.lastVal === null) return -1;
+        return a.lastVal - b.lastVal;
+      });
+      break;
+
+    case 'default':
+    default:
+      // Original behaviour: worsening → stable → improving → insufficient data
+      const defaultOrder = { worsening: 0, stable: 1, improving: 2, new: 3 };
+      rows.sort((a, b) => (defaultOrder[a.trend] ?? 99) - (defaultOrder[b.trend] ?? 99));
+      break;
+  }
+
   tbody.innerHTML = rows.map(r => `
     <tr onclick="openPatient('${r.pid}')">
       <td><strong>#${r.pid}</strong></td>
