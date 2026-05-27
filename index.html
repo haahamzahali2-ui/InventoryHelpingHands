@@ -327,32 +327,34 @@
         </div>
         <div id="famContent"></div>
       </div>
-      <div class="analytics-card" style="margin-bottom:28px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div class="analytics-card-title">Patient-Level Breakdown</div>
-        </div>
-        <div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
-        <div class="breakdown-tabs">
-          <button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
-          <button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
-        </div>
-        <table class="patient-breakdown-table" id="patientBreakdownTable">
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Previous</th>
-              <th>Most Recent</th>
-              <th>Change</th>
-              <th>Trend</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
   </div><!-- /main -->
 </div><!-- /layout -->
+<!-- BREAKDOWN PAGE -->
+<div class="page" id="page-breakdown">
+<div class="section-header">
+<button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
+<h2>Patient-Level Breakdown</h2>
+</div>
+<div class="analytics-card" style="margin-bottom:28px;">
+<div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
+<div class="breakdown-tabs">
+<button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
+<button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
+</div>
+<table class="patient-breakdown-table" id="patientBreakdownTable">
+<thead>
+<tr>
+<th>Patient</th>
+<th>Previous</th>
+<th>Most Recent</th>
+<th>Change</th>
+<th>Trend</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
 
 <!-- ADD DATA MODAL -->
 <div class="modal-overlay" id="addDataModal">
