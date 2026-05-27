@@ -6,11 +6,12 @@
 // NAVIGATION
 // ═══════════════════════════════════
 function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (name === 'analytics') renderAnalytics();
-  if (name === 'patients') renderPatientsGrid();
-  if (name === 'home') renderHomeStats();
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+document.getElementById('page-' + name).classList.add('active');
+if (name === 'analytics') renderAnalytics();
+if (name === 'breakdown') renderBreakdown(); // ADD THIS
+if (name === 'patients') renderPatientsGrid();
+if (name === 'home') renderHomeStats();
 }
 
 
@@ -95,6 +96,7 @@ document.addEventListener('keydown', e => {
     return;
   }
 });
+
 
 // Show hint on first load
 setTimeout(() => showKbdHint('Press <kbd>?</kbd> for keyboard shortcuts'), 2000);
