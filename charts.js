@@ -76,30 +76,28 @@ function setAnalyticsTimeFilter(filter, btn) {
 }
 
 // ─── Build annotation objects for a patient ───────────────────────────────
-function buildAnnotations(patientId, readingDates) {
+// formattedLabels = the exact strings used as x-axis labels (e.g. "Apr 30, 2026")
+// rawDates        = parallel array of YYYY-MM-DD strings for distance calc
+function buildAnnotations(patientId, rawDates, formattedLabels) {
   const p = db.patients[patientId];
-  if (!p) return {};
+  if (!p || !rawDates.length) return {};
   const annotations = {};
 
-  // readingDates is the array of raw datetime strings from readings (YYYY-MM-DD)
-  // We map a med/FaM date to the nearest reading index for accurate placement
-  const findNearestIndex = (targetDate) => {
-    if (!targetDate || !readingDates.length) return null;
-    // exact match first
-    const exact = readingDates.indexOf(targetDate);
-    if (exact !== -1) return exact;
-    // find nearest by date distance
+  // Returns the formatted label of the nearest reading to a target date
+  const findNearestLabel = (targetDate) => {
+    if (!targetDate) return null;
     const targetMs = new Date(targetDate).getTime();
     let bestIdx = 0, bestDist = Infinity;
-    readingDates.forEach((d, i) => {
+    rawDates.forEach((d, i) => {
       const dist = Math.abs(new Date(d).getTime() - targetMs);
       if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     });
-    // only snap if within 180 days, otherwise return null (off chart)
-    return bestDist < 180 * 24 * 60 * 60 * 1000 ? bestIdx : null;
+    // Don't snap if more than 180 days from every reading
+    if (bestDist > 180 * 24 * 60 * 60 * 1000) return null;
+    return formattedLabels[bestIdx];
   };
 
-  // Build a stable color map per unique med name
+  // Stable color per unique med name
   const meds = p.medications || [];
   const medColorMap = {};
   let colorIdx = 0;
@@ -110,26 +108,27 @@ function buildAnnotations(patientId, readingDates) {
     }
   });
 
-  // Active meds only (no endDate, or endDate in the future)
+  // Active meds only
   const today = new Date().toISOString().slice(0, 10);
   const activeMeds = meds.filter(m => !m.endDate || m.endDate > today);
 
   activeMeds.forEach((med, i) => {
     if (!med.startDate) return;
-    const xVal = findNearestIndex(med.startDate);
-    if (xVal === null) return; // date too far outside chart range, skip
+    const label = findNearestLabel(med.startDate);
+    if (!label) return;
+    const color = medColorMap[med.name];
     annotations[`med_${i}`] = {
       type: 'line',
       scaleID: 'x',
-      value: xVal,
-      borderColor: medColorMap[med.name],
+      value: label,
+      borderColor: color,
       borderWidth: 2,
       borderDash: [6, 3],
       label: {
         display: true,
         content: `💊 ${med.name}`,
         position: 'start',
-        backgroundColor: medColorMap[med.name],
+        backgroundColor: color,
         color: '#fff',
         font: { family: "'DM Sans', sans-serif", size: 11, weight: '600' },
         padding: { x: 8, y: 4 },
@@ -140,14 +139,13 @@ function buildAnnotations(patientId, readingDates) {
   });
 
   // FaM enrollment — solid green line
-  const famDate = p.famEnrollmentDate || null;
-  if (famDate && p.famEnrolled) {
-    const xVal = findNearestIndex(famDate);
-    if (xVal !== null) {
+  if (p.famEnrolled && p.famEnrollmentDate) {
+    const label = findNearestLabel(p.famEnrollmentDate);
+    if (label) {
       annotations['fam'] = {
         type: 'line',
         scaleID: 'x',
-        value: xVal,
+        value: label,
         borderColor: FAM_COLOR,
         borderWidth: 2.5,
         borderDash: [],
@@ -168,6 +166,7 @@ function buildAnnotations(patientId, readingDates) {
 
   return annotations;
 }
+
 
 // ─── BP Chart ─────────────────────────────────────────────────────────────
 function renderBPChart(readings) {
@@ -198,7 +197,7 @@ function renderBPChart(readings) {
     });
   }
 
-  const annotations = buildAnnotations(currentPatientId, rawDates);
+  const annotations = buildAnnotations(currentPatientId, rawDates, labels);
 
   bpChartInst = new Chart(ctx, {
     type: bpChartType,
@@ -226,7 +225,7 @@ function renderA1CChart(readings) {
   const ctx = document.getElementById('a1cChart').getContext('2d');
   const labels = readings.map(r => formatDateTime(r.datetime));
   const rawDates = readings.map(r => r.datetime);
-  const annotations = buildAnnotations(currentPatientId, rawDates);
+  const annotations = buildAnnotations(currentPatientId, rawDates, labels);
 
   a1cChartInst = new Chart(ctx, {
     type: a1cChartType,
