@@ -288,3 +288,6 @@ function setAnalyticsSubTab(tab, btn) {
   document.getElementById('analyticsPane-outcomes').style.display = tab === 'outcomes' ? '' : 'none';
   document.getElementById('analyticsPane-fam').style.display = tab === 'fam' ? '' : 'none';
 }
+function renderBreakdown() {
+renderPatientBreakdownTable(currentBreakdownMetric);
+}
