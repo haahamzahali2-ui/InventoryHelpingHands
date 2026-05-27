@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -88,17 +88,13 @@
           <div class="home-card-arrow">&#8594;</div>
         </div>
         <div class="home-card" onclick="showPage('breakdown')">
-  <div class="home-card-icon">
-    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-  </div>
-  <h2>Patient Breakdown</h2>
-  <p>Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</p>
-  <div class="home-card-arrow">&#8594;</div>
-</div>
-<div class="home-card" onclick="showPage('breakdown')">
-  <div class="home-card-icon">
-    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-  </div>
+          <div class="home-card-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          </div>
+          <h2>Patient Breakdown</h2>
+          <p>Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</p>
+          <div class="home-card-arrow">&#8594;</div>
+        </div>
       </div>
 
       <div class="home-impact-row" id="homeImpactRow">
@@ -174,7 +170,7 @@
           <button class="sort-btn" onclick="setSort('worsening',this)">📉 Worsening</button>
           <button class="sort-btn" onclick="setSort('improving',this)">📈 Improving</button>
           <button class="sort-btn" onclick="setSort('readings',this)">📋 Most Readings</button>
-<button class="sort-btn" onclick="setSort('lastseen',this)">🕐 Last Seen</button>
+          <button class="sort-btn" onclick="setSort('lastseen',this)">🕐 Last Seen</button>
           <button class="sort-btn" onclick="setSort('fam',this)">🥗 FaM Enrolled</button>
         </div>
         <div class="patient-count-label" id="patientCountLabel"></div>
@@ -196,10 +192,8 @@
         <div class="patient-detail-tags" id="detailTags"></div>
       </div>
 
-    <div id="patientAlertPanel"></div>
-
+      <div id="patientAlertPanel"></div>
       <div id="famPatientPanel"></div>
-
       <div class="print-header" id="printHeader"></div>
 
       <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
@@ -268,7 +262,7 @@
         <h2>Population Analytics</h2>
       </div>
 
-   <div class="analytics-actions">
+      <div class="analytics-actions">
         <button class="analytics-export-btn" onclick="exportAnalyticsPDF()">⬇ Export Donor PDF</button>
         <button class="confetti-btn" onclick="launchConfetti();showToast('🎉 Looking good!')">🎉 Celebrate</button>
       </div>
@@ -291,70 +285,73 @@
       <div class="analytics-print-header" id="analyticsPrintHeaderInPage"></div>
       <div class="analytics-summary-row" id="analyticsKPIs"></div>
 
-     <div id="analyticsPane-outcomes">
-      <div class="analytics-grid">
-        <div class="analytics-card">
-          <div class="analytics-card-title">Blood Pressure Outcomes</div>
-          <div class="analytics-card-sub">Change in systolic BP between each patient's last two visits. Improving = last reading lower than previous.</div>
-          <div class="analytics-chart-container">
-            <canvas id="bpOutcomesChart"></canvas>
+      <!-- OUTCOMES PANE -->
+      <div id="analyticsPane-outcomes">
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <div class="analytics-card-title">Blood Pressure Outcomes</div>
+            <div class="analytics-card-sub">Change in systolic BP between each patient's last two visits. Improving = last reading lower than previous.</div>
+            <div class="analytics-chart-container">
+              <canvas id="bpOutcomesChart"></canvas>
+            </div>
+          </div>
+          <div class="analytics-card">
+            <div class="analytics-card-title">A1C Outcomes</div>
+            <div class="analytics-card-sub">Change in A1C between each patient's last two tests. Improving = last reading lower than previous.</div>
+            <div class="analytics-chart-container">
+              <canvas id="a1cOutcomesChart"></canvas>
+            </div>
           </div>
         </div>
-        <div class="analytics-card">
-          <div class="analytics-card-title">A1C Outcomes</div>
-          <div class="analytics-card-sub">Change in A1C between each patient's last two tests. Improving = last reading lower than previous.</div>
-          <div class="analytics-chart-container">
-            <canvas id="a1cOutcomesChart"></canvas>
-          </div>
-        </div>
-      </div>
-       </div>
       </div><!-- /analyticsPane-outcomes -->
-<!-- FOOD AS MEDICINE SECTION -->
-  <div id="analyticsPane-fam" style="display:none;">
-<!-- FOOD AS MEDICINE SECTION -->
-      <div class="fam-analytics-section" id="famAnalyticsSection">
-        <div class="fam-section-header">
-          <div class="fam-section-title">🥗 Food as Medicine Program</div>
-          <div style="font-size:12px;color:var(--text-light);font-style:italic;" id="famSectionMeta"></div>
-        </div>
-        </div><!-- /analyticsPane-fam -->
 
-        <div class="fam-section-sub">
-          Tracking BP and A1C outcomes for chronic disease patients enrolled in the food distribution program.
-          Comparisons show patient-level changes between pre-enrollment and post-enrollment readings,
-          and cohort-level differences between enrolled vs. non-enrolled patients.
+      <!-- FOOD AS MEDICINE PANE -->
+      <div id="analyticsPane-fam" style="display:none;">
+        <div class="fam-analytics-section" id="famAnalyticsSection">
+          <div class="fam-section-header">
+            <div class="fam-section-title">🥗 Food as Medicine Program</div>
+            <div style="font-size:12px;color:var(--text-light);font-style:italic;" id="famSectionMeta"></div>
+          </div>
+          <div class="fam-section-sub">
+            Tracking BP and A1C outcomes for chronic disease patients enrolled in the food distribution program.
+            Comparisons show patient-level changes between pre-enrollment and post-enrollment readings,
+            and cohort-level differences between enrolled vs. non-enrolled patients.
+          </div>
+          <div id="famContent"></div>
         </div>
-        <div id="famContent"></div>
+      </div><!-- /analyticsPane-fam -->
+
+    </div><!-- /page-analytics -->
+
+    <!-- BREAKDOWN PAGE -->
+    <div class="page" id="page-breakdown">
+      <div class="section-header">
+        <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
+        <h2>Patient-Level Breakdown</h2>
       </div>
+      <div class="analytics-card" style="margin-bottom:28px;">
+        <div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
+        <div class="breakdown-tabs">
+          <button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
+          <button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
+        </div>
+        <table class="patient-breakdown-table" id="patientBreakdownTable">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Previous</th>
+              <th>Most Recent</th>
+              <th>Change</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div><!-- /page-breakdown -->
+
   </div><!-- /main -->
 </div><!-- /layout -->
-<!-- BREAKDOWN PAGE -->
-<div class="page" id="page-breakdown">
-<div class="section-header">
-<button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
-<h2>Patient-Level Breakdown</h2>
-</div>
-<div class="analytics-card" style="margin-bottom:28px;">
-<div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
-<div class="breakdown-tabs">
-<button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
-<button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
-</div>
-<table class="patient-breakdown-table" id="patientBreakdownTable">
-<thead>
-<tr>
-<th>Patient</th>
-<th>Previous</th>
-<th>Most Recent</th>
-<th>Change</th>
-<th>Trend</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
 
 <!-- ADD DATA MODAL -->
 <div class="modal-overlay" id="addDataModal">
@@ -453,6 +450,7 @@
     </div>
   </div>
 </div>
+
 <!-- FAM ENROLLMENT MODAL -->
 <div class="modal-overlay" id="famEnrollModal">
   <div class="modal">
@@ -479,6 +477,7 @@
     </div>
   </div>
 </div>
+
 <!-- ALERTS MODAL -->
 <div class="modal-overlay" id="alertsModal">
   <div class="modal" style="max-width:680px;">
