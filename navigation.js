@@ -228,7 +228,6 @@ document.addEventListener('keydown', e => {
 // TIME FILTER
 // ═══════════════════════════════════
 let currentTimeFilter = 'all';
-let currentAnalyticsTimeFilter = 'all';
 
 function getTimeFilterRange(filter) {
   const now = new Date();
@@ -271,7 +270,7 @@ function setTimeFilter(filter, btn) {
 }
 
 function setAnalyticsTimeFilter(filter, btn) {
-  currentAnalyticsTimeFilter = filter;
+ currentAnalyticsTimeFilter = filter;
   document.querySelectorAll('#page-analytics .time-filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderAnalytics();
