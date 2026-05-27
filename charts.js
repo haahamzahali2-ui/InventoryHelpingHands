@@ -129,7 +129,6 @@ function renderAnalytics() {
   renderBPOutcomesChart(bpOutcomes);
 renderA1COutcomesChart(a1cOutcomes);
   renderFAMAnalytics();
-  renderPatientBreakdownTable(currentBreakdownMetric);
   // Update time filter stats
   const range = getTimeFilterRange(currentAnalyticsTimeFilter);
   const statsEl = document.getElementById('analyticsTimeStats');
