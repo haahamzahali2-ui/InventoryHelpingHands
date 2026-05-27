@@ -123,68 +123,62 @@
     </p>
   </div>
 
-  <script>
-    // ─── CONFIGURATION ───────────────────────────────────────────────
-    const ALLOWED_DOMAIN = "helpinghandsfreeclinic.org";
+<script>
+  // ─── CONFIGURATION ───────────────────────────────────────────────
+  const ALLOWED_DOMAIN = "helpinghandsfreeclinic.org";
 
-    // Add your personal test email here so it also gets through
-    const ALLOWED_INDIVIDUALS = [
-      "haa.hamzahali2@gmail.com"   // <-- replace with your Gmail
-    ];
-    // ─────────────────────────────────────────────────────────────────
+  const ALLOWED_INDIVIDUALS = [
+    "haa.hamzahali2@gmail.com"
+  ];
+  // ─────────────────────────────────────────────────────────────────
 
-    function handleCredentialResponse(response) {
-      // Decode the JWT token Google returns
-      const payload = parseJwt(response.credential);
-      const email = payload.email || "";
-      const emailVerified = payload.email_verified;
+  function handleCredentialResponse(response) {
+    const payload = parseJwt(response.credential);
+    const email = (payload.email || "").toLowerCase();
+    const emailVerified = payload.email_verified;
 
-      // Check domain or individual allowlist
-      const domainOk = email.endsWith("@" + ALLOWED_DOMAIN);
-      const individualOk = ALLOWED_INDIVIDUALS.includes(email.toLowerCase());
+    const domainOk = email.endsWith("@" + ALLOWED_DOMAIN);
+    const individualOk = ALLOWED_INDIVIDUALS.map(e => e.toLowerCase()).includes(email);
 
-      if (!emailVerified) {
-        showError("Your Google account email is not verified. Please verify it and try again.");
-        return;
-      }
-
-      if (domainOk || individualOk) {
-        // Save a simple session token so the dashboard knows they're logged in
-        sessionStorage.setItem("clinic_user", JSON.stringify({
-          name: payload.name,
-          email: payload.email,
-          picture: payload.picture,
-          token: response.credential
-        }));
-        // Redirect to the protected dashboard
-        window.location.href = "index.html";
-      } else {
-        showError(`Access denied. "${email}" is not an authorized clinic account. Please sign in with your @helpinghandsfreeclinic.org address.`);
-      }
+    if (!emailVerified) {
+      showError("Your Google account email is not verified. Please verify it and try again.");
+      return;
     }
 
-    function showError(msg) {
-      const box = document.getElementById("errorBox");
-      box.textContent = msg;
-      box.style.display = "block";
-    }
-
-    // Decode Google's JWT without a library
-    function parseJwt(token) {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64).split('').map(c =>
-          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join('')
-      );
-      return JSON.parse(jsonPayload);
-    }
-
-    // If someone lands on login.html already logged in, skip straight to dashboard
-    if (sessionStorage.getItem("clinic_user")) {
+    if (domainOk || individualOk) {
+      sessionStorage.setItem("clinic_user", JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+        token: response.credential
+      }));
       window.location.href = "index.html";
+    } else {
+      showError(`Access denied. "${payload.email}" is not an authorized clinic account. Please sign in with your @helpinghandsfreeclinic.org address.`);
     }
-  </script>
+  }
+
+  function showError(msg) {
+    const box = document.getElementById("errorBox");
+    box.textContent = msg;
+    box.style.display = "block";
+  }
+
+  function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64).split('').map(c =>
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    );
+    return JSON.parse(jsonPayload);
+  }
+
+  if (sessionStorage.getItem("clinic_user")) {
+    window.location.href = "index.html";
+  }
+</script>
+
 </body>
 </html>
