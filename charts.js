@@ -42,7 +42,7 @@ function formatDateTime(dt) {
 }
 
 // ─── Time filter helpers ───────────────────────────────────────────────────
-let currentAnalyticsTimeFilter = 'all';
+var currentAnalyticsTimeFilter = currentAnalyticsTimeFilter || 'all';
 
 function getTimeFilterRange(filter) {
   const now = new Date();
