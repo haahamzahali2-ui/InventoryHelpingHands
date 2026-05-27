@@ -2,7 +2,11 @@
 // CHARTS — patient charts, tables, analytics charts
 // ═══════════════════════════════════
 
-const goldPalette = { gold: '#C9A84C', goldDim: '#A8893C', goldLight: '#E8D5A3', red: '#C0392B', amber: '#D4850A', green: '#2E7D52', text: '#5C4F38', grid: '#E8D9B8' };
+const goldPalette = {
+  gold: '#C9A84C', goldDim: '#A8893C', goldLight: '#E8D5A3',
+  red: '#C0392B', amber: '#D4850A', green: '#2E7D52',
+  text: '#5C4F38', grid: '#E8D9B8'
+};
 
 const chartDefaults = {
   responsive: true, maintainAspectRatio: false,
@@ -23,34 +27,79 @@ const MED_COLORS = [
   '#8E44AD', // purple
   '#D4850A', // amber
   '#16A085', // teal
-  '#C0392B', // crimson
+  '#884EA0', // violet
   '#1A5276', // navy
-  '#6C3483', // violet
   '#A04000', // brown
+  '#B7950B', // dark gold
   '#1F618D', // steel blue
 ];
-const FAM_COLOR = '#2E7D52'; // green, reserved
+const FAM_COLOR = '#2E7D52'; // green, reserved for FaM
 
 function formatDateTime(dt) {
   if (!dt) return '';
-  const d = new Date(dt);
+  const d = new Date(dt + 'T00:00:00'); // force local timezone, avoid UTC shift
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// ─── Time filter helpers ───────────────────────────────────────────────────
+let currentAnalyticsTimeFilter = 'all';
+
+function getTimeFilterRange(filter) {
+  const now = new Date();
+  if (filter === 'all') return null;
+  const start = new Date();
+  if (filter === 'thismonth') { start.setDate(1); start.setHours(0,0,0,0); }
+  else if (filter === 'lastmonth') {
+    start.setDate(1); start.setMonth(start.getMonth() - 1); start.setHours(0,0,0,0);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10) };
+  }
+  else if (filter === '3months') { start.setMonth(start.getMonth() - 3); start.setHours(0,0,0,0); }
+  else if (filter === '6months') { start.setMonth(start.getMonth() - 6); start.setHours(0,0,0,0); }
+  else if (filter === '1year')   { start.setFullYear(start.getFullYear() - 1); start.setHours(0,0,0,0); }
+  return { start: start.toISOString().slice(0,10), end: now.toISOString().slice(0,10) };
+}
+
+function patientHasReadingInRange(pid, range) {
+  if (!range) return true;
+  const p = db.patients[pid];
+  if (!p) return false;
+  const allReadings = [...(p.bpReadings||[]), ...(p.a1cReadings||[])];
+  return allReadings.some(r => r.datetime >= range.start && r.datetime <= range.end);
+}
+
+function setAnalyticsTimeFilter(filter, btn) {
+  currentAnalyticsTimeFilter = filter;
+  document.querySelectorAll('.time-filter-bar .time-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAnalytics();
+}
+
 // ─── Build annotation objects for a patient ───────────────────────────────
-function buildAnnotations(patientId, chartLabels) {
+function buildAnnotations(patientId, readingDates) {
   const p = db.patients[patientId];
   if (!p) return {};
   const annotations = {};
 
-  // Map label strings back to x-axis index positions
-  const labelIndex = (dateStr) => {
-    const formatted = formatDateTime(dateStr);
-    const idx = chartLabels.indexOf(formatted);
-    return idx >= 0 ? idx : null;
+  // readingDates is the array of raw datetime strings from readings (YYYY-MM-DD)
+  // We map a med/FaM date to the nearest reading index for accurate placement
+  const findNearestIndex = (targetDate) => {
+    if (!targetDate || !readingDates.length) return null;
+    // exact match first
+    const exact = readingDates.indexOf(targetDate);
+    if (exact !== -1) return exact;
+    // find nearest by date distance
+    const targetMs = new Date(targetDate).getTime();
+    let bestIdx = 0, bestDist = Infinity;
+    readingDates.forEach((d, i) => {
+      const dist = Math.abs(new Date(d).getTime() - targetMs);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    });
+    // only snap if within 180 days, otherwise return null (off chart)
+    return bestDist < 180 * 24 * 60 * 60 * 1000 ? bestIdx : null;
   };
 
-  // Medications — one color per unique med name
+  // Build a stable color map per unique med name
   const meds = p.medications || [];
   const medColorMap = {};
   let colorIdx = 0;
@@ -61,77 +110,60 @@ function buildAnnotations(patientId, chartLabels) {
     }
   });
 
-  meds.forEach((med, i) => {
-    if (!med.startDate) return;
-    const xIdx = labelIndex(med.startDate);
-    if (xIdx === null) {
-      // Date not on chart — use xMin/xMax approach with scaleID
-      annotations[`med_${i}`] = {
-        type: 'line',
-        scaleID: 'x',
-        value: formatDateTime(med.startDate),
-        borderColor: medColorMap[med.name],
-        borderWidth: 2,
-        borderDash: [6, 3],
-        label: {
-          display: true,
-          content: `💊 ${med.name}`,
-          position: 'start',
-          backgroundColor: medColorMap[med.name],
-          color: '#fff',
-          font: { family: "'DM Sans', sans-serif", size: 11, weight: '600' },
-          padding: { x: 8, y: 4 },
-          cornerRadius: 6,
-          yAdjust: -6
-        }
-      };
-    } else {
-      annotations[`med_${i}`] = {
-        type: 'line',
-        scaleID: 'x',
-        value: xIdx,
-        borderColor: medColorMap[med.name],
-        borderWidth: 2,
-        borderDash: [6, 3],
-        label: {
-          display: true,
-          content: `💊 ${med.name}`,
-          position: 'start',
-          backgroundColor: medColorMap[med.name],
-          color: '#fff',
-          font: { family: "'DM Sans', sans-serif", size: 11, weight: '600' },
-          padding: { x: 8, y: 4 },
-          cornerRadius: 6,
-          yAdjust: -6
-        }
-      };
-    }
-  });
+  // Active meds only (no endDate, or endDate in the future)
+  const today = new Date().toISOString().slice(0, 10);
+  const activeMeds = meds.filter(m => !m.endDate || m.endDate > today);
 
-  // FaM enrollment — solid green line
-  const famDate = p.famEnrollment?.date || p.fam?.enrollDate || null;
-  if (famDate) {
-    const xIdx = labelIndex(famDate);
-    const xVal = xIdx !== null ? xIdx : formatDateTime(famDate);
-    annotations['fam'] = {
+  activeMeds.forEach((med, i) => {
+    if (!med.startDate) return;
+    const xVal = findNearestIndex(med.startDate);
+    if (xVal === null) return; // date too far outside chart range, skip
+    annotations[`med_${i}`] = {
       type: 'line',
       scaleID: 'x',
       value: xVal,
-      borderColor: FAM_COLOR,
-      borderWidth: 2.5,
-      borderDash: [],
+      borderColor: medColorMap[med.name],
+      borderWidth: 2,
+      borderDash: [6, 3],
       label: {
         display: true,
-        content: '🥗 FaM Enrolled',
-        position: 'end',
-        backgroundColor: FAM_COLOR,
+        content: `💊 ${med.name}`,
+        position: 'start',
+        backgroundColor: medColorMap[med.name],
         color: '#fff',
         font: { family: "'DM Sans', sans-serif", size: 11, weight: '600' },
         padding: { x: 8, y: 4 },
         cornerRadius: 6,
-        yAdjust: 6
+        yAdjust: -6
       }
     };
+  });
+
+  // FaM enrollment — solid green line
+  const famDate = p.famEnrollmentDate || null;
+  if (famDate && p.famEnrolled) {
+    const xVal = findNearestIndex(famDate);
+    if (xVal !== null) {
+      annotations['fam'] = {
+        type: 'line',
+        scaleID: 'x',
+        value: xVal,
+        borderColor: FAM_COLOR,
+        borderWidth: 2.5,
+        borderDash: [],
+        label: {
+          display: true,
+          content: '🥗 FaM Enrolled',
+          position: 'end',
+          backgroundColor: FAM_COLOR,
+          color: '#fff',
+          font: { family: "'DM Sans', sans-serif", size: 11, weight: '600' },
+          padding: { x: 8, y: 4 },
+          cornerRadius: 6,
+          yAdjust: 6
+        }
+      };
+    }
   }
 
   return annotations;
@@ -142,6 +174,8 @@ function renderBPChart(readings) {
   if (bpChartInst) { bpChartInst.destroy(); bpChartInst = null; }
   const ctx = document.getElementById('bpChart').getContext('2d');
   const labels = readings.map(r => formatDateTime(r.datetime));
+  const rawDates = readings.map(r => r.datetime);
+
   let datasets = [];
   if (bpSeriesMode === 'both' || bpSeriesMode === 'systolic') {
     datasets.push({
@@ -150,7 +184,7 @@ function renderBPChart(readings) {
       borderColor: goldPalette.red,
       backgroundColor: bpChartType === 'line'
         ? 'rgba(192,57,43,0.08)'
-        : readings.map(r => getBPStatus(r.sys,r.dia) === 'critical' ? 'rgba(192,57,43,0.7)' : getBPStatus(r.sys,r.dia) === 'warning' ? 'rgba(212,133,10,0.7)' : 'rgba(201,168,76,0.7)'),
+        : readings.map(r => getBPStatus(r.sys, r.dia) === 'critical' ? 'rgba(192,57,43,0.7)' : getBPStatus(r.sys, r.dia) === 'warning' ? 'rgba(212,133,10,0.7)' : 'rgba(201,168,76,0.7)'),
       tension: 0.3, fill: bpChartType === 'line', pointRadius: 5, pointHoverRadius: 7
     });
   }
@@ -164,7 +198,7 @@ function renderBPChart(readings) {
     });
   }
 
-  const annotations = buildAnnotations(currentPatientId, labels);
+  const annotations = buildAnnotations(currentPatientId, rawDates);
 
   bpChartInst = new Chart(ctx, {
     type: bpChartType,
@@ -191,7 +225,8 @@ function renderA1CChart(readings) {
   if (a1cChartInst) { a1cChartInst.destroy(); a1cChartInst = null; }
   const ctx = document.getElementById('a1cChart').getContext('2d');
   const labels = readings.map(r => formatDateTime(r.datetime));
-  const annotations = buildAnnotations(currentPatientId, labels);
+  const rawDates = readings.map(r => r.datetime);
+  const annotations = buildAnnotations(currentPatientId, rawDates);
 
   a1cChartInst = new Chart(ctx, {
     type: a1cChartType,
@@ -280,64 +315,70 @@ function renderA1CTable(readings) {
 // ANALYTICS
 // ═══════════════════════════════════
 function renderAnalytics() {
-  const bpOutcomes = computeBPOutcomes();
-  const a1cOutcomes = computeA1COutcomes();
-  renderAnalyticsKPIs(bpOutcomes, a1cOutcomes);
+  const range = getTimeFilterRange(currentAnalyticsTimeFilter);
+
+  // Filter patients to those with readings in range
+  const filteredPatients = Object.keys(db.patients).filter(pid =>
+    range ? patientHasReadingInRange(pid, range) : true
+  );
+
+  const bpOutcomes = computeBPOutcomes(filteredPatients, range);
+  const a1cOutcomes = computeA1COutcomes(filteredPatients, range);
+  renderAnalyticsKPIs(bpOutcomes, a1cOutcomes, filteredPatients.length);
   renderBPOutcomesChart(bpOutcomes);
   renderA1COutcomesChart(a1cOutcomes);
   renderFAMAnalytics();
-  const range = getTimeFilterRange(currentAnalyticsTimeFilter);
+
   const statsEl = document.getElementById('analyticsTimeStats');
-  if (statsEl && range) {
-    const filtered = Object.keys(db.patients).filter(pid => patientHasReadingInRange(pid, range));
-    statsEl.textContent = `${filtered.length} patients with readings in period`;
-  } else if (statsEl) {
-    statsEl.textContent = '';
+  if (statsEl) {
+    statsEl.textContent = range
+      ? `${filteredPatients.length} patient${filteredPatients.length !== 1 ? 's' : ''} with readings in period`
+      : '';
   }
 }
 
-function computeBPOutcomes() {
+function filterReadingsInRange(readings, range) {
+  if (!range) return readings;
+  return readings.filter(r => r.datetime >= range.start && r.datetime <= range.end);
+}
+
+function computeBPOutcomes(patientIds, range) {
   let improving = 0, worsening = 0, stable = 0, newPatient = 0;
   const rows = [];
-  for (const pid in db.patients) {
-    const readings = db.patients[pid].bpReadings || [];
+  for (const pid of patientIds) {
+    const readings = filterReadingsInRange(db.patients[pid].bpReadings || [], range);
     const trend = getBPTrend(readings);
     if (trend === 'improving') improving++;
     else if (trend === 'worsening') worsening++;
     else if (trend === 'stable') stable++;
     else newPatient++;
-    const last = readings.slice(-1)[0];
-    const prev = readings.slice(-2)[0];
-    rows.push({ pid, trend, last, prev });
+    rows.push({ pid, trend, last: readings.slice(-1)[0], prev: readings.slice(-2)[0] });
   }
   return { improving, worsening, stable, newPatient, rows };
 }
 
-function computeA1COutcomes() {
+function computeA1COutcomes(patientIds, range) {
   let improving = 0, worsening = 0, stable = 0, newPatient = 0;
   const rows = [];
-  for (const pid in db.patients) {
-    const readings = db.patients[pid].a1cReadings || [];
+  for (const pid of patientIds) {
+    const readings = filterReadingsInRange(db.patients[pid].a1cReadings || [], range);
     const trend = getA1CTrend(readings);
     if (trend === 'improving') improving++;
     else if (trend === 'worsening') worsening++;
     else if (trend === 'stable') stable++;
     else newPatient++;
-    const last = readings.slice(-1)[0];
-    const prev = readings.slice(-2)[0];
-    rows.push({ pid, trend, last, prev });
+    rows.push({ pid, trend, last: readings.slice(-1)[0], prev: readings.slice(-2)[0] });
   }
   return { improving, worsening, stable, newPatient, rows };
 }
 
-function renderAnalyticsKPIs(bpOutcomes, a1cOutcomes) {
-  const totalPts = Object.keys(db.patients).length;
-  const pct = (n, d) => d > 0 ? Math.round((n/d)*100) + '%' : '—';
+function renderAnalyticsKPIs(bpOutcomes, a1cOutcomes, totalPts) {
+  const pct = (n, d) => d > 0 ? Math.round((n / d) * 100) + '%' : '—';
   document.getElementById('analyticsKPIs').innerHTML = `
     <div class="analytics-kpi gold">
       <div class="kpi-label">Total Patients</div>
       <div class="kpi-val gold">${totalPts}</div>
-      <div class="kpi-sub">enrolled in system</div>
+      <div class="kpi-sub">in selected period</div>
     </div>
     <div class="analytics-kpi green">
       <div class="kpi-label">Improving BP</div>
@@ -365,9 +406,15 @@ function renderBPOutcomesChart(outcomes) {
     type: 'doughnut',
     data: {
       labels: ['Improving', 'Worsening', 'Stable', 'Insufficient Data'],
-      datasets: [{ data: [improving, worsening, stable, newPatient], backgroundColor: ['rgba(46,125,82,0.85)','rgba(192,57,43,0.85)','rgba(168,137,60,0.7)','rgba(140,125,96,0.4)'], borderColor: '#FFFDF7', borderWidth: 3 }]
+      datasets: [{ data: [improving, worsening, stable, newPatient], backgroundColor: ['rgba(46,125,82,0.85)', 'rgba(192,57,43,0.85)', 'rgba(168,137,60,0.7)', 'rgba(140,125,96,0.4)'], borderColor: '#FFFDF7', borderWidth: 3 }]
     },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { font: { family: "'DM Sans', sans-serif", size: 13 }, color: goldPalette.text, padding: 16 } }, tooltip: { backgroundColor: '#1A1208', bodyFont: { family: "'DM Sans', sans-serif", size: 14 }, padding: 14, cornerRadius: 10, callbacks: { label: (ctx) => { const total = ctx.dataset.data.reduce((a,b)=>a+b,0); const pct = total > 0 ? Math.round((ctx.raw/total)*100) : 0; return ` ${ctx.raw} patients (${pct}%)`; } } } } }
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: "'DM Sans', sans-serif", size: 13 }, color: goldPalette.text, padding: 16 } },
+        tooltip: { backgroundColor: '#1A1208', bodyFont: { family: "'DM Sans', sans-serif", size: 14 }, padding: 14, cornerRadius: 10, callbacks: { label: (ctx) => { const total = ctx.dataset.data.reduce((a, b) => a + b, 0); const pct = total > 0 ? Math.round((ctx.raw / total) * 100) : 0; return ` ${ctx.raw} patients (${pct}%)`; } } }
+      }
+    }
   });
 }
 
@@ -379,12 +426,21 @@ function renderA1COutcomesChart(outcomes) {
     type: 'doughnut',
     data: {
       labels: ['Improving', 'Worsening', 'Stable', 'Insufficient Data'],
-      datasets: [{ data: [improving, worsening, stable, newPatient], backgroundColor: ['rgba(46,125,82,0.85)','rgba(192,57,43,0.85)','rgba(168,137,60,0.7)','rgba(140,125,96,0.4)'], borderColor: '#FFFDF7', borderWidth: 3 }]
+      datasets: [{ data: [improving, worsening, stable, newPatient], backgroundColor: ['rgba(46,125,82,0.85)', 'rgba(192,57,43,0.85)', 'rgba(168,137,60,0.7)', 'rgba(140,125,96,0.4)'], borderColor: '#FFFDF7', borderWidth: 3 }]
     },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { font: { family: "'DM Sans', sans-serif", size: 13 }, color: goldPalette.text, padding: 16 } }, tooltip: { backgroundColor: '#1A1208', bodyFont: { family: "'DM Sans', sans-serif", size: 14 }, padding: 14, cornerRadius: 10, callbacks: { label: (ctx) => { const total = ctx.dataset.data.reduce((a,b)=>a+b,0); const pct = total > 0 ? Math.round((ctx.raw/total)*100) : 0; return ` ${ctx.raw} patients (${pct}%)`; } } } } }
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: "'DM Sans', sans-serif", size: 13 }, color: goldPalette.text, padding: 16 } },
+        tooltip: { backgroundColor: '#1A1208', bodyFont: { family: "'DM Sans', sans-serif", size: 14 }, padding: 14, cornerRadius: 10, callbacks: { label: (ctx) => { const total = ctx.dataset.data.reduce((a, b) => a + b, 0); const pct = total > 0 ? Math.round((ctx.raw / total) * 100) : 0; return ` ${ctx.raw} patients (${pct}%)`; } } }
+      }
+    }
   });
 }
 
+// ═══════════════════════════════════
+// BREAKDOWN PAGE
+// ═══════════════════════════════════
 function setBreakdownMetric(metric, btn) {
   currentBreakdownMetric = metric;
   document.querySelectorAll('.breakdown-tab').forEach(t => t.classList.remove('active'));
@@ -424,7 +480,7 @@ function renderPatientBreakdownTable(metric) {
     return { pid, prevStr, lastStr, changeStr, trend, badge: badgeMap[trend] || '' };
   });
   const order = { worsening: 0, stable: 1, improving: 2, new: 3 };
-  rows.sort((a,b) => (order[a.trend]||99) - (order[b.trend]||99));
+  rows.sort((a, b) => (order[a.trend] || 99) - (order[b.trend] || 99));
   tbody.innerHTML = rows.map(r => `
     <tr onclick="openPatient('${r.pid}')">
       <td><strong>#${r.pid}</strong></td>
