@@ -70,7 +70,7 @@
         <div class="home-divider"></div>
       </div>
 
-      <div class="home-cards">
+      <div class="home-cards" style="max-width:1200px;">
         <div class="home-card" onclick="showPage('patients')">
           <div class="home-card-icon">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -87,6 +87,18 @@
           <p>Population-level outcomes — see which patients are improving, stable, or worsening since their last visit.</p>
           <div class="home-card-arrow">&#8594;</div>
         </div>
+        <div class="home-card" onclick="showPage('breakdown')">
+  <div class="home-card-icon">
+    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+  </div>
+  <h2>Patient Breakdown</h2>
+  <p>Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</p>
+  <div class="home-card-arrow">&#8594;</div>
+</div>
+<div class="home-card" onclick="showPage('breakdown')">
+  <div class="home-card-icon">
+    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+  </div>
       </div>
 
       <div class="home-impact-row" id="homeImpactRow">
