@@ -151,7 +151,7 @@
     margin: 36px auto 48px;
   }
 
-  .home-cards { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; max-width: 820px; margin: 0 auto; }
+.home-cards { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
   .home-card {
     flex: 1; min-width: 300px; max-width: 380px;
     background: var(--white); border: 1px solid var(--border);
