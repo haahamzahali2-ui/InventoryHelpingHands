@@ -332,6 +332,18 @@
       </div>
       <div class="analytics-card" style="margin-bottom:28px;">
         <div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
+
+        <!-- BREAKDOWN SORT BAR -->
+        <div class="sort-bar" style="margin:14px 0 18px;">
+          <span class="sort-label">Sort by:</span>
+          <button class="sort-btn active" onclick="setBreakdownSort('default',this)">Default</button>
+          <button class="sort-btn" onclick="setBreakdownSort('lastseen',this)">🕐 Last Seen First</button>
+          <button class="sort-btn" onclick="setBreakdownSort('improving',this)">📈 Improving First</button>
+          <button class="sort-btn" onclick="setBreakdownSort('worsening',this)">📉 Worsening First</button>
+          <button class="sort-btn" onclick="setBreakdownSort('highest',this)">🔺 Highest BP/A1C First</button>
+          <button class="sort-btn" onclick="setBreakdownSort('lowest',this)">🔻 Lowest BP/A1C First</button>
+        </div>
+
         <div class="breakdown-tabs">
           <button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
           <button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
