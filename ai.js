@@ -2,7 +2,7 @@
 // AI VISIT NOTE GENERATOR — Powered by Claude
 // ═══════════════════════════════════
 
-const CLAUDE_API_KEY = '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"';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-CgUEw8qPUQEm7i5VxLkivuASa35gc97f-YWJiOmPK-OwmOl4U_dE7vZR1/exec';
 
 let currentNoteFormat = 'soap';
 
@@ -125,26 +125,17 @@ async function generateVisitNote() {
   }
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
+    var response = await fetch(APPS_SCRIPT_URL + '?action=claude', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ prompt: prompt })
     });
 
     if (!response.ok) {
-      var errData = await response.json();
-      throw new Error(errData.error && errData.error.message ? errData.error.message : 'API error ' + response.status);
+      throw new Error('Proxy error ' + response.status);
     }
 
     var data = await response.json();
+    if (data.error) throw new Error(data.error.message || 'API error');
     var text = data.content[0].text;
 
     document.getElementById('visitNoteText').value = text;
