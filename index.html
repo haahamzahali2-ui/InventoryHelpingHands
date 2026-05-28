@@ -20,9 +20,7 @@
       <div class="topbar-subtitle">Patient Care Portal</div>
     </div>
   </div>
-
   <div class="topbar-center">Free Community Clinic &nbsp;·&nbsp; Columbus, OH</div>
-
   <div class="topbar-right">
     <div class="topbar-stat">
       <div class="topbar-stat-val" id="stat-patients">—</div>
@@ -55,10 +53,8 @@
   <button class="easter-egg-close" onclick="document.getElementById('easterEggOverlay').classList.remove('show')">Keep Going ›</button>
 </div>
 
-<!-- CONFETTI CANVAS -->
 <canvas id="confetti-canvas"></canvas>
 
-<!-- LAYOUT -->
 <div class="layout">
   <div class="main">
 
@@ -70,7 +66,6 @@
         <p>Patient data, trends &amp; analytics — all in one place</p>
         <div class="home-divider"></div>
       </div>
-
       <div class="home-cards" style="max-width:1200px;">
         <div class="home-card" onclick="showPage('patients')">
           <div class="home-card-icon">
@@ -97,7 +92,6 @@
           <div class="home-card-arrow">&#8594;</div>
         </div>
       </div>
-
       <div class="home-impact-row" id="homeImpactRow">
         <div class="impact-chip gold">
           <div class="impact-chip-val" id="imp-patients">0</div>
@@ -122,13 +116,27 @@
       </div>
     </div>
 
-    <!-- PATIENTS PAGE -->
+    <!-- ═══════════════════════════════════════════════════════
+         PATIENTS PAGE — redesigned
+    ════════════════════════════════════════════════════════ -->
     <div class="page" id="page-patients">
-      <div class="section-header">
-        <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
-        <h2>Patient Lookup</h2>
+
+      <!-- Page header -->
+      <div class="pt-page-header">
+        <div class="pt-page-header-left">
+          <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
+          <div>
+            <h2 class="pt-page-title">Patient Lookup</h2>
+            <div class="pt-page-subtitle" id="patientCountLabel">Loading…</div>
+          </div>
+        </div>
+        <button class="pt-add-btn" onclick="openAddPatientModal()">
+          <span class="pt-add-btn-icon">+</span>
+          Add New Patient
+        </button>
       </div>
 
+      <!-- Sheet setup banner (hidden once connected) -->
       <div class="setup-banner" id="sheetSetupBanner">
         <div class="setup-banner-icon">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -146,44 +154,63 @@
         </div>
       </div>
 
-      <div class="time-filter-bar">
-        <span class="time-filter-label">Period:</span>
-        <button class="time-filter-btn active" onclick="setTimeFilter('all',this)">All Time</button>
-        <button class="time-filter-btn" onclick="setTimeFilter('thismonth',this)">This Month</button>
-        <button class="time-filter-btn" onclick="setTimeFilter('lastmonth',this)">Last Month</button>
-        <button class="time-filter-btn" onclick="setTimeFilter('3months',this)">Last 3 Months</button>
-        <span class="time-filter-stats" id="timeFilterStats"></span>
-      </div>
-
-      <div class="search-wrap">
-        <span class="search-icon">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        </span>
-        <input type="text" id="patientSearch" placeholder="Search by patient ID (e.g. 1042)…" oninput="filterPatients()" />
-      </div>
-
-      <div class="patient-controls">
-        <div class="sort-bar">
-          <span class="sort-label">Sort:</span>
-          <button class="sort-btn active" onclick="setSort('id',this)">ID</button>
-          <button class="sort-btn" onclick="setSort('critical',this)">🔴 Critical First</button>
-          <button class="sort-btn" onclick="setSort('overdue',this)">⏰ Overdue First</button>
-          <button class="sort-btn" onclick="setSort('worsening',this)">📉 Worsening</button>
-          <button class="sort-btn" onclick="setSort('improving',this)">📈 Improving</button>
-          <button class="sort-btn" onclick="setSort('readings',this)">📋 Most Readings</button>
-          <button class="sort-btn" onclick="setSort('lastseen',this)">🕐 Last Seen</button>
-          <button class="sort-btn" onclick="setSort('fam',this)">🥗 FaM Enrolled</button>
+      <!-- Search + controls bar -->
+      <div class="pt-controls-bar">
+        <!-- Search -->
+        <div class="pt-search-wrap">
+          <svg class="pt-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="patientSearch" class="pt-search-input" placeholder="Search patient ID…" oninput="filterPatients()" />
+          <button class="pt-search-clear" id="searchClearBtn" onclick="document.getElementById('patientSearch').value='';filterPatients();this.style.display='none'" style="display:none">✕</button>
         </div>
-        <div class="patient-count-label" id="patientCountLabel"></div>
+
+        <!-- View toggle -->
+        <div class="pt-view-toggle">
+          <button class="pt-view-btn active" id="viewBtn-grid" onclick="setPatientView('grid')" title="Grid view">
+            <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+          </button>
+          <button class="pt-view-btn" id="viewBtn-list" onclick="setPatientView('list')" title="List view">
+            <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
+          </button>
+        </div>
       </div>
 
-      <div class="patients-grid" id="patientsGrid">
-        <button class="add-patient-btn" onclick="openAddPatientModal()">
-          <div class="plus-icon">+</div>
-          Add New Patient
-        </button>
+      <!-- Filter + sort row -->
+      <div class="pt-filter-row">
+        <!-- Period filter -->
+        <div class="pt-filter-group">
+          <span class="pt-filter-label">Period</span>
+          <div class="pt-chip-row">
+            <button class="pt-chip active" onclick="setTimeFilter('all',this)">All Time</button>
+            <button class="pt-chip" onclick="setTimeFilter('thismonth',this)">This Month</button>
+            <button class="pt-chip" onclick="setTimeFilter('lastmonth',this)">Last Month</button>
+            <button class="pt-chip" onclick="setTimeFilter('3months',this)">3 Months</button>
+          </div>
+        </div>
+
+        <div class="pt-filter-divider"></div>
+
+        <!-- Sort -->
+        <div class="pt-filter-group">
+          <span class="pt-filter-label">Sort</span>
+          <div class="pt-chip-row">
+            <button class="pt-chip active sort-btn" onclick="setSort('id',this)">ID</button>
+            <button class="pt-chip sort-btn" onclick="setSort('critical',this)">🔴 Critical</button>
+            <button class="pt-chip sort-btn" onclick="setSort('overdue',this)">⏰ Overdue</button>
+            <button class="pt-chip sort-btn" onclick="setSort('worsening',this)">📉 Worsening</button>
+            <button class="pt-chip sort-btn" onclick="setSort('improving',this)">📈 Improving</button>
+            <button class="pt-chip sort-btn" onclick="setSort('lastseen',this)">🕐 Last Seen</button>
+            <button class="pt-chip sort-btn" onclick="setSort('readings',this)">📋 Readings</button>
+            <button class="pt-chip sort-btn" onclick="setSort('fam',this)">🥗 FaM</button>
+          </div>
+        </div>
+
+        <span class="pt-filter-stats" id="timeFilterStats"></span>
       </div>
-    </div>
+
+      <!-- Patient grid / list -->
+      <div class="patients-grid" id="patientsGrid"></div>
+
+    </div><!-- /page-patients -->
 
     <!-- PATIENT DETAIL PAGE -->
     <div class="page" id="page-detail">
@@ -192,21 +219,17 @@
         <h2 id="detailTitle">Patient #—</h2>
         <div class="patient-detail-tags" id="detailTags"></div>
       </div>
-
       <div id="patientAlertPanel"></div>
       <div id="famPatientPanel"></div>
       <div class="print-header" id="printHeader"></div>
-
       <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
       <button class="add-data-btn" style="margin-left:8px;" onclick="openAddMedicationModal()">+ Add Medication</button>
       <button class="export-pdf-btn" onclick="exportPatientPDF()">⬇ Export PDF</button>
       <button class="export-pdf-btn" style="margin-left:8px;background:linear-gradient(135deg,#1A1208,#2C2010);color:var(--gold-light);border-color:rgba(201,168,76,0.3);" onclick="openVisitNoteModal()">🤖 Generate Visit Note</button>
-
       <div class="metric-tabs">
         <button class="metric-tab active" id="metric-tab-bp" onclick="setDetailMetric('bp')">Blood Pressure</button>
         <button class="metric-tab" id="metric-tab-a1c" onclick="setDetailMetric('a1c')">A1C</button>
       </div>
-
       <div class="detail-grid">
         <div class="detail-card" id="bpDetailCard">
           <div class="detail-card-header">
@@ -229,7 +252,6 @@
             </table>
           </div>
         </div>
-
         <div class="detail-card hidden" id="a1cDetailCard">
           <div class="detail-card-header">
             <div class="detail-card-title">A1C Results</div>
@@ -247,11 +269,8 @@
           </div>
         </div>
       </div>
-
       <div class="medications-wrap">
-        <div class="medications-head">
-          <div class="detail-card-title">Medications</div>
-        </div>
+        <div class="medications-head"><div class="detail-card-title">Medications</div></div>
         <div id="medicationsList"></div>
       </div>
     </div>
@@ -262,18 +281,14 @@
         <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
         <h2>Population Analytics</h2>
       </div>
-
       <div class="analytics-actions">
         <button class="analytics-export-btn" onclick="exportAnalyticsPDF()">⬇ Export Donor PDF</button>
         <button class="confetti-btn" onclick="launchConfetti();showToast('🎉 Looking good!')">🎉 Celebrate</button>
       </div>
-
       <div class="analytics-sub-tabs">
         <button class="analytics-sub-tab active" id="aTab-outcomes" onclick="setAnalyticsSubTab('outcomes', this)">📊 A1C / BP Outcomes</button>
         <button class="analytics-sub-tab" id="aTab-fam" onclick="setAnalyticsSubTab('fam', this)">🥗 Food as Medicine</button>
       </div>
-
-      <!-- TIME FILTER -->
       <div class="time-filter-bar">
         <span class="time-filter-label">Period:</span>
         <button class="time-filter-btn active" onclick="setAnalyticsTimeFilter('all',this)">All Time</button>
@@ -282,31 +297,22 @@
         <button class="time-filter-btn" onclick="setAnalyticsTimeFilter('3months',this)">Last 3 Months</button>
         <span class="time-filter-stats" id="analyticsTimeStats"></span>
       </div>
-
       <div class="analytics-print-header" id="analyticsPrintHeaderInPage"></div>
       <div class="analytics-summary-row" id="analyticsKPIs"></div>
-
-      <!-- OUTCOMES PANE -->
       <div id="analyticsPane-outcomes">
         <div class="analytics-grid">
           <div class="analytics-card">
             <div class="analytics-card-title">Blood Pressure Outcomes</div>
             <div class="analytics-card-sub">Change in systolic BP between each patient's last two visits. Improving = last reading lower than previous.</div>
-            <div class="analytics-chart-container">
-              <canvas id="bpOutcomesChart"></canvas>
-            </div>
+            <div class="analytics-chart-container"><canvas id="bpOutcomesChart"></canvas></div>
           </div>
           <div class="analytics-card">
             <div class="analytics-card-title">A1C Outcomes</div>
             <div class="analytics-card-sub">Change in A1C between each patient's last two tests. Improving = last reading lower than previous.</div>
-            <div class="analytics-chart-container">
-              <canvas id="a1cOutcomesChart"></canvas>
-            </div>
+            <div class="analytics-chart-container"><canvas id="a1cOutcomesChart"></canvas></div>
           </div>
         </div>
-      </div><!-- /analyticsPane-outcomes -->
-
-      <!-- FOOD AS MEDICINE PANE -->
+      </div>
       <div id="analyticsPane-fam" style="display:none;">
         <div class="fam-analytics-section" id="famAnalyticsSection">
           <div class="fam-section-header">
@@ -320,11 +326,12 @@
           </div>
           <div id="famContent"></div>
         </div>
-      </div><!-- /analyticsPane-fam -->
+      </div>
+    </div>
 
-    </div><!-- /page-analytics -->
-
-    <!-- BREAKDOWN PAGE -->
+    <!-- ═══════════════════════════════════════════════════════
+         BREAKDOWN PAGE — with sort + FaM filter
+    ════════════════════════════════════════════════════════ -->
     <div class="page" id="page-breakdown">
       <div class="section-header">
         <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
@@ -333,21 +340,40 @@
       <div class="analytics-card" style="margin-bottom:28px;">
         <div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
 
-        <!-- BREAKDOWN SORT BAR -->
-        <div class="sort-bar" style="margin:14px 0 18px;">
-          <span class="sort-label">Sort by:</span>
-          <button class="sort-btn active" onclick="setBreakdownSort('default',this)">Default</button>
-          <button class="sort-btn" onclick="setBreakdownSort('lastseen',this)">🕐 Last Seen First</button>
-          <button class="sort-btn" onclick="setBreakdownSort('improving',this)">📈 Improving First</button>
-          <button class="sort-btn" onclick="setBreakdownSort('worsening',this)">📉 Worsening First</button>
-          <button class="sort-btn" onclick="setBreakdownSort('highest',this)">🔺 Highest BP/A1C First</button>
-          <button class="sort-btn" onclick="setBreakdownSort('lowest',this)">🔻 Lowest BP/A1C First</button>
+        <!-- Controls row -->
+        <div class="bd-controls">
+          <!-- Sort -->
+          <div class="bd-control-group">
+            <span class="bd-control-label">Sort by</span>
+            <div class="bd-chip-row">
+              <button class="bd-chip active" onclick="setBreakdownSort('default',this)">Default</button>
+              <button class="bd-chip" onclick="setBreakdownSort('lastseen',this)">🕐 Last Seen</button>
+              <button class="bd-chip" onclick="setBreakdownSort('improving',this)">📈 Improving</button>
+              <button class="bd-chip" onclick="setBreakdownSort('worsening',this)">📉 Worsening</button>
+              <button class="bd-chip" onclick="setBreakdownSort('highest',this)">🔺 Highest</button>
+              <button class="bd-chip" onclick="setBreakdownSort('lowest',this)">🔻 Lowest</button>
+            </div>
+          </div>
+
+          <div class="bd-control-divider"></div>
+
+          <!-- FaM filter -->
+          <div class="bd-control-group">
+            <span class="bd-control-label">Filter</span>
+            <div class="bd-chip-row">
+              <button class="bd-chip active" onclick="setBreakdownFaMFilter('all',this)">All Patients</button>
+              <button class="bd-chip" onclick="setBreakdownFaMFilter('fam',this)">🥗 FaM Only</button>
+              <button class="bd-chip" onclick="setBreakdownFaMFilter('nonfam',this)">Non-FaM</button>
+            </div>
+          </div>
         </div>
 
-        <div class="breakdown-tabs">
+        <!-- Metric tabs -->
+        <div class="breakdown-tabs" style="margin-top:4px;">
           <button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
           <button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
         </div>
+
         <table class="patient-breakdown-table" id="patientBreakdownTable">
           <thead>
             <tr>
@@ -361,10 +387,12 @@
           <tbody></tbody>
         </table>
       </div>
-    </div><!-- /page-breakdown -->
+    </div>
 
   </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- ── MODALS (unchanged) ─────────────────────────────────────────────── -->
 
 <!-- ADD DATA MODAL -->
 <div class="modal-overlay" id="addDataModal">
@@ -469,10 +497,7 @@
   <div class="modal">
     <h3>Food as Medicine Enrollment</h3>
     <div class="modal-sub" id="famEnrollModalSub">Patient #—</div>
-    <div class="form-row">
-      <label>Enrollment Date</label>
-      <input type="date" id="fam-enroll-date" />
-    </div>
+    <div class="form-row"><label>Enrollment Date</label><input type="date" id="fam-enroll-date" /></div>
     <div class="form-row">
       <label>Program Type</label>
       <input type="text" id="fam-program-type" placeholder="e.g. Diabetes Food Box, Produce Rx" list="famProgramOptions" />
@@ -497,9 +522,7 @@
     <h3>Active Alerts</h3>
     <div class="modal-sub">Click a patient ID to open that chart</div>
     <div id="alertsModalList"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal('alertsModal')">Close</button>
-    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('alertsModal')">Close</button></div>
   </div>
 </div>
 
@@ -522,10 +545,7 @@
   </div>
 </div>
 
-<!-- ANALYTICS PRINT HEADER -->
 <div class="analytics-print-header" id="analyticsPrintHeader"></div>
-
-<!-- KEYBOARD HINT -->
 <div class="kbd-hint" id="kbdHint"></div>
 
 <!-- VISIT NOTE MODAL -->
@@ -539,41 +559,22 @@
       </div>
     </div>
     <div class="modal-sub" id="visitNoteModalSub">Patient #— · Powered by Claude AI</div>
-
-    <!-- Generating state -->
     <div id="visitNoteGenerating" style="display:none;padding:28px 0;text-align:center;">
       <div style="display:inline-flex;align-items:center;gap:12px;color:var(--text-light);font-size:14px;font-style:italic;">
         <div class="ai-spinner"></div>
         Claude is generating your visit note…
       </div>
     </div>
-
-    <!-- Note editor -->
     <div id="visitNoteEditor" style="display:none;">
-      <div style="font-size:12px;color:var(--text-light);margin-bottom:8px;font-style:italic;">
-        ✏️ Review and edit before copying. This is a draft — always verify with a provider.
-      </div>
-      <textarea id="visitNoteText"
-        style="width:100%;min-height:320px;resize:vertical;padding:16px;
-               border:1.5px solid var(--border);border-radius:14px;
-               background:var(--off-white);font-family:'DM Sans',sans-serif;
-               font-size:14px;line-height:1.75;color:var(--text-dark);
-               outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='var(--gold)'"
-        onblur="this.style.borderColor='var(--border)'">
-      </textarea>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:8px;font-style:italic;">✏️ Review and edit before copying. This is a draft — always verify with a provider.</div>
+      <textarea id="visitNoteText" style="width:100%;min-height:320px;resize:vertical;padding:16px;border:1.5px solid var(--border);border-radius:14px;background:var(--off-white);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.75;color:var(--text-dark);outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
       <div style="font-size:11px;color:var(--text-light);margin-top:6px;" id="visitNoteTimestamp"></div>
     </div>
-
-    <!-- Empty/prompt state -->
     <div id="visitNotePrompt" style="padding:32px 0;text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">📋</div>
       <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--text-dark);margin-bottom:8px;">Ready to generate</div>
-      <div style="font-size:14px;color:var(--text-light);line-height:1.7;max-width:360px;margin:0 auto;">
-        Claude will read this patient's last 3 readings, medications, and trends to draft a visit note ready for Athena.
-      </div>
+      <div style="font-size:14px;color:var(--text-light);line-height:1.7;max-width:360px;margin:0 auto;">Claude will read this patient's last 3 readings, medications, and trends to draft a visit note ready for Athena.</div>
     </div>
-
     <div class="modal-actions" style="margin-top:20px;">
       <button class="btn-cancel" onclick="closeModal('visitNoteModal')">Close</button>
       <button class="btn-cancel" id="visitNoteRegenBtn" onclick="generateVisitNote()" style="display:none;">↺ Regenerate</button>
@@ -583,13 +584,23 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
   if (!sessionStorage.getItem("clinic_user")) {
     window.location.href = "login.html";
   }
+
+  // Show/hide search clear button
+  document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('patientSearch');
+    const clr = document.getElementById('searchClearBtn');
+    if (inp && clr) {
+      inp.addEventListener('input', () => {
+        clr.style.display = inp.value ? 'flex' : 'none';
+      });
+    }
+  });
 </script>
 
 <script src="core.js"></script>
