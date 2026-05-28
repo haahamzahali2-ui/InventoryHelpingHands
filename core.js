@@ -1,4 +1,4 @@
-﻿// ═══════════════════════════════════
+// ═══════════════════════════════════
 // CORE — data store, helpers, modals, sync, exports, visit notes
 // ═══════════════════════════════════
 
@@ -12,7 +12,10 @@ const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-
 
 let db = { patients: {}, alerts: [], seenAlerts: [], stickies: {} };
 let sheetId = localStorage.getItem(SHEET_ID_KEY) || '';
-let sheetWriteUrl = localStorage.getItem(SHEET_WRITE_URL_KEY) || '';
+
+// ✅ Always use the hardcoded URL — falls back to localStorage if not set
+let sheetWriteUrl = HARDCODED_SCRIPT_URL || localStorage.getItem(SHEET_WRITE_URL_KEY) || '';
+
 let currentPatientId = null;
 let currentDetailMetric = 'bp';
 let currentBreakdownMetric = 'bp';
@@ -59,16 +62,12 @@ async function postToSheetBackend(action, payload = {}) {
 function normalizeDate(val) {
   if (!val) return '';
   const s = String(val);
-  // Already a plain date string YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // ISO timestamp — slice to date portion
   if (s.includes('T')) return s.slice(0, 10);
-  // Google Sheets serial date number (days since Dec 30 1899)
   if (/^\d+(\.\d+)?$/.test(s)) {
     const d = new Date(Math.round((parseFloat(s) - 25569) * 86400000));
     return d.toISOString().slice(0, 10);
   }
-  // Try parsing anything else
   const d = new Date(s);
   return isNaN(d) ? s : d.toISOString().slice(0, 10);
 }
@@ -114,11 +113,10 @@ function parseBackendBundle(bundle) {
     type: String(a.type||'general'), msg: String(a.msg||''), time: normalizeDate(a.time),
     seen: String(a.seen).toLowerCase() === 'true' || a.seen === true, level: String(a.level||'warning')
   }));
-db.stickies = {};
+  db.stickies = {};
   (bundle.stickies || []).forEach(s => {
     if (s.patientId) db.stickies[String(s.patientId)] = { note: s.note||'', color: s.color||'gold', createdAt: s.createdAt||'' };
   });
-  // Apply Food as Medicine enrollments
   (bundle.famEnrollments || []).forEach(f => {
     const pid = String(f.patientId || '').trim();
     if (!pid || !db.patients[pid]) return;
@@ -404,7 +402,7 @@ if (localStorage.getItem('hh_dark_mode') === '1') {
 }
 
 // ═══════════════════════════════════
-// CONFETTI — fires when a patient shows improvement trend
+// CONFETTI
 // ═══════════════════════════════════
 const confettiCanvas = document.getElementById('confetti-canvas');
 const confettiCtx = confettiCanvas.getContext('2d');
@@ -472,11 +470,9 @@ function exportPatientPDF() {
     </div>
     <hr style="border:none;border-top:1px solid #E8D9B8;margin-bottom:16px;">
   `;
-  // Show both cards for print
   document.getElementById('bpDetailCard').classList.remove('hidden');
   document.getElementById('a1cDetailCard').classList.remove('hidden');
   window.print();
-  // Restore metric view after print
   setTimeout(() => {
     setDetailMetric(currentDetailMetric);
     ph.innerHTML = '';
@@ -587,13 +583,12 @@ function renderHomeStats() {
     if (getBPTrend(p.bpReadings||[]) === 'improving' || getA1CTrend(p.a1cReadings||[]) === 'improving') improving++;
   }
 
-  // Topbar stats (plain)
   document.getElementById('stat-patients').textContent = pCount;
   document.getElementById('stat-readings').textContent = rCount;
   document.getElementById('stat-alerts').textContent = aCount;
 
-  // Animated impact chips on home page
   animateCount(document.getElementById('imp-patients'), pCount);
   animateCount(document.getElementById('imp-readings'), rCount);
   animateCount(document.getElementById('imp-improving'), improving);
   animateCount(document.getElementById('imp-alerts'), aCount);
+}
