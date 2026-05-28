@@ -2,12 +2,7 @@
 // AI VISIT NOTE GENERATOR — Powered by Claude
 // ═══════════════════════════════════
 
-const CLAUDE_API_KEY = 'curl https://api.anthropic.com/v1/messages \
-  --header "x-api-key: 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" \
-  --header "anthropic-version: 2023-06-01" \
-  --header "content-type: application/json" \
-  --data '{"model": "claude-sonnet-4-6", "max_tokens": 1024,
-    "messages": [{"role": "user", "content": "Hello, world"}]}''; // 🔑 Replace with your Anthropic API key
+const CLAUDE_API_KEY = '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';
 
 let currentNoteFormat = 'soap';
 
