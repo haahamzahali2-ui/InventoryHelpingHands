@@ -212,20 +212,27 @@
 
     </div><!-- /page-patients -->
 
-    <!-- PATIENT DETAIL PAGE -->
-    <div class="page" id="page-detail">
-      <div class="section-header">
-        <button class="back-btn" onclick="showPage('patients')">&#8592; Patients</button>
-        <h2 id="detailTitle">Patient #—</h2>
-        <div class="patient-detail-tags" id="detailTags"></div>
-      </div>
-      <div id="patientAlertPanel"></div>
-      <div id="famPatientPanel"></div>
-      <div class="print-header" id="printHeader"></div>
-      <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
-      <button class="add-data-btn" style="margin-left:8px;" onclick="openAddMedicationModal()">+ Add Medication</button>
-      <button class="export-pdf-btn" onclick="exportPatientPDF()">⬇ Export PDF</button>
-      <button class="export-pdf-btn" style="margin-left:8px;background:linear-gradient(135deg,#1A1208,#2C2010);color:var(--gold-light);border-color:rgba(201,168,76,0.3);" onclick="openVisitNoteModal()">🤖 Generate Visit Note</button>
+   <!-- PATIENT DETAIL PAGE -->
+<div class="page" id="page-detail">
+  <div class="section-header">
+    <button class="back-btn" onclick="showPage('patients')">&#8592; Patients</button>
+    <h2 id="detailTitle">Patient #—</h2>
+    <div class="patient-detail-tags" id="detailTags"></div>
+  </div>
+
+  <div id="patientAlertPanel"></div>
+  <div class="print-header" id="printHeader"></div>
+
+  <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
+  <button class="add-data-btn" style="margin-left:8px;" onclick="openAddMedicationModal()">+ Add Medication</button>
+  <button class="export-pdf-btn" onclick="exportPatientPDF()">⬇ Export PDF</button>
+  <button class="export-pdf-btn" style="margin-left:8px;background:linear-gradient(135deg,#1A1208,#2C2010);color:var(--gold-light);border-color:rgba(201,168,76,0.3);" onclick="openVisitNoteModal()">🤖 Generate Visit Note</button>
+
+  <!-- TWO-COLUMN LAYOUT: main content + FaM sidebar -->
+  <div class="patient-detail-layout">
+
+    <!-- LEFT: charts, tables, metrics -->
+    <div class="patient-detail-main">
       <div class="metric-tabs">
         <button class="metric-tab active" id="metric-tab-bp" onclick="setDetailMetric('bp')">Blood Pressure</button>
         <button class="metric-tab" id="metric-tab-a1c" onclick="setDetailMetric('a1c')">A1C</button>
