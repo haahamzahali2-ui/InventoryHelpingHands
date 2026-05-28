@@ -149,11 +149,18 @@ window.fetchFromSheet = async function() {
 // ═══════════════════════════════════
 let currentSort = 'id';
 
-function setSort(sort, btn) {
-  currentSort = sort;
-  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderPatientsGrid(document.getElementById('patientSearch')?.value.trim() || '');
+function setSort(sortKey, btn) {
+  // ✅ Toggle off if already active
+  if (btn.classList.contains('active')) {
+    btn.classList.remove('active');
+    currentSort = 'id'; // reset to default
+  } else {
+    document.querySelectorAll('.pt-chip-row .sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSort = sortKey;
+  }
+  const range = getTimeFilterRange(currentTimeFilter);
+  renderPatientsGrid(document.getElementById('patientSearch')?.value.trim() || '', range);
 }
 
 function getDaysSinceLastReading(pid) {
@@ -259,13 +266,22 @@ function patientHasReadingInRange(pid, range) {
 
 function setTimeFilter(filter, btn) {
   currentTimeFilter = filter;
-  document.querySelectorAll('.time-filter-bar .time-filter-btn').forEach(b => b.classList.remove('active'));
+
+  // ✅ Fixed selector to match your actual HTML
+  document.querySelectorAll('.pt-chip-row .pt-chip:not(.sort-btn)').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+
   const range = getTimeFilterRange(filter);
   const allIds = Object.keys(db.patients);
   const filtered = range ? allIds.filter(pid => patientHasReadingInRange(pid, range)) : allIds;
+
   const statsEl = document.getElementById('timeFilterStats');
-  if (statsEl) statsEl.textContent = filter !== 'all' ? `${filtered.length} patient${filtered.length !== 1 ? 's' : ''} with readings in period` : '';
+  if (statsEl) {
+    statsEl.textContent = filter !== 'all'
+      ? `${filtered.length} patient${filtered.length !== 1 ? 's' : ''} with readings in period`
+      : '';
+  }
+
   renderPatientsGrid(document.getElementById('patientSearch')?.value.trim() || '', range);
 }
 
