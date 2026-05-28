@@ -1,6 +1,18 @@
-﻿// ═══════════════════════════════════
+// ═══════════════════════════════════
 // PATIENTS — grid, detail view, readings CRUD, milestones, sticky notes
 // ═══════════════════════════════════
+
+// ═══════════════════════════════════
+// VIEW MODE (grid / list)
+// ═══════════════════════════════════
+let patientViewMode = 'grid'; // 'grid' | 'list'
+
+function setPatientView(mode) {
+  patientViewMode = mode;
+  document.getElementById('viewBtn-grid').classList.toggle('active', mode === 'grid');
+  document.getElementById('viewBtn-list').classList.toggle('active', mode === 'list');
+  renderPatientsGrid(document.getElementById('patientSearch')?.value.trim() || '');
+}
 
 // ═══════════════════════════════════
 // PATIENTS GRID
@@ -24,93 +36,143 @@ function renderPatientsGrid(filter = '', range = null) {
   const countEl = document.getElementById('patientCountLabel');
   if (countEl) countEl.textContent = `${ids.length} patient${ids.length !== 1 ? 's' : ''}`;
 
+  // Switch layout class
+  grid.className = patientViewMode === 'list' ? 'patients-list' : 'patients-grid';
+
+  if (ids.length === 0) {
+    grid.innerHTML = `<div class="patients-empty-state">
+      <div class="patients-empty-icon">🔍</div>
+      <div class="patients-empty-title">No patients found</div>
+      <div class="patients-empty-sub">Try adjusting your search or filters</div>
+    </div>`;
+    return;
+  }
+
   const cards = ids.map(id => {
     const p = db.patients[id];
-    const lastBP = (p.bpReadings||[]).slice(-1)[0];
+    const lastBP  = (p.bpReadings||[]).slice(-1)[0];
     const lastA1C = (p.a1cReadings||[]).slice(-1)[0];
-    const bpStatus = lastBP ? getBPStatus(lastBP.sys, lastBP.dia) : null;
-    const a1cStatus = lastA1C ? getA1CStatus(lastA1C.val) : null;
+    const bpStatus  = lastBP  ? getBPStatus(lastBP.sys, lastBP.dia)  : null;
+    const a1cStatus = lastA1C ? getA1CStatus(lastA1C.val)            : null;
 
     let cardClass = '';
     if (bpStatus === 'critical' || a1cStatus === 'critical') cardClass = 'has-critical';
     else if (bpStatus === 'warning' || a1cStatus === 'warning') cardClass = 'has-warning';
 
-    // BP block
-    const bpValClass = bpStatus ? `val-${bpStatus}` : '';
-    const bpDisplay = lastBP
-      ? `<div class="patient-reading-value ${bpValClass}">${lastBP.sys}/${lastBP.dia}</div><div class="patient-reading-unit">mmHg</div>`
-      : `<div class="patient-reading-value" style="font-size:15px;color:var(--text-light);font-family:'DM Sans'">—</div><div class="patient-reading-unit">No data</div>`;
-
-    // A1C block
+    const bpValClass  = bpStatus  ? `val-${bpStatus}`  : '';
     const a1cValClass = a1cStatus ? `val-${a1cStatus}` : '';
+
+    const bpDisplay = lastBP
+      ? `<span class="pcard-val ${bpValClass}">${lastBP.sys}/${lastBP.dia}</span><span class="pcard-unit">mmHg</span>`
+      : `<span class="pcard-val pcard-nodata">—</span><span class="pcard-unit">No data</span>`;
+
     const a1cDisplay = lastA1C
-      ? `<div class="patient-reading-value ${a1cValClass}">${lastA1C.val}%</div><div class="patient-reading-unit">A1C</div>`
-      : `<div class="patient-reading-value" style="font-size:15px;color:var(--text-light);font-family:'DM Sans'">—</div><div class="patient-reading-unit">No data</div>`;
+      ? `<span class="pcard-val ${a1cValClass}">${lastA1C.val}%</span><span class="pcard-unit">A1C</span>`
+      : `<span class="pcard-val pcard-nodata">—</span><span class="pcard-unit">No data</span>`;
 
-    // Sticky note flag
+    // Sticky note
     const sticky = db.stickies && db.stickies[id];
-    const stickyHtml = sticky ? `<div class="sticky-flag" onclick="event.stopPropagation();openStickyModal('${id}')" title="${escapeHtml(sticky.note)}">📌</div>` : `<div class="sticky-flag" onclick="event.stopPropagation();openStickyModal('${id}')" title="Add staff note" style="opacity:0.25">📌</div>`;
+    const stickyHtml = `<button class="pcard-sticky ${sticky ? 'has-note' : ''}" onclick="event.stopPropagation();openStickyModal('${id}')" title="${sticky ? escapeHtml(sticky.note) : 'Add staff note'}">📌</button>`;
 
-    // Milestone badges
-    const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
-const badges = getMilestoneBadges(id);
-    const famBadge = isFAMEnrolled(id) ? `<span class="fam-card-badge" title="Enrolled: ${escapeHtml(p.famProgramType || 'Food as Medicine')}">🥗 FaM</span>` : '';
-    const allBadgesHtml = badges.map(b=>`<span class="milestone-badge" title="${b.title}">${b.icon} ${b.label}</span>`).join('') + famBadge;
-    const badgesHtml = allBadgesHtml ? `<div class="milestone-badges">${allBadgesHtml}</div>` : '';
-
-    // Last seen badge
+    // Last seen
     const allDates = [...(p.bpReadings||[]), ...(p.a1cReadings||[])].map(r => r.datetime).filter(Boolean).sort();
     const lastDate = allDates.slice(-1)[0];
-    let lastSeenHtml = '';
+    let lastSeenLabel = 'Never seen';
+    let lastSeenClass = 'old';
+    let overdueHtml = '';
     if (lastDate) {
       const daysDiff = Math.floor((Date.now() - new Date(lastDate)) / 86400000);
-      const dotClass = daysDiff <= 7 ? 'recent' : daysDiff <= 30 ? '' : 'old';
-      const label = daysDiff === 0 ? 'Today' : daysDiff === 1 ? 'Yesterday' : daysDiff < 30 ? `${daysDiff}d ago` : `${Math.floor(daysDiff/30)}mo ago`;
-      const overdueHtml = daysDiff >= 60 ? `<span class="overdue-badge">⏰ Overdue ${daysDiff}d</span>` : '';
-      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot ${dotClass}"></div>Last visit: ${label} ${overdueHtml}</div>`;
+      lastSeenClass = daysDiff <= 7 ? 'recent' : daysDiff <= 30 ? 'ok' : 'old';
+      lastSeenLabel = daysDiff === 0 ? 'Today' : daysDiff === 1 ? 'Yesterday' : daysDiff < 30 ? `${daysDiff}d ago` : `${Math.floor(daysDiff/30)}mo ago`;
+      if (daysDiff >= 60) overdueHtml = `<span class="pcard-overdue">⏰ Overdue</span>`;
     } else {
-      lastSeenHtml = `<div class="patient-last-seen"><div class="patient-last-seen-dot old"></div>No visits yet <span class="overdue-badge">⏰ Never seen</span></div>`;
+      overdueHtml = `<span class="pcard-overdue">⏰ Never seen</span>`;
     }
 
+    // Badges
+    const milestoneBadges = getMilestoneBadges(id);
+    const famBadge = isFAMEnrolled(id) ? `<span class="pcard-fam-badge">🥗 FaM</span>` : '';
+    const criticalBadge = (bpStatus === 'critical' || a1cStatus === 'critical') ? `<span class="pcard-status-badge critical">Critical</span>` : (bpStatus === 'warning' || a1cStatus === 'warning') ? `<span class="pcard-status-badge warning">Needs Attention</span>` : '';
+    const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
+
+    if (patientViewMode === 'list') {
+      // ── LIST ROW ──────────────────────────────────────────────────────
+      return `<div class="patient-list-row ${cardClass}" onclick="openPatient('${id}')">
+        <div class="plr-indicator ${cardClass}"></div>
+        <div class="plr-id">
+          <div class="plr-id-num">#${id}</div>
+          ${famBadge}
+        </div>
+        <div class="plr-metric">
+          <div class="plr-metric-label">BP</div>
+          <div class="plr-metric-val">${lastBP ? `<span class="${bpValClass}">${lastBP.sys}/${lastBP.dia}</span>` : '<span class="plr-nodata">—</span>'}</div>
+        </div>
+        <div class="plr-metric">
+          <div class="plr-metric-label">A1C</div>
+          <div class="plr-metric-val">${lastA1C ? `<span class="${a1cValClass}">${lastA1C.val}%</span>` : '<span class="plr-nodata">—</span>'}</div>
+        </div>
+        <div class="plr-lastseen">
+          <div class="plr-dot ${lastSeenClass}"></div>
+          <span>${lastSeenLabel}</span>
+          ${overdueHtml}
+        </div>
+        <div class="plr-readings">${totalReadings} reading${totalReadings !== 1 ? 's' : ''}</div>
+        ${criticalBadge ? `<div class="plr-status">${criticalBadge}</div>` : '<div class="plr-status"></div>'}
+        <div class="plr-actions">
+          ${stickyHtml}
+          <div class="plr-arrow">→</div>
+        </div>
+      </div>`;
+    }
+
+    // ── GRID CARD ────────────────────────────────────────────────────────
     return `<div class="patient-card ${cardClass}" onclick="openPatient('${id}')">
-      <div class="patient-card-stripe"></div>
-      ${stickyHtml}
-      <div class="patient-card-body">
-        <div class="patient-card-top">
-          <div class="patient-id-badge">
-            <div>
-              <div class="patient-id-label">Patient</div>
-              <div class="patient-id-number">#${id}</div>
-            </div>
+      <div class="pcard-stripe"></div>
+      <div class="pcard-body">
+        <div class="pcard-header">
+          <div class="pcard-id-group">
+            <span class="pcard-id-label">Patient</span>
+            <span class="pcard-id">#${id}</span>
           </div>
-          <div class="patient-status-dot"></div>
-        </div>
-        <div class="patient-readings">
-          <div class="patient-reading-block">
-            <div class="patient-reading-label">Blood Pressure</div>
-            ${bpDisplay}
-          </div>
-          <div class="patient-reading-block">
-            <div class="patient-reading-label">A1C</div>
-            ${a1cDisplay}
+          <div class="pcard-header-right">
+            ${famBadge}
+            ${stickyHtml}
           </div>
         </div>
-        ${badgesHtml}
-        <div class="patient-card-footer">
-          <div>
-            <div class="patient-reading-count">${totalReadings} reading${totalReadings !== 1 ? 's' : ''}</div>
-            ${lastSeenHtml}
+
+        <div class="pcard-readings">
+          <div class="pcard-metric">
+            <div class="pcard-metric-label">Blood Pressure</div>
+            <div class="pcard-metric-value">${bpDisplay}</div>
           </div>
-          <div class="patient-card-arrow-icon">&#8594;</div>
+          <div class="pcard-divider"></div>
+          <div class="pcard-metric">
+            <div class="pcard-metric-label">A1C</div>
+            <div class="pcard-metric-value">${a1cDisplay}</div>
+          </div>
+        </div>
+
+        ${criticalBadge || milestoneBadges.length ? `<div class="pcard-badges">
+          ${criticalBadge}
+          ${milestoneBadges.map(b=>`<span class="milestone-badge" title="${b.title}">${b.icon} ${b.label}</span>`).join('')}
+        </div>` : ''}
+
+        <div class="pcard-footer">
+          <div class="pcard-lastseen">
+            <span class="pcard-dot ${lastSeenClass}"></span>
+            <span>${lastSeenLabel}</span>
+            ${overdueHtml}
+          </div>
+          <div class="pcard-meta">
+            <span class="pcard-count">${totalReadings} visit${totalReadings !== 1 ? 's' : ''}</span>
+            <span class="pcard-arrow">→</span>
+          </div>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  grid.innerHTML = cards + `<button class="add-patient-btn" onclick="openAddPatientModal()">
-    <div class="plus-icon">+</div>
-    Add New Patient
-  </button>`;
+  grid.innerHTML = cards;
 
   const banner = document.getElementById('sheetSetupBanner');
   if (sheetWriteUrl || sheetId) banner.style.display = 'none';
@@ -132,18 +194,18 @@ function openPatient(id) {
   document.getElementById('detailTitle').textContent = `Patient #${id}`;
   document.getElementById('addDataModalSub').textContent = `Patient #${id}`;
   document.getElementById('addMedicationModalSub').textContent = `Patient #${id}`;
-  const bpReadings = p.bpReadings || [];
+  const bpReadings  = p.bpReadings  || [];
   const a1cReadings = p.a1cReadings || [];
-  const lastBP = bpReadings.slice(-1)[0];
+  const lastBP  = bpReadings.slice(-1)[0];
   const lastA1C = a1cReadings.slice(-1)[0];
-  const bpStatus = lastBP ? getBPStatus(lastBP.sys, lastBP.dia) : null;
-  const a1cStatus = lastA1C ? getA1CStatus(lastA1C.val) : null;
+  const bpStatus  = lastBP  ? getBPStatus(lastBP.sys, lastBP.dia)  : null;
+  const a1cStatus = lastA1C ? getA1CStatus(lastA1C.val)            : null;
   const tagsEl = document.getElementById('detailTags');
   let tags = '';
-  if (bpStatus) tags += `<span class="tag ${bpStatus}">BP: ${bpStatus}</span>`;
+  if (bpStatus)  tags += `<span class="tag ${bpStatus}">BP: ${bpStatus}</span>`;
   if (a1cStatus) tags += `<span class="tag ${a1cStatus}">A1C: ${a1cStatus}</span>`;
   tagsEl.innerHTML = tags;
-renderPatientAlertPanel(id, bpStatus, a1cStatus, lastBP, lastA1C);
+  renderPatientAlertPanel(id, bpStatus, a1cStatus, lastBP, lastA1C);
   renderFAMPatientPanel(id);
   renderBPChart(bpReadings);
   renderA1CChart(a1cReadings);
@@ -156,7 +218,7 @@ renderPatientAlertPanel(id, bpStatus, a1cStatus, lastBP, lastA1C);
 function renderPatientAlertPanel(id, bpStatus, a1cStatus, lastBP, lastA1C) {
   const el = document.getElementById('patientAlertPanel');
   if (patientAlertDismissed[id]) { el.innerHTML = ''; return; }
-  if (!bpStatus && !a1cStatus) { el.innerHTML = ''; return; }
+  if (!bpStatus && !a1cStatus)   { el.innerHTML = ''; return; }
   let msgs = [];
   if (bpStatus === 'critical') msgs.push(`Last BP reading (${lastBP.sys}/${lastBP.dia} mmHg) indicates <strong>Hypertensive Urgency</strong> — immediate attention required.`);
   else if (bpStatus === 'warning') msgs.push(`Last BP reading (${lastBP.sys}/${lastBP.dia} mmHg) indicates <strong>Stage 2 Hypertension</strong>.`);
@@ -182,28 +244,28 @@ function setDetailMetric(metric) {
 
 
 // ── EDIT / DELETE READINGS ──────────────────────────
-let editReadingType = null;
+let editReadingType  = null;
 let editReadingIndex = null;
 
 function openEditReading(type, idx) {
-  editReadingType = type;
+  editReadingType  = type;
   editReadingIndex = idx;
   const p = db.patients[currentPatientId];
   const r = type === 'bp' ? p.bpReadings[idx] : p.a1cReadings[idx];
-  document.getElementById('editReadingTitle').textContent = type === 'bp' ? 'Edit Blood Pressure' : 'Edit A1C Reading';
+  document.getElementById('editReadingTitle').textContent    = type === 'bp' ? 'Edit Blood Pressure' : 'Edit A1C Reading';
   document.getElementById('editReadingModalSub').textContent = `Patient #${currentPatientId}`;
   document.getElementById('readingDeleteBar').classList.remove('show');
-  document.getElementById('editReadingBPFields').style.display = type === 'bp' ? 'block' : 'none';
+  document.getElementById('editReadingBPFields').style.display  = type === 'bp'  ? 'block' : 'none';
   document.getElementById('editReadingA1CFields').style.display = type === 'a1c' ? 'block' : 'none';
   if (type === 'bp') {
-    document.getElementById('edit-bp-datetime').value = r.datetime || '';
-    document.getElementById('edit-bp-systolic').value = r.sys || '';
+    document.getElementById('edit-bp-datetime').value  = r.datetime || '';
+    document.getElementById('edit-bp-systolic').value  = r.sys || '';
     document.getElementById('edit-bp-diastolic').value = r.dia || '';
-    document.getElementById('edit-bp-note').value = r.note || '';
+    document.getElementById('edit-bp-note').value      = r.note || '';
   } else {
     document.getElementById('edit-a1c-datetime').value = r.datetime || '';
-    document.getElementById('edit-a1c-value').value = r.val || '';
-    document.getElementById('edit-a1c-note').value = r.note || '';
+    document.getElementById('edit-a1c-value').value    = r.val || '';
+    document.getElementById('edit-a1c-note').value     = r.note || '';
   }
   document.getElementById('editReadingModal').classList.add('open');
 }
@@ -213,15 +275,15 @@ function saveEditedReading() {
   const p = db.patients[currentPatientId];
   const oldReading = editReadingType === 'bp' ? { ...p.bpReadings[editReadingIndex] } : { ...p.a1cReadings[editReadingIndex] };
   if (editReadingType === 'bp') {
-    const sys = parseFloat(document.getElementById('edit-bp-systolic').value);
-    const dia = parseFloat(document.getElementById('edit-bp-diastolic').value);
-    const dt = document.getElementById('edit-bp-datetime').value;
+    const sys  = parseFloat(document.getElementById('edit-bp-systolic').value);
+    const dia  = parseFloat(document.getElementById('edit-bp-diastolic').value);
+    const dt   = document.getElementById('edit-bp-datetime').value;
     const note = document.getElementById('edit-bp-note').value.trim();
     if (!sys || !dia || !dt) { showToast('Please fill in all fields'); return; }
     p.bpReadings[editReadingIndex] = { sys, dia, datetime: dt, note };
   } else {
-    const val = parseFloat(document.getElementById('edit-a1c-value').value);
-    const dt = document.getElementById('edit-a1c-datetime').value;
+    const val  = parseFloat(document.getElementById('edit-a1c-value').value);
+    const dt   = document.getElementById('edit-a1c-datetime').value;
     const note = document.getElementById('edit-a1c-note').value.trim();
     if (!val || !dt) { showToast('Please fill in all fields'); return; }
     p.a1cReadings[editReadingIndex] = { val, datetime: dt, note };
@@ -229,8 +291,6 @@ function saveEditedReading() {
   p.bpReadings.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   p.a1cReadings.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   saveDB();
-  // Sync edit to sheet: delete old then add new
-  const newReading = editReadingType === 'bp' ? p.bpReadings.find(r => r !== oldReading) || p.bpReadings[editReadingIndex] : p.a1cReadings[editReadingIndex];
   postToSheetBackend('delete_reading', { patientId: currentPatientId, type: editReadingType, datetime: oldReading.datetime })
     .then(() => postToSheetBackend('add_reading', { patientId: currentPatientId, type: editReadingType, ...( editReadingType === 'bp' ? p.bpReadings.find(r => r.datetime === document.getElementById('edit-bp-datetime').value) || p.bpReadings.slice(-1)[0] : p.a1cReadings.find(r => r.datetime === document.getElementById('edit-a1c-datetime')?.value) || p.a1cReadings.slice(-1)[0] ) }))
     .catch(() => showToast('Reading updated locally; sheet sync failed'));
@@ -242,7 +302,7 @@ function saveEditedReading() {
 async function confirmDeleteReading() {
   if (editReadingIndex === null || !currentPatientId) return;
   const p = db.patients[currentPatientId];
-  const deletedReading = editReadingType === 'bp' ? p.bpReadings[editReadingIndex] : p.a1cReadings[editReadingIndex];
+  const deletedReading  = editReadingType === 'bp' ? p.bpReadings[editReadingIndex] : p.a1cReadings[editReadingIndex];
   const deletedDatetime = deletedReading?.datetime || '';
   if (editReadingType === 'bp') p.bpReadings.splice(editReadingIndex, 1);
   else p.a1cReadings.splice(editReadingIndex, 1);
@@ -251,13 +311,8 @@ async function confirmDeleteReading() {
   openPatient(currentPatientId);
   renderHomeStats();
   showToast('Reading deleted ✓');
-  // Sync deletion to sheet
   try {
-    await postToSheetBackend('delete_reading', {
-      patientId: currentPatientId,
-      type: editReadingType,
-      datetime: deletedDatetime
-    });
+    await postToSheetBackend('delete_reading', { patientId: currentPatientId, type: editReadingType, datetime: deletedDatetime });
   } catch(e) {
     showToast('Deleted locally — sheet sync failed. Re-open and retry.');
   }
@@ -272,9 +327,9 @@ async function saveReading() {
   if (!db.patients[currentPatientId]) db.patients[currentPatientId] = { bpReadings: [], a1cReadings: [], medications: [] };
   const p = db.patients[currentPatientId];
   if (activeModalTab === 'bp') {
-    const sys = parseFloat(document.getElementById('bp-systolic').value);
-    const dia = parseFloat(document.getElementById('bp-diastolic').value);
-    const dt = document.getElementById('bp-datetime').value;
+    const sys  = parseFloat(document.getElementById('bp-systolic').value);
+    const dia  = parseFloat(document.getElementById('bp-diastolic').value);
+    const dt   = document.getElementById('bp-datetime').value;
     const note = document.getElementById('bp-note').value.trim();
     if (!sys || !dia || !dt) { showToast('Please fill in all fields'); return; }
     const newReading = { sys, dia, datetime: dt, note };
@@ -284,8 +339,8 @@ async function saveReading() {
     try { await postToSheetBackend('add_reading', { patientId: currentPatientId, type: 'bp', ...newReading }); }
     catch (e) { showToast('BP reading saved locally; Google Sheets write failed.'); }
   } else {
-    const val = parseFloat(document.getElementById('a1c-value').value);
-    const dt = document.getElementById('a1c-datetime').value;
+    const val  = parseFloat(document.getElementById('a1c-value').value);
+    const dt   = document.getElementById('a1c-datetime').value;
     const note = document.getElementById('a1c-note').value.trim();
     if (!val || !dt) { showToast('Please fill in all fields'); return; }
     const newReading = { val, datetime: dt, note };
