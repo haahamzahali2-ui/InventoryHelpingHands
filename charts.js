@@ -452,12 +452,9 @@ function setBreakdownMetric(metric, btn) {
 
 function setBreakdownSort(sort, btn) {
   currentBreakdownSort = sort;
-  document.querySelectorAll('#page-breakdown .bd-chip-row:first-of-type .bd-chip').forEach(b => b.classList.remove('active'));
-  // safer: just mark the clicked button active
+  // Deactivate only sort chips (those calling setBreakdownSort)
   document.querySelectorAll('#page-breakdown .bd-chip').forEach(b => {
-    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("setBreakdownSort")) {
-      b.classList.remove('active');
-    }
+    if ((b.getAttribute('onclick') || '').includes('setBreakdownSort')) b.classList.remove('active');
   });
   btn.classList.add('active');
   renderPatientBreakdownTable(currentBreakdownMetric);
@@ -465,10 +462,9 @@ function setBreakdownSort(sort, btn) {
 
 function setBreakdownFaMFilter(filter, btn) {
   currentBreakdownFaMFilter = filter;
+  // Deactivate only FaM filter chips (those calling setBreakdownFaMFilter)
   document.querySelectorAll('#page-breakdown .bd-chip').forEach(b => {
-    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("setBreakdownFaMFilter")) {
-      b.classList.remove('active');
-    }
+    if ((b.getAttribute('onclick') || '').includes('setBreakdownFaMFilter')) b.classList.remove('active');
   });
   btn.classList.add('active');
   renderPatientBreakdownTable(currentBreakdownMetric);
@@ -502,11 +498,14 @@ function renderPatientBreakdownTable(metric) {
   const tbody = document.querySelector('#patientBreakdownTable tbody');
   let patients = Object.keys(db.patients);
 
+  // Guard: isFAMEnrolled comes from foodAsMedicine.js — fall back gracefully
+  const famCheck = (typeof isFAMEnrolled === 'function') ? isFAMEnrolled : () => false;
+
   // ── FaM filter ──────────────────────────────────────────────
   if (currentBreakdownFaMFilter === 'fam') {
-    patients = patients.filter(pid => isFAMEnrolled(pid));
+    patients = patients.filter(pid => famCheck(pid));
   } else if (currentBreakdownFaMFilter === 'nonfam') {
-    patients = patients.filter(pid => !isFAMEnrolled(pid));
+    patients = patients.filter(pid => !famCheck(pid));
   }
 
   if (patients.length === 0) {
@@ -541,7 +540,7 @@ function renderPatientBreakdownTable(metric) {
       stable:    '<span class="trend-badge stable">Stable</span>',
       new:       '<span class="trend-badge new">Insufficient Data</span>'
     };
-    const famTag = isFAMEnrolled(pid) ? '<span style="font-size:11px;margin-left:6px;" title="FaM enrolled">🥗</span>' : '';
+    const famTag = famCheck(pid) ? '<span style="font-size:11px;margin-left:6px;" title="FaM enrolled">🥗</span>' : '';
     const lastSeenDays = getBreakdownLastSeenDays(pid);
     const lastVal      = getBreakdownLastValue(pid, metric);
     return { pid, prevStr, lastStr, changeStr, trend, badge: badgeMap[trend] || '', lastSeenDays, lastVal, famTag };
