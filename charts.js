@@ -440,7 +440,8 @@ function renderA1COutcomesChart(outcomes) {
 // ═══════════════════════════════════
 // BREAKDOWN PAGE
 // ═══════════════════════════════════
-let currentBreakdownSort = 'default';
+let currentBreakdownSort      = 'default';
+let currentBreakdownFaMFilter = 'all'; // 'all' | 'fam' | 'nonfam'
 
 function setBreakdownMetric(metric, btn) {
   currentBreakdownMetric = metric;
@@ -451,12 +452,29 @@ function setBreakdownMetric(metric, btn) {
 
 function setBreakdownSort(sort, btn) {
   currentBreakdownSort = sort;
-  document.querySelectorAll('#page-breakdown .sort-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-breakdown .bd-chip-row:first-of-type .bd-chip').forEach(b => b.classList.remove('active'));
+  // safer: just mark the clicked button active
+  document.querySelectorAll('#page-breakdown .bd-chip').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("setBreakdownSort")) {
+      b.classList.remove('active');
+    }
+  });
   btn.classList.add('active');
   renderPatientBreakdownTable(currentBreakdownMetric);
 }
 
-// Returns days since the most recent reading for this patient (any type)
+function setBreakdownFaMFilter(filter, btn) {
+  currentBreakdownFaMFilter = filter;
+  document.querySelectorAll('#page-breakdown .bd-chip').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("setBreakdownFaMFilter")) {
+      b.classList.remove('active');
+    }
+  });
+  btn.classList.add('active');
+  renderPatientBreakdownTable(currentBreakdownMetric);
+}
+
+// Returns days since most recent reading for this patient (any type)
 function getBreakdownLastSeenDays(pid) {
   const p = db.patients[pid];
   if (!p) return 9999;
@@ -467,13 +485,13 @@ function getBreakdownLastSeenDays(pid) {
   return Math.floor((Date.now() - new Date(last + 'T00:00:00')) / 86400000);
 }
 
-// Returns the numeric value of the most recent reading for sorting by value
+// Returns the numeric value of the most recent metric reading for sorting
 function getBreakdownLastValue(pid, metric) {
   const p = db.patients[pid];
   if (!p) return null;
   if (metric === 'bp') {
     const last = (p.bpReadings || []).slice(-1)[0];
-    return last ? last.sys : null; // sort by systolic
+    return last ? last.sys : null;
   } else {
     const last = (p.a1cReadings || []).slice(-1)[0];
     return last ? last.val : null;
@@ -482,26 +500,39 @@ function getBreakdownLastValue(pid, metric) {
 
 function renderPatientBreakdownTable(metric) {
   const tbody = document.querySelector('#patientBreakdownTable tbody');
-  const patients = Object.keys(db.patients);
+  let patients = Object.keys(db.patients);
+
+  // ── FaM filter ──────────────────────────────────────────────
+  if (currentBreakdownFaMFilter === 'fam') {
+    patients = patients.filter(pid => isFAMEnrolled(pid));
+  } else if (currentBreakdownFaMFilter === 'nonfam') {
+    patients = patients.filter(pid => !isFAMEnrolled(pid));
+  }
+
   if (patients.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:28px;font-style:italic;">No patient data</td></tr>';
+    const label = currentBreakdownFaMFilter === 'fam'
+      ? 'No FaM-enrolled patients found'
+      : currentBreakdownFaMFilter === 'nonfam'
+        ? 'No non-FaM patients found'
+        : 'No patient data';
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:28px;font-style:italic;">${label}</td></tr>`;
     return;
   }
 
   const rows = patients.map(pid => {
     const p = db.patients[pid];
     const readings = metric === 'bp' ? (p.bpReadings || []) : (p.a1cReadings || []);
-    const trend = metric === 'bp' ? getBPTrend(readings) : getA1CTrend(readings);
-    const last = readings.slice(-1)[0];
-    const prev = readings.slice(-2)[0];
+    const trend    = metric === 'bp' ? getBPTrend(readings) : getA1CTrend(readings);
+    const last     = readings.slice(-1)[0];
+    const prev     = readings.slice(-2)[0];
     let prevStr = '—', lastStr = '—', changeStr = '—';
     if (metric === 'bp') {
-      prevStr = prev ? `${prev.sys}/${prev.dia} mmHg` : '—';
-      lastStr = last ? `${last.sys}/${last.dia} mmHg` : '—';
+      prevStr  = prev ? `${prev.sys}/${prev.dia} mmHg` : '—';
+      lastStr  = last ? `${last.sys}/${last.dia} mmHg` : '—';
       if (prev && last) { const diff = last.sys - prev.sys; changeStr = (diff > 0 ? '+' : '') + diff + ' mmHg (sys)'; }
     } else {
-      prevStr = prev ? `${prev.val}%` : '—';
-      lastStr = last ? `${last.val}%` : '—';
+      prevStr  = prev ? `${prev.val}%` : '—';
+      lastStr  = last ? `${last.val}%` : '—';
       if (prev && last) { const diff = (last.val - prev.val).toFixed(1); changeStr = (diff > 0 ? '+' : '') + diff + '%'; }
     }
     const badgeMap = {
@@ -510,34 +541,30 @@ function renderPatientBreakdownTable(metric) {
       stable:    '<span class="trend-badge stable">Stable</span>',
       new:       '<span class="trend-badge new">Insufficient Data</span>'
     };
+    const famTag = isFAMEnrolled(pid) ? '<span style="font-size:11px;margin-left:6px;" title="FaM enrolled">🥗</span>' : '';
     const lastSeenDays = getBreakdownLastSeenDays(pid);
     const lastVal      = getBreakdownLastValue(pid, metric);
-    return { pid, prevStr, lastStr, changeStr, trend, badge: badgeMap[trend] || '', lastSeenDays, lastVal };
+    return { pid, prevStr, lastStr, changeStr, trend, badge: badgeMap[trend] || '', lastSeenDays, lastVal, famTag };
   });
 
-  // ── Apply sort ──────────────────────────────────────────────────────────
+  // ── Sort ────────────────────────────────────────────────────
   switch (currentBreakdownSort) {
     case 'lastseen':
-      // Most recently seen first (fewest days ago = smallest number first)
       rows.sort((a, b) => a.lastSeenDays - b.lastSeenDays);
       break;
-
     case 'improving':
       rows.sort((a, b) => {
-        const order = { improving: 0, stable: 1, new: 2, worsening: 3 };
-        return (order[a.trend] ?? 99) - (order[b.trend] ?? 99);
+        const o = { improving: 0, stable: 1, new: 2, worsening: 3 };
+        return (o[a.trend] ?? 99) - (o[b.trend] ?? 99);
       });
       break;
-
     case 'worsening':
       rows.sort((a, b) => {
-        const order = { worsening: 0, stable: 1, new: 2, improving: 3 };
-        return (order[a.trend] ?? 99) - (order[b.trend] ?? 99);
+        const o = { worsening: 0, stable: 1, new: 2, improving: 3 };
+        return (o[a.trend] ?? 99) - (o[b.trend] ?? 99);
       });
       break;
-
     case 'highest':
-      // Highest BP (systolic) or A1C first; nulls go to the bottom
       rows.sort((a, b) => {
         if (a.lastVal === null && b.lastVal === null) return 0;
         if (a.lastVal === null) return 1;
@@ -545,9 +572,7 @@ function renderPatientBreakdownTable(metric) {
         return b.lastVal - a.lastVal;
       });
       break;
-
     case 'lowest':
-      // Lowest BP (systolic) or A1C first; nulls go to the bottom
       rows.sort((a, b) => {
         if (a.lastVal === null && b.lastVal === null) return 0;
         if (a.lastVal === null) return 1;
@@ -555,18 +580,17 @@ function renderPatientBreakdownTable(metric) {
         return a.lastVal - b.lastVal;
       });
       break;
-
     case 'default':
-    default:
-      // Original behaviour: worsening → stable → improving → insufficient data
-      const defaultOrder = { worsening: 0, stable: 1, improving: 2, new: 3 };
-      rows.sort((a, b) => (defaultOrder[a.trend] ?? 99) - (defaultOrder[b.trend] ?? 99));
+    default: {
+      const o = { worsening: 0, stable: 1, improving: 2, new: 3 };
+      rows.sort((a, b) => (o[a.trend] ?? 99) - (o[b.trend] ?? 99));
       break;
+    }
   }
 
   tbody.innerHTML = rows.map(r => `
     <tr onclick="openPatient('${r.pid}')">
-      <td><strong>#${r.pid}</strong></td>
+      <td><strong>#${r.pid}</strong>${r.famTag}</td>
       <td>${r.prevStr}</td>
       <td>${r.lastStr}</td>
       <td style="color:var(--text-mid);font-size:13px;">${r.changeStr}</td>
@@ -579,7 +603,7 @@ function setAnalyticsSubTab(tab, btn) {
   document.querySelectorAll('.analytics-sub-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('analyticsPane-outcomes').style.display = tab === 'outcomes' ? '' : 'none';
-  document.getElementById('analyticsPane-fam').style.display = tab === 'fam' ? '' : 'none';
+  document.getElementById('analyticsPane-fam').style.display      = tab === 'fam'      ? '' : 'none';
 }
 
 function renderBreakdown() {
