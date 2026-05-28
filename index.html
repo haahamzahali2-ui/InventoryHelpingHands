@@ -58,12 +58,13 @@
 <div class="layout">
   <div class="main">
 
-    <!-- HOME PAGE -->
+    <!-- ═══════════════════════════════════════════════════════
+         HOME PAGE
+    ════════════════════════════════════════════════════════ -->
     <div class="page active" id="page-home">
       <div class="home-hero">
         <div class="home-hero-eyebrow">Welcome Back</div>
         <h1>Helping <em>Hands</em><br>Free Clinic</h1>
-  
         <div class="home-divider"></div>
       </div>
       <div class="home-cards" style="max-width:1200px;">
@@ -114,10 +115,10 @@
           <div class="impact-chip-sub">click to review</div>
         </div>
       </div>
-    </div>
+    </div><!-- /page-home -->
 
     <!-- ═══════════════════════════════════════════════════════
-         PATIENTS PAGE — redesigned
+         PATIENTS PAGE
     ════════════════════════════════════════════════════════ -->
     <div class="page" id="page-patients">
 
@@ -136,7 +137,7 @@
         </button>
       </div>
 
-      <!-- Sheet setup banner (hidden once connected) -->
+      <!-- Sheet setup banner -->
       <div class="setup-banner" id="sheetSetupBanner">
         <div class="setup-banner-icon">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -156,14 +157,11 @@
 
       <!-- Search + controls bar -->
       <div class="pt-controls-bar">
-        <!-- Search -->
         <div class="pt-search-wrap">
           <svg class="pt-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="patientSearch" class="pt-search-input" placeholder="Search patient ID…" oninput="filterPatients()" />
           <button class="pt-search-clear" id="searchClearBtn" onclick="document.getElementById('patientSearch').value='';filterPatients();this.style.display='none'" style="display:none">✕</button>
         </div>
-
-        <!-- View toggle -->
         <div class="pt-view-toggle">
           <button class="pt-view-btn active" id="viewBtn-grid" onclick="setPatientView('grid')" title="Grid view">
             <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
@@ -176,7 +174,6 @@
 
       <!-- Filter + sort row -->
       <div class="pt-filter-row">
-        <!-- Period filter -->
         <div class="pt-filter-group">
           <span class="pt-filter-label">Period</span>
           <div class="pt-chip-row">
@@ -186,10 +183,7 @@
             <button class="pt-chip" onclick="setTimeFilter('3months',this)">3 Months</button>
           </div>
         </div>
-
         <div class="pt-filter-divider"></div>
-
-        <!-- Sort -->
         <div class="pt-filter-group">
           <span class="pt-filter-label">Sort</span>
           <div class="pt-chip-row">
@@ -203,7 +197,6 @@
             <button class="pt-chip sort-btn" onclick="setSort('fam',this)">🥗 FaM</button>
           </div>
         </div>
-
         <span class="pt-filter-stats" id="timeFilterStats"></span>
       </div>
 
@@ -212,77 +205,93 @@
 
     </div><!-- /page-patients -->
 
-   <!-- PATIENT DETAIL PAGE -->
-<div class="page" id="page-detail">
-  <div class="section-header">
-    <button class="back-btn" onclick="showPage('patients')">&#8592; Patients</button>
-    <h2 id="detailTitle">Patient #—</h2>
-    <div class="patient-detail-tags" id="detailTags"></div>
-  </div>
+    <!-- ═══════════════════════════════════════════════════════
+         PATIENT DETAIL PAGE
+    ════════════════════════════════════════════════════════ -->
+    <div class="page" id="page-detail">
 
-  <div id="patientAlertPanel"></div>
-  <div class="print-header" id="printHeader"></div>
-
-  <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
-  <button class="add-data-btn" style="margin-left:8px;" onclick="openAddMedicationModal()">+ Add Medication</button>
-  <button class="export-pdf-btn" onclick="exportPatientPDF()">⬇ Export PDF</button>
-  <button class="export-pdf-btn" style="margin-left:8px;background:linear-gradient(135deg,#1A1208,#2C2010);color:var(--gold-light);border-color:rgba(201,168,76,0.3);" onclick="openVisitNoteModal()">🤖 Generate Visit Note</button>
-
-  <!-- TWO-COLUMN LAYOUT: main content + FaM sidebar -->
-  <div class="patient-detail-layout">
-
-    <!-- LEFT: charts, tables, metrics -->
-    <div class="patient-detail-main">
-      <div class="metric-tabs">
-        <button class="metric-tab active" id="metric-tab-bp" onclick="setDetailMetric('bp')">Blood Pressure</button>
-        <button class="metric-tab" id="metric-tab-a1c" onclick="setDetailMetric('a1c')">A1C</button>
+      <div class="section-header">
+        <button class="back-btn" onclick="showPage('patients')">&#8592; Patients</button>
+        <h2 id="detailTitle">Patient #—</h2>
+        <div class="patient-detail-tags" id="detailTags"></div>
       </div>
-      <div class="detail-grid">
-        <div class="detail-card" id="bpDetailCard">
-          <div class="detail-card-header">
-            <div class="detail-card-title">Blood Pressure</div>
-            <div class="chart-toggle">
-              <button class="active" id="bp-series-both" onclick="setBPSeriesMode('both', this)">Both</button>
-              <button id="bp-series-sys" onclick="setBPSeriesMode('systolic', this)">Systolic</button>
-              <button id="bp-series-dia" onclick="setBPSeriesMode('diastolic', this)">Diastolic</button>
-            </div>
-            <div class="chart-toggle">
-              <button class="active" onclick="toggleChart('bp','line',this)">Line</button>
-              <button onclick="toggleChart('bp','bar',this)">Bar</button>
-            </div>
-          </div>
-          <div class="chart-container"><canvas id="bpChart"></canvas></div>
-          <div style="margin-top:20px;">
-            <table class="readings-table" id="bpTable">
-              <thead><tr><th>Date</th><th>Systolic</th><th>Diastolic</th><th>Status</th><th>Notes</th><th></th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="detail-card hidden" id="a1cDetailCard">
-          <div class="detail-card-header">
-            <div class="detail-card-title">A1C Results</div>
-            <div class="chart-toggle">
-              <button class="active" onclick="toggleChart('a1c','line',this)">Line</button>
-              <button onclick="toggleChart('a1c','bar',this)">Bar</button>
-            </div>
-          </div>
-          <div class="chart-container"><canvas id="a1cChart"></canvas></div>
-          <div style="margin-top:20px;">
-            <table class="readings-table" id="a1cTable">
-              <thead><tr><th>Date</th><th>A1C %</th><th>Status</th><th>Notes</th><th></th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="medications-wrap">
-        <div class="medications-head"><div class="detail-card-title">Medications</div></div>
-        <div id="medicationsList"></div>
-      </div>
-    </div>
 
-    <!-- ANALYTICS PAGE -->
+      <!-- Alert panel spans full width above layout -->
+      <div id="patientAlertPanel"></div>
+      <div class="print-header" id="printHeader"></div>
+
+      <!-- Action buttons span full width above layout -->
+      <button class="add-data-btn" onclick="openAddDataModal()">+ Add New Reading</button>
+      <button class="add-data-btn" style="margin-left:8px;" onclick="openAddMedicationModal()">+ Add Medication</button>
+      <button class="export-pdf-btn" onclick="exportPatientPDF()">⬇ Export PDF</button>
+      <button class="export-pdf-btn" style="margin-left:8px;background:linear-gradient(135deg,#1A1208,#2C2010);color:var(--gold-light);border-color:rgba(201,168,76,0.3);" onclick="openVisitNoteModal()">🤖 Generate Visit Note</button>
+
+      <!-- TWO-COLUMN LAYOUT: main content + FaM sidebar -->
+      <div class="patient-detail-layout">
+
+        <!-- LEFT: charts, tables, metrics -->
+        <div class="patient-detail-main">
+          <div class="metric-tabs">
+            <button class="metric-tab active" id="metric-tab-bp" onclick="setDetailMetric('bp')">Blood Pressure</button>
+            <button class="metric-tab" id="metric-tab-a1c" onclick="setDetailMetric('a1c')">A1C</button>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-card" id="bpDetailCard">
+              <div class="detail-card-header">
+                <div class="detail-card-title">Blood Pressure</div>
+                <div class="chart-toggle">
+                  <button class="active" id="bp-series-both" onclick="setBPSeriesMode('both', this)">Both</button>
+                  <button id="bp-series-sys" onclick="setBPSeriesMode('systolic', this)">Systolic</button>
+                  <button id="bp-series-dia" onclick="setBPSeriesMode('diastolic', this)">Diastolic</button>
+                </div>
+                <div class="chart-toggle">
+                  <button class="active" onclick="toggleChart('bp','line',this)">Line</button>
+                  <button onclick="toggleChart('bp','bar',this)">Bar</button>
+                </div>
+              </div>
+              <div class="chart-container"><canvas id="bpChart"></canvas></div>
+              <div style="margin-top:20px;">
+                <table class="readings-table" id="bpTable">
+                  <thead><tr><th>Date</th><th>Systolic</th><th>Diastolic</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="detail-card hidden" id="a1cDetailCard">
+              <div class="detail-card-header">
+                <div class="detail-card-title">A1C Results</div>
+                <div class="chart-toggle">
+                  <button class="active" onclick="toggleChart('a1c','line',this)">Line</button>
+                  <button onclick="toggleChart('a1c','bar',this)">Bar</button>
+                </div>
+              </div>
+              <div class="chart-container"><canvas id="a1cChart"></canvas></div>
+              <div style="margin-top:20px;">
+                <table class="readings-table" id="a1cTable">
+                  <thead><tr><th>Date</th><th>A1C %</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="medications-wrap">
+            <div class="medications-head"><div class="detail-card-title">Medications</div></div>
+            <div id="medicationsList"></div>
+          </div>
+        </div><!-- /patient-detail-main -->
+
+        <!-- RIGHT: FaM sidebar -->
+        <aside class="patient-detail-sidebar">
+          <div id="famPatientPanel"></div>
+        </aside>
+
+      </div><!-- /patient-detail-layout -->
+
+    </div><!-- /page-detail -->
+
+    <!-- ═══════════════════════════════════════════════════════
+         ANALYTICS PAGE
+    ════════════════════════════════════════════════════════ -->
     <div class="page" id="page-analytics">
       <div class="section-header">
         <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
@@ -334,10 +343,10 @@
           <div id="famContent"></div>
         </div>
       </div>
-    </div>
+    </div><!-- /page-analytics -->
 
     <!-- ═══════════════════════════════════════════════════════
-         BREAKDOWN PAGE — with sort + FaM filter
+         BREAKDOWN PAGE
     ════════════════════════════════════════════════════════ -->
     <div class="page" id="page-breakdown">
       <div class="section-header">
@@ -347,9 +356,7 @@
       <div class="analytics-card" style="margin-bottom:28px;">
         <div class="analytics-card-sub">Per-patient outcome status based on most recent vs. prior reading. Click any row to open that patient's chart.</div>
 
-        <!-- Controls row -->
         <div class="bd-controls">
-          <!-- Sort -->
           <div class="bd-control-group">
             <span class="bd-control-label">Sort by</span>
             <div class="bd-chip-row">
@@ -361,10 +368,7 @@
               <button class="bd-chip" onclick="setBreakdownSort('lowest',this)">🔻 Lowest</button>
             </div>
           </div>
-
           <div class="bd-control-divider"></div>
-
-          <!-- FaM filter -->
           <div class="bd-control-group">
             <span class="bd-control-label">Filter</span>
             <div class="bd-chip-row">
@@ -375,7 +379,6 @@
           </div>
         </div>
 
-        <!-- Metric tabs -->
         <div class="breakdown-tabs" style="margin-top:4px;">
           <button class="breakdown-tab active" onclick="setBreakdownMetric('bp', this)">Blood Pressure</button>
           <button class="breakdown-tab" onclick="setBreakdownMetric('a1c', this)">A1C</button>
@@ -394,12 +397,14 @@
           <tbody></tbody>
         </table>
       </div>
-    </div>
+    </div><!-- /page-breakdown -->
 
   </div><!-- /main -->
 </div><!-- /layout -->
 
-<!-- ── MODALS (unchanged) ─────────────────────────────────────────────── -->
+<!-- ═══════════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════════════ -->
 
 <!-- ADD DATA MODAL -->
 <div class="modal-overlay" id="addDataModal">
@@ -552,9 +557,6 @@
   </div>
 </div>
 
-<div class="analytics-print-header" id="analyticsPrintHeader"></div>
-<div class="kbd-hint" id="kbdHint"></div>
-
 <!-- VISIT NOTE MODAL -->
 <div class="modal-overlay" id="visitNoteModal">
   <div class="modal" style="max-width:620px;">
@@ -591,6 +593,8 @@
   </div>
 </div>
 
+<div class="analytics-print-header" id="analyticsPrintHeader"></div>
+<div class="kbd-hint" id="kbdHint"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -598,7 +602,6 @@
     window.location.href = "login.html";
   }
 
-  // Show/hide search clear button
   document.addEventListener('DOMContentLoaded', () => {
     const inp = document.getElementById('patientSearch');
     const clr = document.getElementById('searchClearBtn');
