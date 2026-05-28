@@ -2727,3 +2727,73 @@ body.dark-mode .pcard-footer { border-top-color: #2A2218; }
 body.dark-mode .pt-search-input { background: #1E1A12; color: var(--text-dark); border-color: #3A3020; }
 body.dark-mode .pt-view-toggle { background: #2A2218; }
 body.dark-mode .pt-view-btn.active { background: #1E1A12; }
+/* ═══════════════════════════════════════════════════════════
+   PATIENT DETAIL — sidebar layout with FaM panel
+═══════════════════════════════════════════════════════════ */
+.patient-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .patient-detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .patient-detail-sidebar {
+    order: -1; /* moves FaM box above charts on mobile */
+  }
+}
+
+.patient-detail-sidebar {
+  position: sticky;
+  top: 90px; /* clears your 72px topbar + breathing room */
+}
+
+/* ── FaM panel restyled as a compact side box ── */
+.patient-detail-sidebar .fam-panel {
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 0;
+}
+
+.patient-detail-sidebar .fam-panel-title {
+  font-size: 16px;
+}
+
+.patient-detail-sidebar .fam-enrollment-info {
+  font-size: 12px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+/* Stack the comparison grid vertically in the narrow sidebar */
+.patient-detail-sidebar .fam-comparison-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.patient-detail-sidebar .fam-comparison-card {
+  padding: 12px 14px;
+}
+
+.patient-detail-sidebar .fam-comp-label {
+  font-size: 10px;
+}
+
+.patient-detail-sidebar .fam-comp-val {
+  font-size: 14px;
+}
+
+.patient-detail-sidebar .fam-enroll-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+/* Tighten the action buttons row */
+.patient-detail-sidebar .fam-panel > div[style*="margin-top:14px"] {
+  flex-direction: column;
+  gap: 6px;
+}
