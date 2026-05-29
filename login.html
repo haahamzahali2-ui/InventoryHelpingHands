@@ -246,15 +246,17 @@
   // ── Microsoft handler ───────────────────────────────────────────
   async function handleMicrosoftSignIn() {
     try {
-      await msalReady; // ensure MSAL is fully initialized first
+      showError("Step 1: Waiting for MSAL...");
+      await msalReady;
+      showError("Step 2: MSAL ready, opening popup...");
       const response = await msalInstance.loginPopup({
         scopes: ["openid", "profile", "email", "User.Read"]
       });
+      showError("Step 3: Got response, processing...");
       processMicrosoftAccount(response.account, response.idTokenClaims);
     } catch (err) {
-      if (err.errorCode !== "user_cancelled") {
-        showError("Microsoft sign-in failed: " + err.message);
-      }
+      const detail = "Code: " + (err.errorCode || "none") + " | " + err.message + " | Name: " + err.name;
+      showError("MSAL ERROR — " + detail);
     }
   }
 
