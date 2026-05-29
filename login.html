@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Staff Login — Helping Hands Free Clinic</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- FIXED: removed "async defer" so MSAL is guaranteed loaded before your script runs -->
   <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -191,14 +192,13 @@
   ];
 
   // ─── Microsoft Azure AD App Registration ─────────────────────────
-  // TODO: Replace with your actual Azure AD app's client ID and tenant ID.
+  // TODO: Replace YOUR_CLIENT_ID_HERE with your actual Azure AD app client ID.
   // Register at https://portal.azure.com → Azure Active Directory → App Registrations
-  // Set redirect URI to this page's URL (e.g. https://yourdomain.org/login.html)
   const MSAL_CONFIG = {
     auth: {
-      clientId: "723596d3-fea8-460a-8400-2082f359b5e5",       // ← replace
+      clientId: "723596d3-fea8-460a-8400-2082f359b5e5",   // ← paste your Azure client ID here
       authority: "https://login.microsoftonline.com/common",
-      redirectUri: window.location.href.split('?')[0]
+      redirectUri: window.location.origin + window.location.pathname
     },
     cache: {
       cacheLocation: "sessionStorage",
@@ -246,13 +246,10 @@
   // ── Microsoft handler ───────────────────────────────────────────
   async function handleMicrosoftSignIn() {
     try {
-      showError("Step 1: Waiting for MSAL...");
       await msalReady;
-      showError("Step 2: MSAL ready, opening popup...");
       const response = await msalInstance.loginPopup({
         scopes: ["openid", "profile", "email", "User.Read"]
       });
-      showError("Step 3: Got response, processing...");
       processMicrosoftAccount(response.account, response.idTokenClaims);
     } catch (err) {
       const detail = "Code: " + (err.errorCode || "none") + " | " + err.message + " | Name: " + err.name;
@@ -261,7 +258,6 @@
   }
 
   function processMicrosoftAccount(account, claims) {
-    // Prefer the UPN (corporate email) over the home account identifier
     const email = (account.username || claims?.email || claims?.preferred_username || "").toLowerCase();
 
     if (!email) {
