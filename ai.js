@@ -125,9 +125,9 @@ async function generateVisitNote() {
   }
 
   try {
-    var response = await fetch(APPS_SCRIPT_URL + '?action=claude', {
+    var response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ prompt: prompt })
+      body: JSON.stringify({ action: 'claude', prompt: prompt })
     });
 
     if (!response.ok) {
