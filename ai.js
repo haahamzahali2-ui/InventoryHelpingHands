@@ -135,6 +135,7 @@ async function generateVisitNote() {
     }
 
     var data = await response.json();
+    console.log('Apps Script response:', JSON.stringify(data));
     if (data.error) throw new Error(data.error.message || 'API error');
     var text = data.content[0].text;
 
