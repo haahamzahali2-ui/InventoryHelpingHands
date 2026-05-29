@@ -1,6 +1,21 @@
 // ═══════════════════════════════════
 // MEDICATIONS — list rendering, CRUD, chart overlay
 // ═══════════════════════════════════
+async function postToSheetBackend(action, payload) {
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-CgUEw8qPUQEm7i5VxLkivuASa35gc97f-YWJiOmPK-OwmOl4U_dE7vZR1/exec';
+  
+  const res = await fetch(SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, payload })
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Backend error');
+  return data;
+}
+
 
 function renderMedicationsList(medications) {
   const container = document.getElementById('medicationsList');
