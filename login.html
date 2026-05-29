@@ -303,6 +303,7 @@
     }
 
     if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+      sessionStorage.setItem("clinic_user", "true");
       document.getElementById("loginForm").style.display = "none";
       const success = document.getElementById("successScreen");
       success.style.display = "block";
