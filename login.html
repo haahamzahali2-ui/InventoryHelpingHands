@@ -3,314 +3,326 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Staff Login — Helping Hands Free Clinic</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- FIXED: removed "async defer" so MSAL is guaranteed loaded before your script runs -->
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <title>Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --cream: #f5f0e8;
+      --ink: #1a1a2e;
+      --accent: #c8a96e;
+      --muted: #7a7a8a;
+      --error: #c0392b;
+      --card: #ffffff;
+    }
+
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f0f4f8;
       min-height: 100vh;
+      background: var(--cream);
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative background shapes */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px; right: -120px;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e8dcc8 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; left: -100px;
+      width: 380px; height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #d4c4a8 0%, transparent 70%);
+      pointer-events: none;
     }
 
     .card {
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      padding: 3rem 2.5rem;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 52px 48px 44px;
       width: 100%;
       max-width: 420px;
-      text-align: center;
+      box-shadow: 0 8px 48px rgba(26,26,46,0.10), 0 1px 4px rgba(26,26,46,0.06);
+      position: relative;
+      z-index: 1;
+      animation: rise 0.55s cubic-bezier(0.22,1,0.36,1) both;
     }
 
-    .logo {
-      width: 64px;
-      height: 64px;
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .brand-icon {
+      width: 52px; height: 52px;
+      background: var(--ink);
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .brand-icon svg {
+      width: 26px; height: 26px;
+      fill: var(--accent);
+    }
+
+    .brand h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+    }
+
+    .brand p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 5px;
+      font-weight: 300;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid #e0dbd0;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.975rem;
+      color: var(--ink);
+      background: #fafaf8;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200,169,110,0.15);
+      background: #fff;
+    }
+
+    .error-msg {
+      font-size: 0.82rem;
+      color: var(--error);
+      margin-top: 16px;
+      text-align: center;
+      min-height: 20px;
+      font-weight: 400;
+      animation: shake 0.35s ease;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+    }
+
+    .btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.975rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:hover {
+      background: #2d2d4e;
+      box-shadow: 0 4px 18px rgba(26,26,46,0.22);
+      transform: translateY(-1px);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    /* Ripple */
+    .btn::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 0; height: 0;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      transform: translate(-50%,-50%);
+      transition: width 0.4s, height 0.4s, opacity 0.4s;
+      opacity: 0;
+    }
+    .btn:active::after {
+      width: 300px; height: 300px; opacity: 1;
+    }
+
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 16px 0;
+      animation: rise 0.45s ease both;
+    }
+
+    .success-screen .check {
+      width: 64px; height: 64px;
       background: #e8f5e9;
       border-radius: 50%;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.5rem;
+      margin-bottom: 20px;
     }
 
-    .logo svg { width: 32px; height: 32px; }
-
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: #1a2e1a;
-      margin-bottom: 0.4rem;
+    .success-screen .check svg {
+      width: 30px; height: 30px;
+      stroke: #2e7d32;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
-    .subtitle {
+    .success-screen h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .success-screen p {
+      color: var(--muted);
       font-size: 0.9rem;
-      color: #6b7280;
-      margin-bottom: 2rem;
-      line-height: 1.5;
     }
 
-    .divider-label {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 1.5rem 0;
-      color: #9ca3af;
-      font-size: 0.8rem;
-    }
-    .divider-label::before,
-    .divider-label::after {
-      content: '';
-      flex: 1;
-      border-top: 1px solid #e5e7eb;
+    .divider {
+      height: 1px;
+      background: #ede8de;
+      margin: 28px 0 0;
     }
 
-    /* Microsoft sign-in button */
-    .ms-signin-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 10px 16px;
-      border: 1px solid #dadce0;
-      border-radius: 4px;
-      background: #fff;
-      color: #3c4043;
-      font-size: 14px;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, box-shadow 0.15s;
-      line-height: 1;
-    }
-    .ms-signin-btn:hover {
-      background: #f8f9fa;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    }
-    .ms-signin-btn:active {
-      background: #f1f3f4;
-    }
-    .ms-signin-btn svg {
-      flex-shrink: 0;
-    }
-
-    hr.divider {
-      border: none;
-      border-top: 1px solid #e5e7eb;
-      margin: 1.75rem 0;
-    }
-
-    .notice {
-      font-size: 0.8rem;
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-    .notice strong { color: #6b7280; }
-
-    /* Google button centering */
-    #g_id_onload { display: none; }
-    .g_id_signin { display: flex; justify-content: center; }
-
-    .error-box {
-      display: none;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
-      color: #b91c1c;
-      margin-top: 1rem;
-      text-align: left;
+    .footer-note {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 0.78rem;
+      color: #b0a898;
     }
   </style>
 </head>
 <body>
 
-  <!-- Google Identity -->
-  <div id="g_id_onload"
-    data-client_id="472076983120-98vc8imikbaeo8jmof0mca0595eq916a.apps.googleusercontent.com"
-    data-callback="handleGoogleCredentialResponse"
-    data-auto_prompt="false">
-  </div>
-
-  <div class="card">
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-      </svg>
+<div class="card">
+  <!-- Login Form -->
+  <div id="loginForm">
+    <div class="brand">
+      <div class="brand-icon">
+        <!-- Simple hands/people icon -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm-7 18c0-3.87 3.13-7 7-7s7 3.13 7 7H5z"/>
+        </svg>
+      </div>
+      <h1>Welcome Back</h1>
+      <p>Sign in to your account to continue</p>
     </div>
 
-    <h1>Helping Hands Free Clinic</h1>
-    <p class="subtitle">Staff &amp; Volunteer Portal<br>Sign in with your clinic account to continue.</p>
-
-    <!-- Google Sign-In -->
-    <div class="g_id_signin"
-      data-type="standard"
-      data-shape="rectangular"
-      data-theme="outline"
-      data-text="sign_in_with"
-      data-size="large"
-      data-logo_alignment="left">
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="Enter your username" autocomplete="username"/>
     </div>
 
-    <div class="divider-label">or</div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
+    </div>
 
-    <!-- Microsoft / Outlook Sign-In -->
-    <button class="ms-signin-btn" id="msSignInBtn" onclick="handleMicrosoftSignIn()">
-      <!-- Microsoft logo (official 4-square SVG) -->
-      <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-      </svg>
-      Sign in with Microsoft
-    </button>
+    <div class="error-msg" id="errorMsg"></div>
 
-    <div class="error-box" id="errorBox"></div>
+    <button class="btn" onclick="handleLogin()">Sign In</button>
 
-    <hr class="divider" />
-    <p class="notice">
-      <strong>Access restricted.</strong> Only authorized <strong>@helpinghandsfreeclinic.org</strong> accounts are permitted.
-      Contact your administrator if you need access.
-    </p>
+    <div class="divider"></div>
+    <p class="footer-note">HelpingHands Portal &mdash; Authorized users only</p>
   </div>
+
+  <!-- Success Screen -->
+  <div class="success-screen" id="successScreen">
+    <div class="check">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>You're in!</h2>
+    <p>Login successful. Welcome, HelpingHands.</p>
+  </div>
+</div>
 
 <script>
-  // ─── CONFIGURATION ───────────────────────────────────────────────
-  const ALLOWED_DOMAIN = "helpinghandsfreeclinic.org";
+  // ── Credentials ──────────────────────────────────────
+  const VALID_USERNAME = "HelpingHands";
+  const VALID_PASSWORD = "1421";
+  // ─────────────────────────────────────────────────────
 
-  const ALLOWED_INDIVIDUALS = [
-    "haa.hamzahali2@gmail.com"
-  ];
+  function handleLogin() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const errorMsg = document.getElementById("errorMsg");
 
-  // ─── Microsoft Azure AD App Registration ─────────────────────────
-  // TODO: Replace YOUR_CLIENT_ID_HERE with your actual Azure AD app client ID.
-  // Register at https://portal.azure.com → Azure Active Directory → App Registrations
-  const MSAL_CONFIG = {
-    auth: {
-      clientId: "723596d3-fea8-460a-8400-2082f359b5e5",   // ← paste your Azure client ID here
-      authority: "https://login.microsoftonline.com/common",
-      redirectUri: window.location.origin + window.location.pathname
-    },
-    cache: {
-      cacheLocation: "sessionStorage",
-      storeAuthStateInCookie: false
-    }
-  };
-  // ─────────────────────────────────────────────────────────────────
-
-  const msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-
-  // Initialize MSAL before anything else (required in MSAL v2.x+)
-  let msalReady = msalInstance.initialize().then(() => {
-    return msalInstance.handleRedirectPromise();
-  }).then(response => {
-    if (response && response.account) {
-      processMicrosoftAccount(response.account, response.idTokenClaims);
-    }
-  }).catch(err => {
-    console.warn("MSAL init error:", err);
-  });
-
-  // ── Google handler ──────────────────────────────────────────────
-  function handleGoogleCredentialResponse(response) {
-    const payload = parseJwt(response.credential);
-    const email = (payload.email || "").toLowerCase();
-
-    if (!payload.email_verified) {
-      showError("Your Google account email is not verified. Please verify it and try again.");
+    if (!username || !password) {
+      showError("Please fill in both fields.");
       return;
     }
 
-    if (isAllowed(email)) {
-      saveUserAndRedirect({
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        token: response.credential,
-        provider: "google"
-      });
+    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+      document.getElementById("loginForm").style.display = "none";
+      const success = document.getElementById("successScreen");
+      success.style.display = "block";
     } else {
-      showError(`Access denied. "${payload.email}" is not an authorized clinic account.`);
+      showError("Incorrect username or password.");
     }
-  }
-
-  // ── Microsoft handler ───────────────────────────────────────────
-  async function handleMicrosoftSignIn() {
-    try {
-      await msalReady;
-      const response = await msalInstance.loginPopup({
-        scopes: ["openid", "profile", "email", "User.Read"]
-      });
-      processMicrosoftAccount(response.account, response.idTokenClaims);
-    } catch (err) {
-      const detail = "Code: " + (err.errorCode || "none") + " | " + err.message + " | Name: " + err.name;
-      showError("MSAL ERROR — " + detail);
-    }
-  }
-
-  function processMicrosoftAccount(account, claims) {
-    const email = (account.username || claims?.email || claims?.preferred_username || "").toLowerCase();
-
-    if (!email) {
-      showError("Could not retrieve email from your Microsoft account.");
-      return;
-    }
-
-    if (isAllowed(email)) {
-      saveUserAndRedirect({
-        name: account.name || claims?.name || email,
-        email: email,
-        picture: null,
-        token: null,
-        provider: "microsoft"
-      });
-    } else {
-      showError(`Access denied. "${email}" is not an authorized clinic account.`);
-    }
-  }
-
-  // ── Shared helpers ──────────────────────────────────────────────
-  function isAllowed(email) {
-    const domainOk = email.endsWith("@" + ALLOWED_DOMAIN);
-    const individualOk = ALLOWED_INDIVIDUALS.map(e => e.toLowerCase()).includes(email);
-    return domainOk || individualOk;
-  }
-
-  function saveUserAndRedirect(user) {
-    sessionStorage.setItem("clinic_user", JSON.stringify(user));
-    window.location.href = "index.html";
   }
 
   function showError(msg) {
-    const box = document.getElementById("errorBox");
-    box.textContent = msg;
-    box.style.display = "block";
+    const el = document.getElementById("errorMsg");
+    el.textContent = "";
+    // Force reflow to restart animation
+    void el.offsetWidth;
+    el.textContent = msg;
   }
 
-  function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64).split('').map(c =>
-        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join('')
-    );
-    return JSON.parse(jsonPayload);
-  }
-
-  // Redirect if already logged in
-  if (sessionStorage.getItem("clinic_user")) {
-    window.location.href = "index.html";
-  }
+  // Allow pressing Enter to submit
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") handleLogin();
+  });
 </script>
 
 </body>
