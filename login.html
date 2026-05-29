@@ -196,7 +196,7 @@
   // Set redirect URI to this page's URL (e.g. https://yourdomain.org/login.html)
   const MSAL_CONFIG = {
     auth: {
-      clientId: "723596d3-fea8-460a-8400-2082f359b5e5",       // ← replace
+      clientId: "YOUR_AZURE_APP_CLIENT_ID",       // ← replace
       authority: "https://login.microsoftonline.com/common",
       redirectUri: window.location.href.split('?')[0]
     },
@@ -209,13 +209,15 @@
 
   const msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
 
-  // Handle MSAL redirect response on page load
-  msalInstance.handleRedirectPromise().then(response => {
+  // Initialize MSAL before anything else (required in MSAL v2.x+)
+  let msalReady = msalInstance.initialize().then(() => {
+    return msalInstance.handleRedirectPromise();
+  }).then(response => {
     if (response && response.account) {
       processMicrosoftAccount(response.account, response.idTokenClaims);
     }
   }).catch(err => {
-    showError("Microsoft sign-in failed: " + err.message);
+    console.warn("MSAL init error:", err);
   });
 
   // ── Google handler ──────────────────────────────────────────────
@@ -244,7 +246,7 @@
   // ── Microsoft handler ───────────────────────────────────────────
   async function handleMicrosoftSignIn() {
     try {
-      // Use popup so we stay on the same page; swap to loginRedirect if preferred
+      await msalReady; // ensure MSAL is fully initialized first
       const response = await msalInstance.loginPopup({
         scopes: ["openid", "profile", "email", "User.Read"]
       });
