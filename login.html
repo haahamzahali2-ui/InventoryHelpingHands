@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Staff Login — Helping Hands Free Clinic</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -54,7 +55,52 @@
       line-height: 1.5;
     }
 
-    .divider {
+    .divider-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      color: #9ca3af;
+      font-size: 0.8rem;
+    }
+    .divider-label::before,
+    .divider-label::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    /* Microsoft sign-in button */
+    .ms-signin-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      background: #fff;
+      color: #3c4043;
+      font-size: 14px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+      line-height: 1;
+    }
+    .ms-signin-btn:hover {
+      background: #f8f9fa;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .ms-signin-btn:active {
+      background: #f1f3f4;
+    }
+    .ms-signin-btn svg {
+      flex-shrink: 0;
+    }
+
+    hr.divider {
       border: none;
       border-top: 1px solid #e5e7eb;
       margin: 1.75rem 0;
@@ -65,10 +111,9 @@
       color: #9ca3af;
       line-height: 1.5;
     }
-
     .notice strong { color: #6b7280; }
 
-    /* Center the Google button */
+    /* Google button centering */
     #g_id_onload { display: none; }
     .g_id_signin { display: flex; justify-content: center; }
 
@@ -87,10 +132,10 @@
 </head>
 <body>
 
-  <!-- Google Identity: renders the button and handles the callback -->
+  <!-- Google Identity -->
   <div id="g_id_onload"
     data-client_id="472076983120-98vc8imikbaeo8jmof0mca0595eq916a.apps.googleusercontent.com"
-    data-callback="handleCredentialResponse"
+    data-callback="handleGoogleCredentialResponse"
     data-auto_prompt="false">
   </div>
 
@@ -102,9 +147,9 @@
     </div>
 
     <h1>Helping Hands Free Clinic</h1>
-    <p class="subtitle">Staff &amp; Volunteer Portal<br>Sign in with your clinic Google account to continue.</p>
+    <p class="subtitle">Staff &amp; Volunteer Portal<br>Sign in with your clinic account to continue.</p>
 
-    <!-- Google Sign-In Button -->
+    <!-- Google Sign-In -->
     <div class="g_id_signin"
       data-type="standard"
       data-shape="rectangular"
@@ -114,11 +159,25 @@
       data-logo_alignment="left">
     </div>
 
+    <div class="divider-label">or</div>
+
+    <!-- Microsoft / Outlook Sign-In -->
+    <button class="ms-signin-btn" id="msSignInBtn" onclick="handleMicrosoftSignIn()">
+      <!-- Microsoft logo (official 4-square SVG) -->
+      <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Sign in with Microsoft
+    </button>
+
     <div class="error-box" id="errorBox"></div>
 
     <hr class="divider" />
     <p class="notice">
-      <strong>Access restricted.</strong> Only <strong>@helpinghandsfreeclinic.org</strong> accounts are permitted.
+      <strong>Access restricted.</strong> Only authorized <strong>@helpinghandsfreeclinic.org</strong> accounts are permitted.
       Contact your administrator if you need access.
     </p>
   </div>
@@ -130,32 +189,105 @@
   const ALLOWED_INDIVIDUALS = [
     "haa.hamzahali2@gmail.com"
   ];
+
+  // ─── Microsoft Azure AD App Registration ─────────────────────────
+  // TODO: Replace with your actual Azure AD app's client ID and tenant ID.
+  // Register at https://portal.azure.com → Azure Active Directory → App Registrations
+  // Set redirect URI to this page's URL (e.g. https://yourdomain.org/login.html)
+  const MSAL_CONFIG = {
+    auth: {
+      clientId: "723596d3-fea8-460a-8400-2082f359b5e5",       // ← replace
+      authority: "https://login.microsoftonline.com/common",
+      redirectUri: window.location.href.split('?')[0]
+    },
+    cache: {
+      cacheLocation: "sessionStorage",
+      storeAuthStateInCookie: false
+    }
+  };
   // ─────────────────────────────────────────────────────────────────
 
-  function handleCredentialResponse(response) {
+  const msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
+
+  // Handle MSAL redirect response on page load
+  msalInstance.handleRedirectPromise().then(response => {
+    if (response && response.account) {
+      processMicrosoftAccount(response.account, response.idTokenClaims);
+    }
+  }).catch(err => {
+    showError("Microsoft sign-in failed: " + err.message);
+  });
+
+  // ── Google handler ──────────────────────────────────────────────
+  function handleGoogleCredentialResponse(response) {
     const payload = parseJwt(response.credential);
     const email = (payload.email || "").toLowerCase();
-    const emailVerified = payload.email_verified;
 
-    const domainOk = email.endsWith("@" + ALLOWED_DOMAIN);
-    const individualOk = ALLOWED_INDIVIDUALS.map(e => e.toLowerCase()).includes(email);
-
-    if (!emailVerified) {
+    if (!payload.email_verified) {
       showError("Your Google account email is not verified. Please verify it and try again.");
       return;
     }
 
-    if (domainOk || individualOk) {
-      sessionStorage.setItem("clinic_user", JSON.stringify({
+    if (isAllowed(email)) {
+      saveUserAndRedirect({
         name: payload.name,
         email: payload.email,
         picture: payload.picture,
-        token: response.credential
-      }));
-      window.location.href = "index.html";
+        token: response.credential,
+        provider: "google"
+      });
     } else {
-      showError(`Access denied. "${payload.email}" is not an authorized clinic account. Please sign in with your @helpinghandsfreeclinic.org address.`);
+      showError(`Access denied. "${payload.email}" is not an authorized clinic account.`);
     }
+  }
+
+  // ── Microsoft handler ───────────────────────────────────────────
+  async function handleMicrosoftSignIn() {
+    try {
+      // Use popup so we stay on the same page; swap to loginRedirect if preferred
+      const response = await msalInstance.loginPopup({
+        scopes: ["openid", "profile", "email", "User.Read"]
+      });
+      processMicrosoftAccount(response.account, response.idTokenClaims);
+    } catch (err) {
+      if (err.errorCode !== "user_cancelled") {
+        showError("Microsoft sign-in failed: " + err.message);
+      }
+    }
+  }
+
+  function processMicrosoftAccount(account, claims) {
+    // Prefer the UPN (corporate email) over the home account identifier
+    const email = (account.username || claims?.email || claims?.preferred_username || "").toLowerCase();
+
+    if (!email) {
+      showError("Could not retrieve email from your Microsoft account.");
+      return;
+    }
+
+    if (isAllowed(email)) {
+      saveUserAndRedirect({
+        name: account.name || claims?.name || email,
+        email: email,
+        picture: null,
+        token: null,
+        provider: "microsoft"
+      });
+    } else {
+      showError(`Access denied. "${email}" is not an authorized clinic account.`);
+    }
+  }
+
+  // ── Shared helpers ──────────────────────────────────────────────
+  function isAllowed(email) {
+    const domainOk = email.endsWith("@" + ALLOWED_DOMAIN);
+    const individualOk = ALLOWED_INDIVIDUALS.map(e => e.toLowerCase()).includes(email);
+    return domainOk || individualOk;
+  }
+
+  function saveUserAndRedirect(user) {
+    sessionStorage.setItem("clinic_user", JSON.stringify(user));
+    window.location.href = "index.html";
   }
 
   function showError(msg) {
@@ -175,6 +307,7 @@
     return JSON.parse(jsonPayload);
   }
 
+  // Redirect if already logged in
   if (sessionStorage.getItem("clinic_user")) {
     window.location.href = "index.html";
   }
