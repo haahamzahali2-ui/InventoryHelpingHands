@@ -306,6 +306,9 @@
       document.getElementById("loginForm").style.display = "none";
       const success = document.getElementById("successScreen");
       success.style.display = "block";
+      setTimeout(() => {
+        window.location.href = "https://haahamzahali2-ui.github.io/InventoryHelpingHands/login.html";
+      }, 1500);
     } else {
       showError("Incorrect username or password.");
     }
