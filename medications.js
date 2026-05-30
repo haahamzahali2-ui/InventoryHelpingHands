@@ -17,14 +17,6 @@ await fetch(url, {
   return data;
 }
 
-
-function renderMedicationsList(medications) {
-  const container = document.getElementById('medicationsList');
-  if (!container) return;
-  if (!medications || !medications.length) {
-    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-light);font-style:italic;font-size:14px;">No medications added</div>';
-    return;
-  }
   const now = new Date();
   const sorted = medications
     .map((m, i) => ({ ...m, _idx: i }))
@@ -73,26 +65,6 @@ function openEditMedication(idx) {
   document.getElementById('medDeleteBar').classList.remove('show');
   document.getElementById('medDeleteTrigger').style.display = 'inline-block';
   document.getElementById('addMedicationModal').classList.add('open');
-}
-
-async function confirmDeleteMedication() {
-  if (editMedicationIndex === null || !currentPatientId) return;
-  const med = db.patients[currentPatientId].medications[editMedicationIndex];
-  db.patients[currentPatientId].medications.splice(editMedicationIndex, 1);
-  saveDB();
-  closeModal('addMedicationModal');
-  renderMedicationsList(db.patients[currentPatientId].medications);
-  showToast('Medication removed ✓');
-  editMedicationIndex = null;
-  try {
-    await postToSheetBackend('delete_medication', {
-      patientId: currentPatientId,
-      name:      med.name,
-      startDate: med.startDate
-    });
-  } catch (e) {
-    showToast('Removed locally — sheet sync failed.');
-  }
 }
 
 function openAddMedicationModal() {
