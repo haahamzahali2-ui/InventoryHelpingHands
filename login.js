@@ -9,8 +9,22 @@
 const MSAL_CONFIG = {
   CLIENT_ID:    "651a15cc-51f3-4b6d-9c59-d650aadc37be",
   TENANT_ID:    "common",
- REDIRECT_URI: "https://haahamzahali2-ui.github.io/InventoryHelpingHands/login.html",
+  REDIRECT_URI: "https://haahamzahali2-ui.github.io/InventoryHelpingHands/login.html",
 };
+
+// ── Access control — add emails or @domains here ──────────────
+const ALLOWED = [
+  "haa.hamzahali2@outlook.com",
+  "@helpinghandsfreeclinic.org",
+];
+
+function isAllowed(email) {
+  return ALLOWED.some(rule =>
+    rule.startsWith("@")
+      ? email.toLowerCase().endsWith(rule.toLowerCase())
+      : email.toLowerCase() === rule.toLowerCase()
+  );
+}
 
 // ── MSAL setup ────────────────────────────────────────────────
 const msalInstance = new msal.PublicClientApplication({
@@ -29,7 +43,7 @@ const loginRequest = {
   scopes: ["openid", "profile", "email"],
 };
 
-// ── Init: must call initialize() before anything else ─────────
+// ── Init ──────────────────────────────────────────────────────
 async function init() {
   await msalInstance.initialize();
 
@@ -37,12 +51,10 @@ async function init() {
     const response = await msalInstance.handleRedirectPromise();
 
     if (response && response.account) {
-      // Returning from Microsoft login redirect
       storeUserAndRedirect(response.account);
       return;
     }
 
-    // Already signed in from a previous session?
     const accounts = msalInstance.getAllAccounts();
     if (accounts.length > 0) {
       storeUserAndRedirect(accounts[0]);
@@ -56,7 +68,7 @@ async function init() {
 
 init();
 
-// ── Sign-in button ─────────────────────────────────────────────
+// ── Sign-in button ────────────────────────────────────────────
 async function signIn() {
   const btn     = document.getElementById("signInBtn");
   const btnText = document.getElementById("signInBtnText");
@@ -80,9 +92,18 @@ async function signIn() {
 
 // ── Store session and redirect to portal ──────────────────────
 function storeUserAndRedirect(account) {
+  const email = account.username;
+
+  if (!isAllowed(email)) {
+    msalInstance.logoutRedirect({ onRedirectNavigate: () => false });
+    localStorage.removeItem("clinic_user");
+    showError(`Access denied. ${email} is not authorized to use this portal. Contact your administrator.`);
+    return;
+  }
+
   localStorage.setItem("clinic_user", JSON.stringify({
-    name:    account.name || account.username,
-    email:   account.username,
+    name:    account.name || email,
+    email:   email,
     loginAt: new Date().toISOString(),
   }));
   window.location.href = "index.html";
