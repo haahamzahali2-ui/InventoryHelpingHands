@@ -1,20 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // deletions.js — Helping Hands Free Clinic
 // All delete operations: local DB + Google Sheets sync
+// Uses postToSheetBackend() from core.js
 // ═══════════════════════════════════════════════════════════════
-
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-CgUEw8qPUQEm7i5VxLkivuASa35gc97f-YWJiOmPK-OwmOl4U_dE7vZR1/exec';
-
-// ── CORE SYNC FUNCTION ───────────────────────────────────────────
-// Sends any action + payload to Google Sheets backend
-async function syncToSheet(action, payload) {
-  const params = encodeURIComponent(JSON.stringify(payload));
-  await fetch(`${SHEET_URL}?action=${action}&payload=${params}`);
-}
 
 
 // ── DELETE PATIENT ───────────────────────────────────────────────
-// Called from the 🗑 button on patient cards
 function confirmDeletePatient(patientId) {
   const first = confirm(`Delete Patient #${patientId}?\n\nThis will permanently remove all readings, medications, alerts, notes, and FaM enrollment for this patient.`);
   if (!first) return;
@@ -35,7 +26,7 @@ async function deletePatientEverywhere(patientId) {
 
   // 2. Sync to Google Sheets
   try {
-    await syncToSheet('delete_patient', { patientId: String(patientId) });
+    await postToSheetBackend('delete_patient', { patientId: String(patientId) });
     showToast(`✓ Patient #${patientId} deleted`);
   } catch (err) {
     showToast(`Deleted locally — sheet sync failed`);
@@ -48,9 +39,8 @@ async function deletePatientEverywhere(patientId) {
 
 
 // ── DELETE MEDICATION ────────────────────────────────────────────
-// Call this instead of the old confirmDeleteMedication()
 async function deleteMedication(patientId, medIndex) {
-  const med = db.patients[patientId].medications[medIndex];
+  const med = db.patients[patientId]?.medications[medIndex];
   if (!med) return;
 
   // 1. Remove locally
@@ -62,7 +52,7 @@ async function deleteMedication(patientId, medIndex) {
 
   // 2. Sync to Google Sheets
   try {
-    await syncToSheet('delete_medication', {
+    await postToSheetBackend('delete_medication', {
       patientId: String(patientId),
       name:      med.name,
       startDate: med.startDate
@@ -75,7 +65,6 @@ async function deleteMedication(patientId, medIndex) {
 
 
 // ── DELETE READING ───────────────────────────────────────────────
-// Call this instead of the old confirmDeleteReading()
 async function deleteReading(patientId, type, index) {
   const p = db.patients[patientId];
   const readings = type === 'bp' ? p.bpReadings : p.a1cReadings;
@@ -94,7 +83,7 @@ async function deleteReading(patientId, type, index) {
 
   // 2. Sync to Google Sheets
   try {
-    await syncToSheet('delete_reading', {
+    await postToSheetBackend('delete_reading', {
       patientId: String(patientId),
       type:      type,
       datetime:  datetime
@@ -107,7 +96,7 @@ async function deleteReading(patientId, type, index) {
 
 
 // ── DELETE STICKY NOTE ───────────────────────────────────────────
-async function deleteSticky(patientId) {
+async function deleteStickyNote(patientId) {
   // 1. Remove locally
   if (db.stickies) delete db.stickies[patientId];
   saveDB();
@@ -117,7 +106,7 @@ async function deleteSticky(patientId) {
 
   // 2. Sync to Google Sheets
   try {
-    await syncToSheet('delete_sticky', { patientId: String(patientId) });
+    await postToSheetBackend('delete_sticky', { patientId: String(patientId) });
   } catch (err) {
     console.error('deleteSticky sync error:', err);
   }
@@ -128,13 +117,18 @@ async function deleteSticky(patientId) {
 async function removeFAMEnrollment(patientId) {
   // 1. Remove locally
   if (db.famEnrollments) delete db.famEnrollments[patientId];
+  if (db.patients[patientId]) {
+    db.patients[patientId].famEnrolled = false;
+    db.patients[patientId].famEnrollmentDate = '';
+    db.patients[patientId].famProgramType = '';
+  }
   saveDB();
   renderFAMPatientPanel(patientId);
   showToast('FaM enrollment removed ✓');
 
   // 2. Sync to Google Sheets
   try {
-    await syncToSheet('remove_fam_enrollment', { patientId: String(patientId) });
+    await postToSheetBackend('remove_fam_enrollment', { patientId: String(patientId) });
   } catch (err) {
     showToast('Removed locally — sheet sync failed');
     console.error('removeFAMEnrollment sync error:', err);
