@@ -34,7 +34,7 @@ return `<div class="med-row">
        <div class="med-row-dates">${dateStr}${endStr}</div>
      </div>
      <div class="med-row-actions">
-       <button class="row-btn edit" onclick="openEditMedication(${m._idx})">Edit</button>
+      <button class="row-btn del" onclick="deleteMedication('${currentPatientId}', ${m._idx})">Remove</button>
     onclick="deleteMedication(currentPatientId, ${m._idx})"
      </div>
    </div>`;
