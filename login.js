@@ -9,7 +9,7 @@
 const MSAL_CONFIG = {
   CLIENT_ID:    "651a15cc-51f3-4b6d-9c59-d650aadc37be",
   TENANT_ID:    "common",
-  REDIRECT_URI: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/"),
+ REDIRECT_URI: "https://yourusername.github.io/your-repo-name/login.html",
 };
 
 // ── MSAL setup ────────────────────────────────────────────────
