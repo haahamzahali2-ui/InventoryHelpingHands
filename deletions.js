@@ -8,12 +8,8 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-CgUEw8qPUQE
 // ── CORE SYNC FUNCTION ───────────────────────────────────────────
 // Sends any action + payload to Google Sheets backend
 async function syncToSheet(action, payload) {
-  await fetch(SHEET_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: action, payload: payload })
-  });
+  const params = encodeURIComponent(JSON.stringify(payload));
+  await fetch(`${SHEET_URL}?action=${action}&payload=${params}`);
 }
 
 
