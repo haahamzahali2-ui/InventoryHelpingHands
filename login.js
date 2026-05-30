@@ -2,54 +2,47 @@
 //  HELPING HANDS — Microsoft Authentication (MSAL.js v2)
 //  login.js
 //
-//  SETUP:
-//   1. Replace CLIENT_ID with your Azure App Registration's
-//      "Application (client) ID"
-//   2. Replace TENANT_ID with your "Directory (tenant) ID"
-//      OR use "common" to allow any Microsoft account
-//   3. REDIRECT_URI must exactly match what you registered
-//      in Azure under Authentication → Redirect URIs
+//  SETUP: Replace CLIENT_ID with your Azure App Registration's
+//  "Application (client) ID". That's the only thing you need.
 // ─────────────────────────────────────────────────────────────
 
 const MSAL_CONFIG = {
-  CLIENT_ID:   "651a15cc-51f3-4b6d-9c59-d650aadc37be",           // e.g. "a1b2c3d4-..."
-  TENANT_ID:   "common",                        // or your tenant ID / "organizations"
-  REDIRECT_URI: window.location.origin + "/",   // auto-detects localhost vs GitHub Pages
+  CLIENT_ID:    "651a15cc-51f3-4b6d-9c59-d650aadc37be",
+  TENANT_ID:    "common",
+  REDIRECT_URI: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/"),
 };
 
-// ── MSAL instance ─────────────────────────────────────────────
-const msalConfig = {
+// ── MSAL setup ────────────────────────────────────────────────
+const msalInstance = new msal.PublicClientApplication({
   auth: {
     clientId:    MSAL_CONFIG.CLIENT_ID,
     authority:   `https://login.microsoftonline.com/${MSAL_CONFIG.TENANT_ID}`,
     redirectUri: MSAL_CONFIG.REDIRECT_URI,
   },
   cache: {
-    cacheLocation: "sessionStorage",   // sessionStorage = cleared on tab close
+    cacheLocation: "sessionStorage",
     storeAuthStateInCookie: false,
   },
-};
+});
 
-const msalInstance = new msal.PublicClientApplication(msalConfig);
-
-// Scopes — openid/profile/email is enough; add more if you need
-// e.g. "User.Read" to fetch profile photo from Microsoft Graph
 const loginRequest = {
   scopes: ["openid", "profile", "email"],
 };
 
-// ── Handle redirect response on page load ─────────────────────
-(async () => {
+// ── Init: must call initialize() before anything else ─────────
+async function init() {
+  await msalInstance.initialize();
+
   try {
     const response = await msalInstance.handleRedirectPromise();
 
     if (response && response.account) {
-      // User just completed sign-in redirect
+      // Returning from Microsoft login redirect
       storeUserAndRedirect(response.account);
       return;
     }
 
-    // Check if already signed in (cached session)
+    // Already signed in from a previous session?
     const accounts = msalInstance.getAllAccounts();
     if (accounts.length > 0) {
       storeUserAndRedirect(accounts[0]);
@@ -57,25 +50,25 @@ const loginRequest = {
 
   } catch (err) {
     showError(err.message || "Authentication error. Please try again.");
-    console.error("MSAL handleRedirectPromise error:", err);
+    console.error("MSAL init error:", err);
   }
-})();
+}
 
-// ── Sign-in button handler ─────────────────────────────────────
+init();
+
+// ── Sign-in button ─────────────────────────────────────────────
 async function signIn() {
   const btn     = document.getElementById("signInBtn");
   const btnText = document.getElementById("signInBtnText");
   const spinner = document.getElementById("signInSpinner");
 
-  btn.disabled       = true;
-  btnText.textContent = "Redirecting…";
+  btn.disabled          = true;
+  btnText.textContent   = "Redirecting…";
   spinner.style.display = "block";
   hideError();
 
   try {
-    // Redirect flow works best for SPA on GitHub Pages
     await msalInstance.loginRedirect(loginRequest);
-    // Page navigates away — code below won't run until redirect returns
   } catch (err) {
     showError(err.message || "Sign-in failed. Please try again.");
     btn.disabled          = false;
@@ -85,23 +78,20 @@ async function signIn() {
   }
 }
 
-// ── Store session and go to portal ────────────────────────────
+// ── Store session and redirect to portal ──────────────────────
 function storeUserAndRedirect(account) {
-  // Minimal user info stored — no tokens, no sensitive data
-  const user = {
-    name:     account.name || account.username,
-    email:    account.username,
-    tenantId: account.tenantId,
-    loginAt:  new Date().toISOString(),
-  };
-  localStorage.setItem("clinic_user", JSON.stringify(user));
+  localStorage.setItem("clinic_user", JSON.stringify({
+    name:    account.name || account.username,
+    email:   account.username,
+    loginAt: new Date().toISOString(),
+  }));
   window.location.href = "index.html";
 }
 
 // ── UI helpers ────────────────────────────────────────────────
 function showError(msg) {
   const el = document.getElementById("loginError");
-  el.textContent  = msg;
+  el.textContent   = msg;
   el.style.display = "block";
 }
 function hideError() {
