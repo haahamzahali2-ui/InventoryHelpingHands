@@ -1,333 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helping Hands — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --cream: #f5f0e8;
-      --ink: #1a1a2e;
-      --accent: #c8a96e;
-      --muted: #7a7a8a;
-      --error: #c0392b;
-      --card: #ffffff;
+      --gold: #C9A84C;
+      --gold-light: #E5C97E;
+      --cream: #F7F3EA;
+      --off-white: #FDFAF4;
+      --bg: #1A1208;
+      --bg2: #221A0C;
+      --text-dark: #2C2010;
+      --border: rgba(201,168,76,0.18);
     }
 
     body {
       min-height: 100vh;
-      background: var(--cream);
+      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'DM Sans', sans-serif;
-      position: relative;
       overflow: hidden;
+      position: relative;
     }
 
-    /* Decorative background shapes */
+    /* Subtle radial glow */
     body::before {
       content: '';
       position: fixed;
-      top: -120px; right: -120px;
-      width: 420px; height: 420px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #e8dcc8 0%, transparent 70%);
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,168,76,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(201,168,76,0.06) 0%, transparent 60%);
       pointer-events: none;
     }
-    body::after {
-      content: '';
+
+    /* Floating orbs */
+    .orb {
       position: fixed;
-      bottom: -100px; left: -100px;
-      width: 380px; height: 380px;
       border-radius: 50%;
-      background: radial-gradient(circle, #d4c4a8 0%, transparent 70%);
+      filter: blur(80px);
       pointer-events: none;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-1 { width: 400px; height: 400px; background: rgba(201,168,76,0.07); top: -100px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 300px; height: 300px; background: rgba(201,168,76,0.05); bottom: -80px; right: -80px; animation-delay: -4s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
     }
 
-    .card {
-      background: var(--card);
-      border-radius: 20px;
-      padding: 52px 48px 44px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 8px 48px rgba(26,26,46,0.10), 0 1px 4px rgba(26,26,46,0.06);
+    .login-card {
       position: relative;
-      z-index: 1;
-      animation: rise 0.55s cubic-bezier(0.22,1,0.36,1) both;
+      z-index: 10;
+      background: rgba(255,253,244,0.03);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 52px 52px 44px;
+      width: 100%;
+      max-width: 440px;
+      backdrop-filter: blur(20px);
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,0.08),
+        0 40px 80px rgba(0,0,0,0.6),
+        0 0 60px rgba(201,168,76,0.04) inset;
+      animation: cardIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
     }
 
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .brand {
-      text-align: center;
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       margin-bottom: 36px;
     }
 
-    .brand-icon {
-      width: 52px; height: 52px;
-      background: var(--ink);
+    .logo-badge {
+      width: 48px;
+      height: 48px;
       border-radius: 14px;
-      display: inline-flex;
+      background: linear-gradient(135deg, var(--gold), #A8782A);
+      display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
-    }
-
-    .brand-icon svg {
-      width: 26px; height: 26px;
-      fill: var(--accent);
-    }
-
-    .brand h1 {
       font-family: 'Playfair Display', serif;
-      font-size: 1.75rem;
-      color: var(--ink);
-      letter-spacing: -0.5px;
-    }
-
-    .brand p {
-      font-size: 0.875rem;
-      color: var(--muted);
-      margin-top: 5px;
-      font-weight: 300;
-    }
-
-    .field {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.78rem;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--ink);
-      margin-bottom: 8px;
-    }
-
-    input {
-      width: 100%;
-      padding: 13px 16px;
-      border: 1.5px solid #e0dbd0;
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.975rem;
-      color: var(--ink);
-      background: #fafaf8;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(200,169,110,0.15);
-      background: #fff;
-    }
-
-    .error-msg {
-      font-size: 0.82rem;
-      color: var(--error);
-      margin-top: 16px;
-      text-align: center;
-      min-height: 20px;
-      font-weight: 400;
-      animation: shake 0.35s ease;
-    }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20%      { transform: translateX(-6px); }
-      60%      { transform: translateX(6px); }
-    }
-
-    .btn {
-      margin-top: 24px;
-      width: 100%;
-      padding: 14px;
-      background: var(--ink);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.975rem;
-      font-weight: 500;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--bg);
       letter-spacing: 0.02em;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-      position: relative;
-      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(201,168,76,0.3);
     }
 
-    .btn:hover {
-      background: #2d2d4e;
-      box-shadow: 0 4px 18px rgba(26,26,46,0.22);
-      transform: translateY(-1px);
-    }
-
-    .btn:active { transform: translateY(0); }
-
-    /* Ripple */
-    .btn::after {
-      content: '';
-      position: absolute;
-      left: 50%; top: 50%;
-      width: 0; height: 0;
-      background: rgba(255,255,255,0.15);
-      border-radius: 50%;
-      transform: translate(-50%,-50%);
-      transition: width 0.4s, height 0.4s, opacity 0.4s;
-      opacity: 0;
-    }
-    .btn:active::after {
-      width: 300px; height: 300px; opacity: 1;
-    }
-
-    .success-screen {
-      display: none;
-      text-align: center;
-      padding: 16px 0;
-      animation: rise 0.45s ease both;
-    }
-
-    .success-screen .check {
-      width: 64px; height: 64px;
-      background: #e8f5e9;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .success-screen .check svg {
-      width: 30px; height: 30px;
-      stroke: #2e7d32;
-      fill: none;
-      stroke-width: 2.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .success-screen h2 {
+    .logo-text-wrap .logo-name {
       font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
-      color: var(--ink);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gold-light);
+      line-height: 1.2;
+    }
+    .logo-text-wrap .logo-sub {
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(201,168,76,0.45);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .login-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: #F5EDD6;
+      line-height: 1.2;
       margin-bottom: 8px;
     }
+    .login-heading em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
 
-    .success-screen p {
-      color: var(--muted);
-      font-size: 0.9rem;
+    .login-sub {
+      font-size: 14px;
+      color: rgba(245,237,214,0.4);
+      line-height: 1.6;
+      margin-bottom: 36px;
     }
 
     .divider {
       height: 1px;
-      background: #ede8de;
-      margin: 28px 0 0;
+      background: var(--border);
+      margin-bottom: 32px;
     }
 
-    .footer-note {
+    /* Microsoft sign-in button */
+    .ms-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(201,168,76,0.25);
+      background: rgba(201,168,76,0.06);
+      color: #F5EDD6;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.01em;
+    }
+    .ms-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .ms-btn:active { transform: translateY(0); }
+    .ms-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .ms-logo {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* Spinner inside button */
+    .btn-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(245,237,214,0.2);
+      border-top-color: var(--gold-light);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .login-error {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(232,112,112,0.1);
+      border: 1px solid rgba(232,112,112,0.25);
+      color: #f5a0a0;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .login-footer {
+      margin-top: 32px;
       text-align: center;
-      margin-top: 18px;
-      font-size: 0.78rem;
-      color: #b0a898;
+      font-size: 11px;
+      color: rgba(201,168,76,0.25);
+      letter-spacing: 0.04em;
+      line-height: 1.7;
     }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <!-- Login Form -->
-  <div id="loginForm">
-    <div class="brand">
-      <div class="brand-icon">
-        <!-- Simple hands/people icon -->
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm-7 18c0-3.87 3.13-7 7-7s7 3.13 7 7H5z"/>
-        </svg>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="login-card">
+    <div class="logo-wrap">
+      <div class="logo-badge">HH</div>
+      <div class="logo-text-wrap">
+        <div class="logo-name">Helping Hands</div>
+        <div class="logo-sub">Free Clinic</div>
       </div>
-      <h1>Welcome Back</h1>
-      <p>Sign in to your account to continue</p>
     </div>
 
-    <div class="field">
-      <label for="username">Username</label>
-      <input type="text" id="username" placeholder="Enter your username" autocomplete="username"/>
-    </div>
-
-    <div class="field">
-      <label for="password">Password</label>
-      <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
-    </div>
-
-    <div class="error-msg" id="errorMsg"></div>
-
-    <button class="btn" onclick="handleLogin()">Sign In</button>
+    <h1 class="login-heading">Welcome <em>back.</em></h1>
+    <p class="login-sub">Sign in to access the Patient Care Portal. Your session is secured by Microsoft.</p>
 
     <div class="divider"></div>
-    <p class="footer-note">HelpingHands Portal &mdash; Authorized users only</p>
-  </div>
 
-  <!-- Success Screen -->
-  <div class="success-screen" id="successScreen">
-    <div class="check">
-      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    <button class="ms-btn" id="signInBtn" onclick="signIn()">
+      <svg class="ms-logo" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      <span id="signInBtnText">Sign in with Microsoft</span>
+      <div class="btn-spinner" id="signInSpinner"></div>
+    </button>
+
+    <div class="login-error" id="loginError"></div>
+
+    <div class="login-footer">
+      Helping Hands Health &amp; Wellness Center<br>
+      Authorized staff only · All access is logged
     </div>
-    <h2>You're in!</h2>
-    <p>Login successful. Welcome, HelpingHands.</p>
   </div>
-</div>
 
-<script>
-  // ── Credentials ──────────────────────────────────────
-  const VALID_USERNAME = "HelpingHands";
-  const VALID_PASSWORD = "1421";
-  // ─────────────────────────────────────────────────────
-
-  function handleLogin() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
-    const errorMsg = document.getElementById("errorMsg");
-
-    if (!username || !password) {
-      showError("Please fill in both fields.");
-      return;
-    }
-
-    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-      sessionStorage.setItem("clinic_user", "true");
-      document.getElementById("loginForm").style.display = "none";
-      const success = document.getElementById("successScreen");
-      success.style.display = "block";
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 1500);
-    } else {
-      showError("Incorrect username or password.");
-    }
-  }
-
-  function showError(msg) {
-    const el = document.getElementById("errorMsg");
-    el.textContent = "";
-    // Force reflow to restart animation
-    void el.offsetWidth;
-    el.textContent = msg;
-  }
-
-  // Allow pressing Enter to submit
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") handleLogin();
-  });
-</script>
-
+  <!-- MSAL.js v2 from CDN -->
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="login.js"></script>
 </body>
 </html>
