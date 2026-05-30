@@ -74,6 +74,9 @@ function renderPatientsGrid(filter = '', range = null) {
     const sticky = db.stickies && db.stickies[id];
     const stickyHtml = `<button class="pcard-sticky ${sticky ? 'has-note' : ''}" onclick="event.stopPropagation();openStickyModal('${id}')" title="${sticky ? escapeHtml(sticky.note) : 'Add staff note'}">📌</button>`;
 
+    // Delete button
+    const deleteHtml = `<button class="pcard-delete-btn" onclick="event.stopPropagation();confirmDeletePatient('${id}')" title="Delete patient">🗑</button>`;
+
     // Last seen
     const allDates = [...(p.bpReadings||[]), ...(p.a1cReadings||[])].map(r => r.datetime).filter(Boolean).sort();
     const lastDate = allDates.slice(-1)[0];
@@ -92,7 +95,11 @@ function renderPatientsGrid(filter = '', range = null) {
     // Badges
     const milestoneBadges = getMilestoneBadges(id);
     const famBadge = isFAMEnrolled(id) ? `<span class="pcard-fam-badge">🥗 FaM</span>` : '';
-    const criticalBadge = (bpStatus === 'critical' || a1cStatus === 'critical') ? `<span class="pcard-status-badge critical">Critical</span>` : (bpStatus === 'warning' || a1cStatus === 'warning') ? `<span class="pcard-status-badge warning">Needs Attention</span>` : '';
+    const criticalBadge = (bpStatus === 'critical' || a1cStatus === 'critical')
+      ? `<span class="pcard-status-badge critical">Critical</span>`
+      : (bpStatus === 'warning' || a1cStatus === 'warning')
+        ? `<span class="pcard-status-badge warning">Needs Attention</span>`
+        : '';
     const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
 
     if (patientViewMode === 'list') {
@@ -120,6 +127,7 @@ function renderPatientsGrid(filter = '', range = null) {
         ${criticalBadge ? `<div class="plr-status">${criticalBadge}</div>` : '<div class="plr-status"></div>'}
         <div class="plr-actions">
           ${stickyHtml}
+          ${deleteHtml}
           <div class="plr-arrow">→</div>
         </div>
       </div>`;
@@ -137,6 +145,7 @@ function renderPatientsGrid(filter = '', range = null) {
           <div class="pcard-header-right">
             ${famBadge}
             ${stickyHtml}
+            ${deleteHtml}
           </div>
         </div>
 
@@ -183,7 +192,42 @@ function filterPatients() {
   renderPatientsGrid(v);
 }
 
+// ═══════════════════════════════════
+// DELETE PATIENT
+// ═══════════════════════════════════
+function confirmDeletePatient(patientId) {
+  const first = confirm(`Delete Patient #${patientId}?\n\nThis will permanently remove all readings, medications, alerts, notes, and FaM enrollment for this patient.`);
+  if (!first) return;
+  const second = confirm(`Are you absolutely sure?\n\nPatient #${patientId} and ALL their data will be deleted. This cannot be undone.`);
+  if (!second) return;
+  deletePatientEverywhere(patientId);
+}
 
+async function deletePatientEverywhere(patientId) {
+  showToast(`Deleting Patient #${patientId}…`);
+  try {
+    // Remove from local db
+    delete db.patients[patientId];
+    if (db.stickies)       delete db.stickies[patientId];
+    if (db.famEnrollments) delete db.famEnrollments[patientId];
+    if (db.alerts)         db.alerts = db.alerts.filter(a => String(a.patientId) !== String(patientId));
+    saveDB();
+
+    // Sync to Google Sheet
+    await postToSheetBackend('delete_patient', { patientId: String(patientId) });
+
+    showToast(`✓ Patient #${patientId} deleted`);
+    renderPatientsGrid();
+    renderHomeStats();
+  } catch (err) {
+    showToast(`Deleted locally — sheet sync failed`);
+    console.error('deletePatient error:', err);
+    renderPatientsGrid();
+  }
+}
+
+
+// ═══════════════════════════════════
 // PATIENT DETAIL
 // ═══════════════════════════════════
 function openPatient(id) {
@@ -232,7 +276,10 @@ function renderPatientAlertPanel(id, bpStatus, a1cStatus, lastBP, lastA1C) {
     </div>`).join('');
 }
 
-function dismissPatientAlert(id) { patientAlertDismissed[id] = true; document.getElementById('patientAlertPanel').innerHTML = ''; }
+function dismissPatientAlert(id) {
+  patientAlertDismissed[id] = true;
+  document.getElementById('patientAlertPanel').innerHTML = '';
+}
 
 function setDetailMetric(metric) {
   currentDetailMetric = metric;
@@ -243,7 +290,9 @@ function setDetailMetric(metric) {
 }
 
 
-// ── EDIT / DELETE READINGS ──────────────────────────
+// ═══════════════════════════════════
+// EDIT / DELETE READINGS
+// ═══════════════════════════════════
 let editReadingType  = null;
 let editReadingIndex = null;
 
@@ -292,7 +341,13 @@ function saveEditedReading() {
   p.a1cReadings.sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   saveDB();
   postToSheetBackend('delete_reading', { patientId: currentPatientId, type: editReadingType, datetime: oldReading.datetime })
-    .then(() => postToSheetBackend('add_reading', { patientId: currentPatientId, type: editReadingType, ...( editReadingType === 'bp' ? p.bpReadings.find(r => r.datetime === document.getElementById('edit-bp-datetime').value) || p.bpReadings.slice(-1)[0] : p.a1cReadings.find(r => r.datetime === document.getElementById('edit-a1c-datetime')?.value) || p.a1cReadings.slice(-1)[0] ) }))
+    .then(() => postToSheetBackend('add_reading', {
+      patientId: currentPatientId,
+      type: editReadingType,
+      ...(editReadingType === 'bp'
+        ? p.bpReadings.find(r => r.datetime === document.getElementById('edit-bp-datetime').value) || p.bpReadings.slice(-1)[0]
+        : p.a1cReadings.find(r => r.datetime === document.getElementById('edit-a1c-datetime')?.value) || p.a1cReadings.slice(-1)[0])
+    }))
     .catch(() => showToast('Reading updated locally; sheet sync failed'));
   closeModal('editReadingModal');
   openPatient(currentPatientId);
@@ -320,7 +375,7 @@ async function confirmDeleteReading() {
 
 
 // ═══════════════════════════════════
-// SAVE NEW READING (from add-data modal)
+// SAVE NEW READING
 // ═══════════════════════════════════
 async function saveReading() {
   if (!currentPatientId) return;
@@ -350,9 +405,13 @@ async function saveReading() {
     try { await postToSheetBackend('add_reading', { patientId: currentPatientId, type: 'a1c', ...newReading }); }
     catch (e) { showToast('A1C reading saved locally; Google Sheets write failed.'); }
   }
-  saveDB(); closeModal('addDataModal'); openPatient(currentPatientId); renderHomeStats();
+  saveDB();
+  closeModal('addDataModal');
+  openPatient(currentPatientId);
+  renderHomeStats();
   showToast('Reading saved successfully');
 }
+
 
 // ═══════════════════════════════════
 // MILESTONE BADGES
@@ -391,6 +450,7 @@ function getMilestoneBadges(pid) {
   if (activeMeds.length > 0) badges.push({ icon:'💊', label:'On Meds', title: activeMeds.map(m=>m.name).join(', ') });
   return badges;
 }
+
 
 // ═══════════════════════════════════
 // STICKY NOTES
