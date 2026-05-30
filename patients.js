@@ -193,41 +193,6 @@ function filterPatients() {
 }
 
 // ═══════════════════════════════════
-// DELETE PATIENT
-// ═══════════════════════════════════
-function confirmDeletePatient(patientId) {
-  const first = confirm(`Delete Patient #${patientId}?\n\nThis will permanently remove all readings, medications, alerts, notes, and FaM enrollment for this patient.`);
-  if (!first) return;
-  const second = confirm(`Are you absolutely sure?\n\nPatient #${patientId} and ALL their data will be deleted. This cannot be undone.`);
-  if (!second) return;
-  deletePatientEverywhere(patientId);
-}
-
-async function deletePatientEverywhere(patientId) {
-  showToast(`Deleting Patient #${patientId}…`);
-  try {
-    // Remove from local db
-    delete db.patients[patientId];
-    if (db.stickies)       delete db.stickies[patientId];
-    if (db.famEnrollments) delete db.famEnrollments[patientId];
-    if (db.alerts)         db.alerts = db.alerts.filter(a => String(a.patientId) !== String(patientId));
-    saveDB();
-
-    // Sync to Google Sheet
-    await postToSheetBackend('delete_patient', { patientId: String(patientId) });
-
-    showToast(`✓ Patient #${patientId} deleted`);
-    renderPatientsGrid();
-    renderHomeStats();
-  } catch (err) {
-    showToast(`Deleted locally — sheet sync failed`);
-    console.error('deletePatient error:', err);
-    renderPatientsGrid();
-  }
-}
-
-
-// ═══════════════════════════════════
 // PATIENT DETAIL
 // ═══════════════════════════════════
 function openPatient(id) {
