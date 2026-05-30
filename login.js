@@ -9,7 +9,7 @@
 const MSAL_CONFIG = {
   CLIENT_ID:    "651a15cc-51f3-4b6d-9c59-d650aadc37be",
   TENANT_ID:    "common",
- REDIRECT_URI: "https://yourusername.github.io/your-repo-name/login.html",
+ REDIRECT_URI: "https://haahamzahali2-ui.github.io/InventoryHelpingHands/login.html",
 };
 
 // ── MSAL setup ────────────────────────────────────────────────
