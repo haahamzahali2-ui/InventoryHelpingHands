@@ -103,7 +103,6 @@ function renderPatientsGrid(filter = '', range = null) {
     const totalReadings = (p.bpReadings||[]).length + (p.a1cReadings||[]).length;
 
     if (patientViewMode === 'list') {
-      // ── LIST ROW ──────────────────────────────────────────────────────
       return `<div class="patient-list-row ${cardClass}" onclick="openPatient('${id}')">
         <div class="plr-indicator ${cardClass}"></div>
         <div class="plr-id">
@@ -133,7 +132,6 @@ function renderPatientsGrid(filter = '', range = null) {
       </div>`;
     }
 
-    // ── GRID CARD ────────────────────────────────────────────────────────
     return `<div class="patient-card ${cardClass}" onclick="openPatient('${id}')">
       <div class="pcard-stripe"></div>
       <div class="pcard-body">
@@ -319,23 +317,10 @@ function saveEditedReading() {
   showToast('Reading updated ✓');
 }
 
+// ── confirmDeleteReading now calls deletions.js ──────────────────
 async function confirmDeleteReading() {
   if (editReadingIndex === null || !currentPatientId) return;
-  const p = db.patients[currentPatientId];
-  const deletedReading  = editReadingType === 'bp' ? p.bpReadings[editReadingIndex] : p.a1cReadings[editReadingIndex];
-  const deletedDatetime = deletedReading?.datetime || '';
-  if (editReadingType === 'bp') p.bpReadings.splice(editReadingIndex, 1);
-  else p.a1cReadings.splice(editReadingIndex, 1);
-  saveDB();
-  closeModal('editReadingModal');
-  openPatient(currentPatientId);
-  renderHomeStats();
-  showToast('Reading deleted ✓');
-  try {
-    await postToSheetBackend('delete_reading', { patientId: currentPatientId, type: editReadingType, datetime: deletedDatetime });
-  } catch(e) {
-    showToast('Deleted locally — sheet sync failed. Re-open and retry.');
-  }
+  await deleteReading(currentPatientId, editReadingType, editReadingIndex);
 }
 
 
@@ -445,7 +430,7 @@ function setStickyColor(color, el) {
 async function saveSticky() {
   if (!currentStickyPatientId) return;
   const note = document.getElementById('stickyText').value.trim();
-  if (!note) { await deleteSticky(); return; }
+  if (!note) { await deleteStickyNote(currentStickyPatientId); return; }
   if (!db.stickies) db.stickies = {};
   db.stickies[currentStickyPatientId] = { note, color: currentStickyColor, createdAt: new Date().toISOString() };
   saveDB();
@@ -456,13 +441,8 @@ async function saveSticky() {
   catch(e) { showToast('Note saved locally; sheet sync failed'); }
 }
 
+// deleteSticky now calls deletions.js
 async function deleteSticky() {
   if (!currentStickyPatientId) return;
-  if (db.stickies) delete db.stickies[currentStickyPatientId];
-  saveDB();
-  document.getElementById('stickyModal').classList.remove('open');
-  renderPatientsGrid();
-  showToast('Note removed');
-  try { await postToSheetBackend('delete_sticky', { patientId: currentStickyPatientId }); }
-  catch(e) {}
+  await deleteStickyNote(currentStickyPatientId);
 }
