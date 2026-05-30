@@ -36,7 +36,7 @@ async function generateVisitNote() {
   var p = db.patients[currentPatientId];
   if (!p) return;
 
-  document.getElementById('visitNotePrompt').style.display = 'none';
+  document.getElementById('visitNote').style.display = 'none';
   document.getElementById('visitNoteEditor').style.display = 'none';
   document.getElementById('visitNoteGenerating').style.display = 'block';
   document.getElementById('visitNoteGenerateBtn').style.display = 'none';
@@ -87,7 +87,7 @@ async function generateVisitNote() {
 
   var prompt;
   if (isSOAP) {
-    prompt = 'You are a clinical documentation specialist at Helping Hands Free Community Clinic. Generate a detailed, thorough SOAP note for this patient visit. Be specific with all numbers. Write full sentences in each section. Do not leave any section sparse.\n\n' +
+    prompt = 'write a short note a provider can copy and paste to athena, mention specific numbers, use all the data available to you' +
       'Patient ID: #' + currentPatientId + '\n' +
       'Visit Date: ' + today + '\n' +
       'Clinic: Helping Hands Free Community Clinic, Columbus, OH\n\n' +
@@ -101,13 +101,10 @@ async function generateVisitNote() {
       firstA1CLine + '\n' +
       'A1C Trend: ' + a1cTrend.toUpperCase() + ' | Current Status: ' + (a1cStatus || 'unknown') + '\n\n' +
       'Active Medications:\n' + activeMedList + discSection + '\n\n' +
-      'INSTRUCTIONS — Write each section in full detail:\n\n' +
-      'SUBJECTIVE: Describe why the patient is being seen (hypertension/diabetes management follow-up). Note the visit is for chronic disease monitoring at a free community clinic. Mention how long the patient has been followed (based on first reading date). Note any relevant observations from reading notes. If notes mention symptoms, adherence, or missed medications — include them here.\n\n' +
-      'OBJECTIVE: List ALL vital signs with exact values and clinical classifications. Compare most recent reading to previous readings with exact numbers and calculate the change. Note whether readings are improving, worsening, or stable with specific mmHg or % differences. List all active medications with doses.\n\n' +
-      'ASSESSMENT: Provide a thorough clinical assessment of BP control and glycemic control. Reference specific numbers. Discuss medication effectiveness based on trend data. Flag any critical or urgent values. Discuss overall disease management progress.\n\n' +
-      'PLAN: Write specific, actionable next steps including follow-up timing, medication considerations, monitoring recommendations, and patient education points relevant to hypertension/diabetes management.';
+      'INSTRUCTIONS — Write 2-3 short pargraphs
+      
   } else {
-    prompt = 'You are a clinical documentation specialist at Helping Hands Free Community Clinic. Write a detailed, professional visit summary paragraph for this patient. Include specific numbers, trends, medication correlation, and clear next steps. Write at least 5-6 sentences. Be thorough and specific — this will be used for clinical documentation.\n\n' +
+    prompt = 'write a short note a provider can copy and paste to athena, mention specific numbers, use all the data available to you' +
       'Patient ID: #' + currentPatientId + '\n' +
       'Visit Date: ' + today + '\n' +
       'Clinic: Helping Hands Free Community Clinic, Columbus, OH\n\n' +
