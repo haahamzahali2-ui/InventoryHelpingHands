@@ -4,11 +4,12 @@
 async function postToSheetBackend(action, payload) {
   const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-CgUEw8qPUQEm7i5VxLkivuASa35gc97f-YWJiOmPK-OwmOl4U_dE7vZR1/exec';
   
-  const res = await fetch(SHEET_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, payload })
-  });
+await fetch(url, {
+  method: 'POST',
+  mode: 'no-cors',                 // ← this is the fix
+  headers: { 'Content-Type': 'text/plain' },  // ← must be text/plain
+  body: JSON.stringify(data)
+});
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
