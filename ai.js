@@ -36,7 +36,7 @@ async function generateVisitNote() {
   var p = db.patients[currentPatientId];
   if (!p) return;
 
-  document.getElementById('visitNote').style.display = 'none';
+  document.getElementById('visitNotePrompt').style.display = 'none';
   document.getElementById('visitNoteEditor').style.display = 'none';
   document.getElementById('visitNoteGenerating').style.display = 'block';
   document.getElementById('visitNoteGenerateBtn').style.display = 'none';
@@ -85,43 +85,23 @@ async function generateVisitNote() {
   var firstA1CLine = firstA1C ? 'First recorded A1C: ' + firstA1C.val + '% on ' + firstA1C.datetime : '';
   var discSection  = discMedList ? '\nDiscontinued Medications:\n' + discMedList : '';
 
-  var prompt;
-  if (isSOAP) {
-    prompt = 'write a short note a provider can copy and paste to athena, mention specific numbers, use all the data available to you' +
-      'Patient ID: #' + currentPatientId + '\n' +
-      'Visit Date: ' + today + '\n' +
-      'Clinic: Helping Hands Free Community Clinic, Columbus, OH\n\n' +
-      'CLINICAL DATA:\n\n' +
-      'Blood Pressure History (' + totalBPReadings + ' total readings on file):\n' +
-      bpHistory + '\n' +
-      firstBPLine + '\n' +
-      'BP Trend: ' + bpTrend.toUpperCase() + ' | Current Status: ' + (bpStatus || 'unknown') + '\n\n' +
-      'A1C History (' + totalA1CReadings + ' total readings on file):\n' +
-      a1cHistory + '\n' +
-      firstA1CLine + '\n' +
-      'A1C Trend: ' + a1cTrend.toUpperCase() + ' | Current Status: ' + (a1cStatus || 'unknown') + '\n\n' +
-      'Active Medications:\n' + activeMedList + discSection + '\n\n' +
-      'INSTRUCTIONS — Write 2-3 short pargraphs
-      
-  } else {
-    prompt = 'write a short note a provider can copy and paste to athena, mention specific numbers, use all the data available to you' +
-      'Patient ID: #' + currentPatientId + '\n' +
-      'Visit Date: ' + today + '\n' +
-      'Clinic: Helping Hands Free Community Clinic, Columbus, OH\n\n' +
-      'CLINICAL DATA:\n\n' +
-      'Blood Pressure History (' + totalBPReadings + ' total readings):\n' +
-      bpHistory + '\n' +
-      firstBPLine + '\n' +
-      'Overall BP Trend: ' + bpTrend.toUpperCase() + ' | Current Classification: ' + (bpStatus || 'unknown') + '\n\n' +
-      'A1C History (' + totalA1CReadings + ' total readings):\n' +
-      a1cHistory + '\n' +
-      firstA1CLine + '\n' +
-      'Overall A1C Trend: ' + a1cTrend.toUpperCase() + ' | Current Classification: ' + (a1cStatus || 'unknown') + '\n\n' +
-      'Active Medications:\n' + activeMedList + discSection + '\n\n' +
-      'Write a thorough clinical paragraph that: (1) states the reason for visit and how long patient has been followed, (2) describes current vital findings with exact numbers and comparisons to prior readings, (3) assesses the trend and medication effectiveness, (4) identifies any urgent concerns, (5) outlines specific follow-up recommendations.';
-  }
+  var prompt = 'You are a clinical documentation assistant at Helping Hands Free Community Clinic. ' +
+    'Use all the information available to write a short visit summary for today\'s date ready to be pasted into an EMR. ' +
+    'Keep it short, organized, and concise.\n\n' +
+    'Patient ID: #' + currentPatientId + '\n' +
+    'Visit Date: ' + today + '\n' +
+    'Clinic: Helping Hands Free Community Clinic, Columbus, OH\n\n' +
+    'Blood Pressure History (' + totalBPReadings + ' total readings):\n' +
+    bpHistory + '\n' +
+    firstBPLine + '\n' +
+    'BP Trend: ' + bpTrend.toUpperCase() + ' | Current Status: ' + (bpStatus || 'unknown') + '\n\n' +
+    'A1C History (' + totalA1CReadings + ' total readings):\n' +
+    a1cHistory + '\n' +
+    firstA1CLine + '\n' +
+    'A1C Trend: ' + a1cTrend.toUpperCase() + ' | Current Status: ' + (a1cStatus || 'unknown') + '\n\n' +
+    'Active Medications:\n' + activeMedList + discSection;
 
-  try {
+    try {
     var response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'claude', prompt: prompt })
@@ -132,7 +112,6 @@ async function generateVisitNote() {
     }
 
     var data = await response.json();
-    console.log('Apps Script response:', JSON.stringify(data));
     if (data.error) throw new Error(data.error.message || 'API error');
     var text = data.content[0].text;
 
