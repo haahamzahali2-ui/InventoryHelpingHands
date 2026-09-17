@@ -213,15 +213,45 @@
 </div><!-- /page-referral-list -->
 
 <!-- ═══════════════════════════════════════════════════════
-     REFERRAL ANALYTICS — placeholder, built out next
+     REFERRAL ANALYTICS
 ════════════════════════════════════════════════════════ -->
 <div class="page" id="page-referral-analytics">
   <div class="section-header">
     <button class="back-btn" onclick="showPage('referral-hub')">&#8592; Referral Tracker</button>
     <h2>Referral Analytics</h2>
   </div>
-  <div class="empty-state">
-    🚧 Referral analytics coming soon.
+
+  <div class="analytics-summary-row" id="referralKPIs"></div>
+
+  <div class="analytics-card" style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+      <div>
+        <div class="analytics-card-title">Completion Rate &amp; Avg. Time to Completion</div>
+        <div class="analytics-card-sub">Grouped by specialty or clinic</div>
+      </div>
+      <div class="breakdown-tabs">
+        <button class="breakdown-tab active" onclick="setReferralAnalyticsGroup('specialty', this)">By Specialty</button>
+        <button class="breakdown-tab" onclick="setReferralAnalyticsGroup('clinic', this)">By Clinic</button>
+      </div>
+    </div>
+    <div class="analytics-chart-container" style="height:320px;"><canvas id="referralGroupChart"></canvas></div>
+  </div>
+
+  <div class="analytics-card">
+    <div class="analytics-card-title">Breakdown Table</div>
+    <div class="analytics-card-sub" id="referralTableSub">By specialty</div>
+    <table class="patient-breakdown-table" id="referralBreakdownTable">
+      <thead>
+        <tr>
+          <th id="referralTableGroupHeader">Specialty</th>
+          <th>Total</th>
+          <th>Completed</th>
+          <th>Completion Rate</th>
+          <th>Avg. Days to Completion</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div><!-- /page-referral-analytics -->
     <!-- ═══════════════════════════════════════════════════════
