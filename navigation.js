@@ -53,8 +53,8 @@ document.addEventListener('keydown', e => {
     if (activePage === 'page-patients' && searchInput) {
       searchInput.focus();
       showKbdHint('<kbd>/</kbd> Search patients');
-    } else {
-      'patients');
+     } else {
+      showPage('patients');
       setTimeout(() => { document.getElementById('patientSearch')?.focus(); }, 300);
       showKbdHint('<kbd>/</kbd> Search patients');
     }
