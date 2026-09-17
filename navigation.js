@@ -12,6 +12,7 @@ if (name === 'analytics') renderAnalytics();
 if (name === 'breakdown') renderBreakdown();
 if (name === 'patients') renderPatientsGrid();
 if (name === 'chronic-hub') renderHomeStats();
+if (name === 'referral-hub') renderReferrals();
 }
 
 
@@ -53,7 +54,7 @@ document.addEventListener('keydown', e => {
       searchInput.focus();
       showKbdHint('<kbd>/</kbd> Search patients');
     } else {
-      showPage('patients');
+      'patients');
       setTimeout(() => { document.getElementById('patientSearch')?.focus(); }, 300);
       showKbdHint('<kbd>/</kbd> Search patients');
     }
