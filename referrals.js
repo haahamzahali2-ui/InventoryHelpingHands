@@ -357,7 +357,7 @@ function renderReferralBreakdownTable(groupStats) {
   }
 
   tbody.innerHTML = groupStats.map(g => `
-    <tr>
+    <tr onclick="drillIntoReferralGroup('${g.key.replace(/'/g, "\\'")}')">
       <td>${escapeHtml(g.key)}</td>
       <td>${g.total}</td>
       <td>${g.completed}</td>
@@ -365,4 +365,18 @@ function renderReferralBreakdownTable(groupStats) {
       <td>${g.avgDays !== null ? g.avgDays + ' days' : '—'}</td>
     </tr>
   `).join('');
+// ═══════════════════════════════════
+// DRILL-DOWN — click a group to view its referrals
+// ═══════════════════════════════════
+function drillIntoReferralGroup(groupKey) {
+  showPage('referral-list');
+  const searchInput = document.getElementById('referralSearch');
+  if (searchInput) {
+    searchInput.value = groupKey;
+  }
+  currentReferralFilter = 'all';
+  document.querySelectorAll('#page-referral-list .pt-chip').forEach(b => b.classList.remove('active'));
+  const allChip = document.querySelector('#page-referral-list .pt-chip');
+  if (allChip) allChip.classList.add('active');
+  renderReferrals(groupKey);
 }
