@@ -3004,3 +3004,37 @@ body.dark-mode .referral-card-notes { border-top-color: #2A2218; }
   border-top-color: var(--gold-dim);
   transform: translateY(2px);
 }
+.referral-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.referral-group-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(.4,0,.2,1);
+}
+.referral-group-card:hover {
+  border-color: var(--gold-light);
+  box-shadow: 0 10px 28px var(--shadow-md);
+  transform: translateY(-3px);
+}
+.referral-group-card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 600; color: var(--text-dark);
+  margin-bottom: 8px;
+}
+.referral-group-card-stats {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap;
+}
+.referral-group-card-total { font-size: 12px; color: var(--text-light); }
+.referral-group-card-rate {
+  font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+}
+.referral-group-card-rate.high   { background: var(--alert-green-bg); color: var(--alert-green); border:1px solid #a3d9bc; }
+.referral-group-card-rate.medium { background: var(--alert-amber-bg); color: var(--alert-amber); border:1px solid #f5d09a; }
+.referral-group-card-rate.low    { background: var(--alert-red-bg); color: var(--alert-red); border:1px solid #f3b0aa; }
