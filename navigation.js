@@ -12,7 +12,8 @@ if (name === 'analytics') renderAnalytics();
 if (name === 'breakdown') renderBreakdown();
 if (name === 'patients') renderPatientsGrid();
 if (name === 'chronic-hub') renderHomeStats();
-if (name === 'referral-hub') renderReferrals();
+if (name === 'referral-list') renderReferrals();
+if (name === 'referral-analytics') renderReferralAnalytics();
 }
 
 
