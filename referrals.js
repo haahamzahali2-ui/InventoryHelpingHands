@@ -141,9 +141,9 @@ function openEditReferralModal(referralId) {
 }
 
 // ═══════════════════════════════════
-// SAVE
+// SAVE — updates UI instantly, syncs to sheet in background
 // ═══════════════════════════════════
-async function saveReferral() {
+function saveReferral() {
   const patientId = document.getElementById('ref-patient-id').value.trim();
   const specialty = document.getElementById('ref-specialty').value.trim();
   const clinic = document.getElementById('ref-clinic').value.trim();
@@ -169,38 +169,39 @@ async function saveReferral() {
       ref.notes = notes;
     }
     saveDB();
-    try {
-      await postToSheetBackend('update_referral', {
-        referralId: editingReferralId, specialty, clinic, dateSent, dateCompleted, notes
-      });
-    } catch(e) { showToast('Referral updated locally; Google Sheets write failed.'); }
+    closeModal('referralModal');
+    renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
     showToast('Referral updated ✓');
+
+    postToSheetBackend('update_referral', {
+      referralId: editingReferralId, specialty, clinic, dateSent, dateCompleted, notes
+    }).catch(() => showToast('Referral updated locally; Google Sheets write failed.'));
   } else {
     const referralId = `REF-${patientId}-${Date.now()}`;
     const newRef = { referralId, patientId, specialty, clinic, dateSent, dateCompleted, notes };
     db.referrals.push(newRef);
     saveDB();
-    try {
-      await postToSheetBackend('add_referral', newRef);
-    } catch(e) { showToast('Referral saved locally; Google Sheets write failed.'); }
+    closeModal('referralModal');
+    renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
     showToast('Referral added ✓');
-  }
 
-  closeModal('referralModal');
-  renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
+    postToSheetBackend('add_referral', newRef)
+      .catch(() => showToast('Referral saved locally; Google Sheets write failed.'));
+  }
 }
 
 // ═══════════════════════════════════
-// DELETE
+// DELETE — updates UI instantly, syncs to sheet in background
 // ═══════════════════════════════════
-async function confirmDeleteReferral() {
+function confirmDeleteReferral() {
   if (!editingReferralId) return;
-  db.referrals = (db.referrals || []).filter(r => r.referralId !== editingReferralId);
+  const idToDelete = editingReferralId;
+  db.referrals = (db.referrals || []).filter(r => r.referralId !== idToDelete);
   saveDB();
-  try {
-    await postToSheetBackend('delete_referral', { referralId: editingReferralId });
-  } catch(e) { showToast('Referral deleted locally; Google Sheets write failed.'); }
   closeModal('referralModal');
   renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
   showToast('Referral deleted');
+
+  postToSheetBackend('delete_referral', { referralId: idToDelete })
+    .catch(() => showToast('Referral deleted locally; Google Sheets write failed.'));
 }
