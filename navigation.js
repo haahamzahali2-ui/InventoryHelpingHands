@@ -9,9 +9,9 @@ function showPage(name) {
 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 document.getElementById('page-' + name).classList.add('active');
 if (name === 'analytics') renderAnalytics();
-if (name === 'breakdown') renderBreakdown(); // ADD THIS
+if (name === 'breakdown') renderBreakdown();
 if (name === 'patients') renderPatientsGrid();
-if (name === 'home') renderHomeStats();
+if (name === 'chronic-hub') renderHomeStats();
 }
 
 
