@@ -16,6 +16,7 @@ function getReferralStatus(ref) {
 // RENDER
 // ═══════════════════════════════════
 function renderReferrals(filter = '') {
+  updateReferralTopbarStats();
   const grid = document.getElementById('referralsGrid');
   if (!grid) return;
 
