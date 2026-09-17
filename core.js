@@ -134,7 +134,7 @@ function parseBackendBundle(bundle) {
     dateCompleted: normalizeDate(r.dateCompleted),
     notes:         String(r.notes || '')
   }));
-  saveDB(); renderPatientsGrid(); renderHomeStats(); renderAlertsList();
+ saveDB(); renderPatientsGrid(); renderHomeStats(); renderAlertsList(); updateReferralTopbarStats();
 }
 
 
