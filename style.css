@@ -2933,3 +2933,32 @@ body.dark-mode .referral-card-notes { border-top-color: #2A2218; }
   padding-left: 0;
   border-left: none;
 }
+.referral-drilldown-breadcrumb {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+}
+.referral-drilldown-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 600; color: var(--text-dark);
+}
+.referral-active-filters {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 18px; padding: 10px 16px;
+  background: var(--gold-pale); border: 1px solid var(--gold-light); border-radius: 12px;
+}
+.referral-filter-chip-label {
+  font-size: 12px; font-weight: 600; color: var(--gold-dim);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.referral-filter-chip {
+  padding: 4px 12px; border-radius: 20px;
+  background: var(--white); border: 1px solid var(--gold-light);
+  font-size: 12px; font-weight: 600; color: var(--text-dark);
+}
+.referral-filter-clear-btn {
+  margin-left: auto; padding: 4px 12px; border-radius: 20px;
+  background: none; border: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; color: var(--text-mid);
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+}
+.referral-filter-clear-btn:hover { background: var(--cream); }
+#referralGroupChart { cursor: pointer; }
