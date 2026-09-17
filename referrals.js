@@ -267,8 +267,14 @@ function confirmDeleteReferral() {
 // ANALYTICS — overview + drill-down
 // ═══════════════════════════════════
 let referralAnalyticsGroup = 'specialty';
+let referralChartMetric = 'rate'; // 'rate' | 'days'
 let referralGroupChartInst = null;
 let referralDrilldownGroup = null; // { dim: 'specialty'|'clinic', key: string } or null
+
+// Table state — populated whenever the chart/table are (re)rendered
+let lastGroupStats = [];
+let referralTableSearchTerm = '';
+let referralTableSort = { field: 'total', dir: 'desc' };
 
 function setReferralAnalyticsGroup(group, btn) {
   referralAnalyticsGroup = group;
@@ -276,6 +282,13 @@ function setReferralAnalyticsGroup(group, btn) {
   document.querySelectorAll('#page-referral-analytics .breakdown-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderReferralAnalytics();
+}
+
+function setReferralChartMetric(metric, btn) {
+  referralChartMetric = metric;
+  document.querySelectorAll('#referralChartMetricToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReferralGroupChart(lastGroupStats);
 }
 
 function computeReferralGroupStats(refs, groupBy) {
@@ -378,8 +391,7 @@ function renderReferralAnalyticsOverview() {
 
   const groupStats = computeReferralGroupStats(refs, referralAnalyticsGroup);
   const headerLabel = referralAnalyticsGroup === 'clinic' ? 'Clinic' : 'Specialty';
-  renderReferralGroupChart(groupStats);
-  renderReferralBreakdownTable(groupStats, headerLabel);
+  loadGroupStatsIntoChartAndTable(groupStats, headerLabel);
 }
 
 function renderReferralDrilldownView() {
@@ -406,8 +418,7 @@ function renderReferralDrilldownView() {
   renderReferralKPIs(matched);
 
   const groupStats = computeReferralGroupStats(matched, oppositeDim);
-  renderReferralGroupChart(groupStats);
-  renderReferralBreakdownTable(groupStats, oppositeLabel);
+  loadGroupStatsIntoChartAndTable(groupStats, oppositeLabel);
 }
 
 function exitReferralDrilldown() {
@@ -415,8 +426,26 @@ function exitReferralDrilldown() {
   renderReferralAnalytics();
 }
 
+// Wires freshly computed groupStats into both the chart and the table,
+// resetting search/sort state for the new dataset.
+function loadGroupStatsIntoChartAndTable(groupStats, headerLabel) {
+  lastGroupStats = groupStats;
+  referralTableSearchTerm = '';
+  referralTableSort = { field: 'total', dir: 'desc' };
+  const searchInput = document.getElementById('referralTableSearch');
+  if (searchInput) searchInput.value = '';
+
+  renderReferralGroupChart(groupStats);
+
+  const headerEl = document.getElementById('referralTableGroupHeader');
+  const subEl = document.getElementById('referralTableSub');
+  if (headerEl) headerEl.textContent = headerLabel;
+  if (subEl) subEl.textContent = `By ${headerLabel.toLowerCase()} — click a row to drill in`;
+  renderReferralTableRows();
+}
+
 // Single handler for both chart-bar clicks and table-row clicks.
-// Behavior depends on current state: overview click drills in; drilldown click navigates to the filtered referral list.
+// Overview click drills in; drilldown click navigates to the filtered referral list.
 function onReferralGroupClick(key) {
   if (referralDrilldownGroup) {
     const { dim, key: topKey } = referralDrilldownGroup;
@@ -439,57 +468,114 @@ function onReferralGroupClick(key) {
   }
 }
 
+// ═══════════════════════════════════
+// CHART — horizontal bars, single metric, auto-scaling height
+// ═══════════════════════════════════
 function renderReferralGroupChart(groupStats) {
   const canvas = document.getElementById('referralGroupChart');
-  if (!canvas) return;
+  const container = document.getElementById('referralChartContainer');
+  if (!canvas || !container) return;
   if (referralGroupChartInst) referralGroupChartInst.destroy();
-  if (groupStats.length === 0) return;
+  if (groupStats.length === 0) {
+    container.style.height = '160px';
+    return;
+  }
 
-  const labels = groupStats.map(g => g.key);
-  const rates = groupStats.map(g => g.completionRate);
-  const avgDaysData = groupStats.map(g => g.avgDays !== null ? g.avgDays : 0);
+  // Order by total referral volume — busiest group first, stable regardless of metric toggle
+  const sorted = [...groupStats].sort((a, b) => b.total - a.total || a.key.localeCompare(b.key));
+
+  const rowHeight = 36;
+  container.style.height = Math.max(240, sorted.length * rowHeight + 40) + 'px';
+
+  const labels = sorted.map(g => g.key);
+  const isRate = referralChartMetric === 'rate';
+  const values = sorted.map(g => isRate ? g.completionRate : (g.avgDays !== null ? g.avgDays : 0));
 
   referralGroupChartInst = new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
       labels,
-      datasets: [
-        { label: 'Completion Rate (%)', data: rates, backgroundColor: 'rgba(46,125,82,0.75)', yAxisID: 'yRate' },
-        { label: 'Avg. Days to Completion', data: avgDaysData, backgroundColor: 'rgba(201,168,76,0.75)', yAxisID: 'yDays' }
-      ]
+      datasets: [{
+        label: isRate ? 'Completion Rate (%)' : 'Avg. Days to Completion',
+        data: values,
+        backgroundColor: isRate ? 'rgba(46,125,82,0.75)' : 'rgba(201,168,76,0.75)'
+      }]
     },
     options: {
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       onClick: (evt, elements) => {
         if (elements.length) {
           const idx = elements[0].index;
-          const label = referralGroupChartInst.data.labels[idx];
-          onReferralGroupClick(label);
+          onReferralGroupClick(labels[idx]);
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => isRate ? `${ctx.parsed.x}% completion rate` : `${ctx.parsed.x} avg. days to completion`
+          }
         }
       },
       scales: {
-        yRate: { type: 'linear', position: 'left', beginAtZero: true, max: 100, title: { display: true, text: 'Completion Rate (%)' } },
-        yDays: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Avg. Days' } }
+        x: {
+          beginAtZero: true,
+          max: isRate ? 100 : undefined,
+          title: { display: true, text: isRate ? 'Completion Rate (%)' : 'Avg. Days' }
+        }
       }
     }
   });
 }
 
-function renderReferralBreakdownTable(groupStats, headerLabel) {
+// ═══════════════════════════════════
+// TABLE — sortable, searchable
+// ═══════════════════════════════════
+function filterReferralBreakdownTable() {
+  referralTableSearchTerm = document.getElementById('referralTableSearch')?.value.trim() || '';
+  renderReferralTableRows();
+}
+
+function sortReferralTable(field) {
+  if (referralTableSort.field === field) {
+    referralTableSort.dir = referralTableSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    referralTableSort.field = field;
+    referralTableSort.dir = field === 'key' ? 'asc' : 'desc';
+  }
+  renderReferralTableRows();
+}
+
+function renderReferralTableRows() {
   const tbody = document.querySelector('#referralBreakdownTable tbody');
-  const headerEl = document.getElementById('referralTableGroupHeader');
-  const subEl = document.getElementById('referralTableSub');
-  if (headerEl) headerEl.textContent = headerLabel;
-  if (subEl) subEl.textContent = `By ${headerLabel.toLowerCase()} — click a row to drill in`;
   if (!tbody) return;
 
-  if (groupStats.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-light);font-style:italic;padding:24px;">No referrals yet</td></tr>`;
+  let rows = [...lastGroupStats];
+
+  if (referralTableSearchTerm) {
+    const q = referralTableSearchTerm.toLowerCase();
+    rows = rows.filter(g => g.key.toLowerCase().includes(q));
+  }
+
+  const { field, dir } = referralTableSort;
+  rows.sort((a, b) => {
+    let av = a[field], bv = b[field];
+    if (field === 'key') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+    if (field === 'avgDays') { av = av === null ? -1 : av; bv = bv === null ? -1 : bv; }
+    if (av < bv) return dir === 'asc' ? -1 : 1;
+    if (av > bv) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-light);font-style:italic;padding:24px;">No matches</td></tr>`;
+    updateReferralTableSortIndicators();
     return;
   }
 
-  tbody.innerHTML = groupStats.map(g => `
+  tbody.innerHTML = rows.map(g => `
     <tr onclick="onReferralGroupClick('${g.key.replace(/'/g, "\\'")}')">
       <td>${escapeHtml(g.key)}</td>
       <td>${g.total}</td>
@@ -498,4 +584,14 @@ function renderReferralBreakdownTable(groupStats, headerLabel) {
       <td>${g.avgDays !== null ? g.avgDays + ' days' : '—'}</td>
     </tr>
   `).join('');
+
+  updateReferralTableSortIndicators();
+}
+
+function updateReferralTableSortIndicators() {
+  document.querySelectorAll('#referralBreakdownTable thead th[data-sort]').forEach(th => {
+    const field = th.getAttribute('data-sort');
+    th.classList.toggle('sorted-asc', referralTableSort.field === field && referralTableSort.dir === 'asc');
+    th.classList.toggle('sorted-desc', referralTableSort.field === field && referralTableSort.dir === 'desc');
+  });
 }
