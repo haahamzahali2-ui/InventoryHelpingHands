@@ -205,3 +205,295 @@ function confirmDeleteReferral() {
   postToSheetBackend('delete_referral', { referralId: idToDelete })
     .catch(() => showToast('Referral deleted locally; Google Sheets write failed.'));
 }
+// ═══════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════
+let referralAnalyticsGroup = 'specialty';
+let referralGroupChartInst = null;
+
+function setReferralAnalyticsGroup(group, btn) {
+  referralAnalyticsGroup = group;
+  document.querySelectorAll('#page-referral-analytics .breakdown-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReferralAnalytics();
+}
+
+function computeReferralGroupStats(groupBy) {
+  const refs = db.referrals || [];
+  const groups = {};
+  refs.forEach(r => {
+    const key = (groupBy === 'clinic' ? r.clinic : r.specialty) || 'Unspecified';
+    if (!groups[key]) groups[key] = { total: 0, completed: 0, totalDays: 0, completedWithDays: 0 };
+    groups[key].total++;
+    if (r.dateCompleted) {
+      groups[key].completed++;
+      const sent = new Date(r.dateSent);
+      const done = new Date(r.dateCompleted);
+      if (!isNaN(sent) && !isNaN(done)) {
+        const days = Math.round((done - sent) / 86400000);
+        if (days >= 0) {
+          groups[key].totalDays += days;
+          groups[key].completedWithDays++;
+        }
+      }
+    }
+  });
+  return Object.keys(groups).sort().map(key => {
+    const g = groups[key];
+    return {
+      key,
+      total: g.total,
+      completed: g.completed,
+      completionRate: g.total ? Math.round((g.completed / g.total) * 100) : 0,
+      avgDays: g.completedWithDays ? Math.round(g.totalDays / g.completedWithDays) : null
+    };
+  });
+}
+
+function renderReferralAnalytics() {
+  const refs = db.referrals || [];
+  const total = refs.length;
+  const completed = refs.filter(r => r.dateCompleted).length;
+  const completionRate = total ? Math.round((completed / total) * 100) : 0;
+
+  let totalDays = 0, completedWithDays = 0;
+  refs.forEach(r => {
+    if (r.dateCompleted) {
+      const sent = new Date(r.dateSent);
+      const done = new Date(r.dateCompleted);
+      if (!isNaN(sent) && !isNaN(done)) {
+        const days = Math.round((done - sent) / 86400000);
+        if (days >= 0) { totalDays += days; completedWithDays++; }
+      }
+    }
+  });
+  const avgDays = completedWithDays ? Math.round(totalDays / completedWithDays) : null;
+
+  const kpiEl = document.getElementById('referralKPIs');
+  if (kpiEl) {
+    kpiEl.innerHTML = `
+      <div class="analytics-kpi gold">
+        <div class="kpi-val gold">${total}</div>
+        <div class="kpi-label">Total Referrals</div>
+      </div>
+      <div class="analytics-kpi green">
+        <div class="kpi-val green">${completionRate}%</div>
+        <div class="kpi-label">Completion Rate</div>
+        <div class="kpi-sub">${completed} of ${total} completed</div>
+      </div>
+      <div class="analytics-kpi amber">
+        <div class="kpi-val amber">${total - completed}</div>
+        <div class="kpi-label">Pending</div>
+      </div>
+      <div class="analytics-kpi gold">
+        <div class="kpi-val gold">${avgDays !== null ? avgDays : '—'}</div>
+        <div class="kpi-label">Avg. Days to Completion</div>
+        <div class="kpi-sub">${completedWithDays ? `across ${completedWithDays} completed` : 'no completed referrals yet'}</div>
+      </div>
+    `;
+  }
+
+  const groupStats = computeReferralGroupStats(referralAnalyticsGroup);
+  renderReferralGroupChart(groupStats);
+  renderReferralBreakdownTable(groupStats);
+}
+
+function renderReferralGroupChart(groupStats) {
+  const canvas = document.getElementById('referralGroupChart');
+  if (!canvas) return;
+  if (referralGroupChartInst) referralGroupChartInst.destroy();
+  if (groupStats.length === 0) return;
+
+  const labels = groupStats.map(g => g.key);
+  const rates = groupStats.map(g => g.completionRate);
+  const avgDaysData = groupStats.map(g => g.avgDays !== null ? g.avgDays : 0);
+
+  referralGroupChartInst = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Completion Rate (%)', data: rates, backgroundColor: 'rgba(46,125,82,0.75)', yAxisID: 'yRate' },
+        { label: 'Avg. Days to Completion', data: avgDaysData, backgroundColor: 'rgba(201,168,76,0.75)', yAxisID: 'yDays' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        yRate: { type: 'linear', position: 'left', beginAtZero: true, max: 100, title: { display: true, text: 'Completion Rate (%)' } },
+        yDays: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Avg. Days' } }
+      }
+    }
+  });
+}
+
+function renderReferralBreakdownTable(groupStats) {
+  const tbody = document.querySelector('#referralBreakdownTable tbody');
+  const headerEl = document.getElementById('referralTableGroupHeader');
+  const subEl = document.getElementById('referralTableSub');
+  if (headerEl) headerEl.textContent = referralAnalyticsGroup === 'clinic' ? 'Clinic' : 'Specialty';
+  if (subEl) subEl.textContent = referralAnalyticsGroup === 'clinic' ? 'By clinic' : 'By specialty';
+  if (!tbody) return;
+
+  if (groupStats.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-light);font-style:italic;padding:24px;">No referrals yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = groupStats.map(g => `
+    <tr>
+      <td>${escapeHtml(g.key)}</td>
+      <td>${g.total}</td>
+      <td>${g.completed}</td>
+      <td>${g.completionRate}%</td>
+      <td>${g.avgDays !== null ? g.avgDays + ' days' : '—'}</td>
+    </tr>
+  `).join('');
+}
+// ═══════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════
+let referralAnalyticsGroup = 'specialty';
+let referralGroupChartInst = null;
+
+function setReferralAnalyticsGroup(group, btn) {
+  referralAnalyticsGroup = group;
+  document.querySelectorAll('#page-referral-analytics .breakdown-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReferralAnalytics();
+}
+
+function computeReferralGroupStats(groupBy) {
+  const refs = db.referrals || [];
+  const groups = {};
+  refs.forEach(r => {
+    const key = (groupBy === 'clinic' ? r.clinic : r.specialty) || 'Unspecified';
+    if (!groups[key]) groups[key] = { total: 0, completed: 0, totalDays: 0, completedWithDays: 0 };
+    groups[key].total++;
+    if (r.dateCompleted) {
+      groups[key].completed++;
+      const sent = new Date(r.dateSent);
+      const done = new Date(r.dateCompleted);
+      if (!isNaN(sent) && !isNaN(done)) {
+        const days = Math.round((done - sent) / 86400000);
+        if (days >= 0) {
+          groups[key].totalDays += days;
+          groups[key].completedWithDays++;
+        }
+      }
+    }
+  });
+  return Object.keys(groups).sort().map(key => {
+    const g = groups[key];
+    return {
+      key,
+      total: g.total,
+      completed: g.completed,
+      completionRate: g.total ? Math.round((g.completed / g.total) * 100) : 0,
+      avgDays: g.completedWithDays ? Math.round(g.totalDays / g.completedWithDays) : null
+    };
+  });
+}
+
+function renderReferralAnalytics() {
+  const refs = db.referrals || [];
+  const total = refs.length;
+  const completed = refs.filter(r => r.dateCompleted).length;
+  const completionRate = total ? Math.round((completed / total) * 100) : 0;
+
+  let totalDays = 0, completedWithDays = 0;
+  refs.forEach(r => {
+    if (r.dateCompleted) {
+      const sent = new Date(r.dateSent);
+      const done = new Date(r.dateCompleted);
+      if (!isNaN(sent) && !isNaN(done)) {
+        const days = Math.round((done - sent) / 86400000);
+        if (days >= 0) { totalDays += days; completedWithDays++; }
+      }
+    }
+  });
+  const avgDays = completedWithDays ? Math.round(totalDays / completedWithDays) : null;
+
+  const kpiEl = document.getElementById('referralKPIs');
+  if (kpiEl) {
+    kpiEl.innerHTML = `
+      <div class="analytics-kpi gold">
+        <div class="kpi-val gold">${total}</div>
+        <div class="kpi-label">Total Referrals</div>
+      </div>
+      <div class="analytics-kpi green">
+        <div class="kpi-val green">${completionRate}%</div>
+        <div class="kpi-label">Completion Rate</div>
+        <div class="kpi-sub">${completed} of ${total} completed</div>
+      </div>
+      <div class="analytics-kpi amber">
+        <div class="kpi-val amber">${total - completed}</div>
+        <div class="kpi-label">Pending</div>
+      </div>
+      <div class="analytics-kpi gold">
+        <div class="kpi-val gold">${avgDays !== null ? avgDays : '—'}</div>
+        <div class="kpi-label">Avg. Days to Completion</div>
+        <div class="kpi-sub">${completedWithDays ? `across ${completedWithDays} completed` : 'no completed referrals yet'}</div>
+      </div>
+    `;
+  }
+
+  const groupStats = computeReferralGroupStats(referralAnalyticsGroup);
+  renderReferralGroupChart(groupStats);
+  renderReferralBreakdownTable(groupStats);
+}
+
+function renderReferralGroupChart(groupStats) {
+  const canvas = document.getElementById('referralGroupChart');
+  if (!canvas) return;
+  if (referralGroupChartInst) referralGroupChartInst.destroy();
+  if (groupStats.length === 0) return;
+
+  const labels = groupStats.map(g => g.key);
+  const rates = groupStats.map(g => g.completionRate);
+  const avgDaysData = groupStats.map(g => g.avgDays !== null ? g.avgDays : 0);
+
+  referralGroupChartInst = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Completion Rate (%)', data: rates, backgroundColor: 'rgba(46,125,82,0.75)', yAxisID: 'yRate' },
+        { label: 'Avg. Days to Completion', data: avgDaysData, backgroundColor: 'rgba(201,168,76,0.75)', yAxisID: 'yDays' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        yRate: { type: 'linear', position: 'left', beginAtZero: true, max: 100, title: { display: true, text: 'Completion Rate (%)' } },
+        yDays: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Avg. Days' } }
+      }
+    }
+  });
+}
+
+function renderReferralBreakdownTable(groupStats) {
+  const tbody = document.querySelector('#referralBreakdownTable tbody');
+  const headerEl = document.getElementById('referralTableGroupHeader');
+  const subEl = document.getElementById('referralTableSub');
+  if (headerEl) headerEl.textContent = referralAnalyticsGroup === 'clinic' ? 'Clinic' : 'Specialty';
+  if (subEl) subEl.textContent = referralAnalyticsGroup === 'clinic' ? 'By clinic' : 'By specialty';
+  if (!tbody) return;
+
+  if (groupStats.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-light);font-style:italic;padding:24px;">No referrals yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = groupStats.map(g => `
+    <tr>
+      <td>${escapeHtml(g.key)}</td>
+      <td>${g.total}</td>
+      <td>${g.completed}</td>
+      <td>${g.completionRate}%</td>
+      <td>${g.avgDays !== null ? g.avgDays + ' days' : '—'}</td>
+    </tr>
+  `).join('');
+}
