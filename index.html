@@ -216,6 +216,7 @@
       </div>
     </div>
   </div>
+  <div class="referral-active-filters" id="referralActiveFilters" style="display:none;"></div>
 
   <div class="referrals-grid" id="referralsGrid"></div>
 </div><!-- /page-referral-list -->
@@ -229,15 +230,17 @@
     <h2>Referral Analytics</h2>
   </div>
 
+  <div class="referral-drilldown-breadcrumb" id="referralDrilldownBreadcrumb" style="display:none;"></div>
+
   <div class="analytics-summary-row" id="referralKPIs"></div>
 
   <div class="analytics-card" style="margin-bottom:28px;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
       <div>
-        <div class="analytics-card-title">Completion Rate &amp; Avg. Time to Completion</div>
-        <div class="analytics-card-sub">Grouped by specialty or clinic</div>
+        <div class="analytics-card-title" id="referralChartTitle">Completion Rate &amp; Avg. Time to Completion</div>
+        <div class="analytics-card-sub" id="referralChartSub">Grouped by specialty or clinic — click a bar to drill in</div>
       </div>
-      <div class="breakdown-tabs">
+      <div class="breakdown-tabs" id="referralAnalyticsTabs">
         <button class="breakdown-tab active" onclick="setReferralAnalyticsGroup('specialty', this)">By Specialty</button>
         <button class="breakdown-tab" onclick="setReferralAnalyticsGroup('clinic', this)">By Clinic</button>
       </div>
@@ -247,7 +250,7 @@
 
   <div class="analytics-card">
     <div class="analytics-card-title">Breakdown Table</div>
-    <div class="analytics-card-sub" id="referralTableSub">By specialty</div>
+    <div class="analytics-card-sub" id="referralTableSub">By specialty — click a row to drill in</div>
     <table class="patient-breakdown-table" id="referralBreakdownTable">
       <thead>
         <tr>
@@ -261,7 +264,7 @@
       <tbody></tbody>
     </table>
   </div>
-</div><!-- /page-referral-analytics -->
+</div>
     <!-- ═══════════════════════════════════════════════════════
          PATIENTS PAGE
     ════════════════════════════════════════════════════════ -->
