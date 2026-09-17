@@ -264,24 +264,22 @@ function confirmDeleteReferral() {
 }
 
 // ═══════════════════════════════════
-// ANALYTICS — overview + drill-down
+// ANALYTICS — grid landing + detail view
 // ═══════════════════════════════════
 let referralAnalyticsGroup = 'specialty';
 let referralChartMetric = 'rate'; // 'rate' | 'days'
 let referralGroupChartInst = null;
-let referralDrilldownGroup = null; // { dim: 'specialty'|'clinic', key: string } or null
+let referralDrilldownGroup = null; // { dim: 'specialty'|'clinic', key: string } or null while on the grid
 
-// Table state — populated whenever the chart/table are (re)rendered
 let lastGroupStats = [];
 let referralTableSearchTerm = '';
 let referralTableSort = { field: 'total', dir: 'desc' };
 
 function setReferralAnalyticsGroup(group, btn) {
   referralAnalyticsGroup = group;
-  referralDrilldownGroup = null;
   document.querySelectorAll('#page-referral-analytics .breakdown-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  renderReferralAnalytics();
+  renderReferralGroupGrid();
 }
 
 function setReferralChartMetric(metric, btn) {
@@ -368,32 +366,62 @@ function renderReferralKPIs(refs) {
   `;
 }
 
-// Main entry point — dispatches to overview or drill-down
+// Main entry point — toggles between the grid landing and the detail view
 function renderReferralAnalytics() {
+  const overviewEl = document.getElementById('referralAnalyticsOverview');
+  const detailEl = document.getElementById('referralAnalyticsDetail');
+
   if (referralDrilldownGroup) {
+    if (overviewEl) overviewEl.style.display = 'none';
+    if (detailEl) detailEl.style.display = 'block';
     renderReferralDrilldownView();
   } else {
+    if (detailEl) detailEl.style.display = 'none';
+    if (overviewEl) overviewEl.style.display = 'block';
     renderReferralAnalyticsOverview();
   }
 }
 
+// GRID LANDING — no chart, just clickable specialty/clinic cards with quick stats
 function renderReferralAnalyticsOverview() {
   const breadcrumbEl = document.getElementById('referralDrilldownBreadcrumb');
   if (breadcrumbEl) { breadcrumbEl.style.display = 'none'; breadcrumbEl.innerHTML = ''; }
 
-  const titleEl = document.getElementById('referralChartTitle');
-  const chartSubEl = document.getElementById('referralChartSub');
-  if (titleEl) titleEl.textContent = 'Completion Rate & Avg. Time to Completion';
-  if (chartSubEl) chartSubEl.textContent = 'Grouped by specialty or clinic — click a bar to drill in';
-
   const refs = db.referrals || [];
   renderReferralKPIs(refs);
-
-  const groupStats = computeReferralGroupStats(refs, referralAnalyticsGroup);
-  const headerLabel = referralAnalyticsGroup === 'clinic' ? 'Clinic' : 'Specialty';
-  loadGroupStatsIntoChartAndTable(groupStats, headerLabel);
+  renderReferralGroupGrid();
 }
 
+function renderReferralGroupGrid() {
+  const grid = document.getElementById('referralGroupGrid');
+  if (!grid) return;
+  const refs = db.referrals || [];
+  const groupStats = computeReferralGroupStats(refs, referralAnalyticsGroup);
+
+  if (groupStats.length === 0) {
+    grid.innerHTML = `<div class="patients-empty-state">
+      <div class="patients-empty-icon">📋</div>
+      <div class="patients-empty-title">No referrals yet</div>
+      <div class="patients-empty-sub">Add a referral to see analytics here</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = groupStats.map(g => {
+    let rateClass = 'low';
+    if (g.completionRate >= 80) rateClass = 'high';
+    else if (g.completionRate >= 50) rateClass = 'medium';
+    return `<div class="referral-group-card" onclick="onReferralGroupClick('${g.key.replace(/'/g, "\\'")}')">
+      <div class="referral-group-card-name">${escapeHtml(g.key)}</div>
+      <div class="referral-group-card-stats">
+        <span class="referral-group-card-total">${g.total} referral${g.total !== 1 ? 's' : ''}</span>
+        <span class="referral-group-card-rate ${rateClass}">${g.completionRate}% completed</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// DETAIL VIEW — chart + table for one specific specialty or clinic
 function renderReferralDrilldownView() {
   const { dim, key } = referralDrilldownGroup;
   const oppositeDim = dim === 'specialty' ? 'clinic' : 'specialty';
@@ -440,12 +468,13 @@ function loadGroupStatsIntoChartAndTable(groupStats, headerLabel) {
   const headerEl = document.getElementById('referralTableGroupHeader');
   const subEl = document.getElementById('referralTableSub');
   if (headerEl) headerEl.textContent = headerLabel;
-  if (subEl) subEl.textContent = `By ${headerLabel.toLowerCase()} — click a row to drill in`;
+  if (subEl) subEl.textContent = `By ${headerLabel.toLowerCase()} — click a row to view those referrals`;
   renderReferralTableRows();
 }
 
-// Single handler for both chart-bar clicks and table-row clicks.
-// Overview click drills in; drilldown click navigates to the filtered referral list.
+// Clicking a card on the grid enters the detail view for that group.
+// Clicking a bar/row inside the detail view navigates to the filtered referral list
+// (filtered by BOTH the group you drilled into and the opposite-dimension value clicked).
 function onReferralGroupClick(key) {
   if (referralDrilldownGroup) {
     const { dim, key: topKey } = referralDrilldownGroup;
@@ -481,7 +510,6 @@ function renderReferralGroupChart(groupStats) {
     return;
   }
 
-  // Order by total referral volume — busiest group first, stable regardless of metric toggle
   const sorted = [...groupStats].sort((a, b) => b.total - a.total || a.key.localeCompare(b.key));
 
   const rowHeight = 36;
