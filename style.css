@@ -2916,3 +2916,18 @@ body.dark-mode .pt-view-btn.active { background: #1E1A12; }
 body.dark-mode .referral-card-dates { background: #1a1610; border-color: #2A2218; }
 body.dark-mode .referral-date-block:first-child { border-right-color: #2A2218; }
 body.dark-mode .referral-card-notes { border-top-color: #2A2218; }
+.topbar-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 14px;
+  border-right: 1px solid rgba(201,168,76,0.15);
+}
+.topbar-stats-group .topbar-stat {
+  padding-left: 14px;
+  border-left: 1px solid rgba(201,168,76,0.15);
+}
+.topbar-stats-group .topbar-stat:first-child {
+  padding-left: 0;
+  border-left: none;
+}
