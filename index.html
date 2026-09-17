@@ -234,50 +234,58 @@
 
   <div class="analytics-summary-row" id="referralKPIs"></div>
 
-  <div class="analytics-card" style="margin-bottom:28px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
-      <div>
-        <div class="analytics-card-title" id="referralChartTitle">Completion Rate & Avg. Time to Completion</div>
-        <div class="analytics-card-sub" id="referralChartSub">Grouped by specialty or clinic — click a bar to drill in</div>
-      </div>
-      <div class="breakdown-tabs" id="referralAnalyticsTabs">
-        <button class="breakdown-tab active" onclick="setReferralAnalyticsGroup('specialty', this)">By Specialty</button>
-        <button class="breakdown-tab" onclick="setReferralAnalyticsGroup('clinic', this)">By Clinic</button>
-      </div>
+  <!-- OVERVIEW: browse and pick a specialty or clinic -->
+  <div id="referralAnalyticsOverview">
+    <div class="breakdown-tabs" id="referralAnalyticsTabs" style="margin-bottom:20px;">
+      <button class="breakdown-tab active" onclick="setReferralAnalyticsGroup('specialty', this)">By Specialty</button>
+      <button class="breakdown-tab" onclick="setReferralAnalyticsGroup('clinic', this)">By Clinic</button>
     </div>
-    <div class="chart-toggle" id="referralChartMetricToggle" style="margin-bottom:14px;">
-      <button class="active" onclick="setReferralChartMetric('rate', this)">Completion Rate</button>
-      <button onclick="setReferralChartMetric('days', this)">Avg. Days</button>
-    </div>
-    <div class="referral-chart-scroll" id="referralChartScroll">
-      <div class="analytics-chart-container" id="referralChartContainer" style="height:320px;">
-        <canvas id="referralGroupChart"></canvas>
-      </div>
-    </div>
+    <div class="referral-group-grid" id="referralGroupGrid"></div>
   </div>
 
-  <div class="analytics-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
-      <div>
-        <div class="analytics-card-title">Breakdown Table</div>
-        <div class="analytics-card-sub" id="referralTableSub">By specialty — click a row to drill in</div>
+  <!-- DETAIL: shown after clicking a specialty/clinic -->
+  <div id="referralAnalyticsDetail" style="display:none;">
+    <div class="analytics-card" style="margin-bottom:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+        <div>
+          <div class="analytics-card-title" id="referralChartTitle">—</div>
+          <div class="analytics-card-sub" id="referralChartSub">—</div>
+        </div>
       </div>
-      <div class="referral-table-search-wrap">
-        <input type="text" id="referralTableSearch" placeholder="Search…" oninput="filterReferralBreakdownTable()" />
+      <div class="chart-toggle" id="referralChartMetricToggle" style="margin-bottom:14px;">
+        <button class="active" onclick="setReferralChartMetric('rate', this)">Completion Rate</button>
+        <button onclick="setReferralChartMetric('days', this)">Avg. Days</button>
+      </div>
+      <div class="referral-chart-scroll" id="referralChartScroll">
+        <div class="analytics-chart-container" id="referralChartContainer" style="height:320px;">
+          <canvas id="referralGroupChart"></canvas>
+        </div>
       </div>
     </div>
-    <table class="patient-breakdown-table" id="referralBreakdownTable">
-      <thead>
-        <tr>
-          <th id="referralTableGroupHeader" data-sort="key" onclick="sortReferralTable('key')">Specialty</th>
-          <th data-sort="total" onclick="sortReferralTable('total')">Total</th>
-          <th data-sort="completed" onclick="sortReferralTable('completed')">Completed</th>
-          <th data-sort="completionRate" onclick="sortReferralTable('completionRate')">Completion Rate</th>
-          <th data-sort="avgDays" onclick="sortReferralTable('avgDays')">Avg. Days to Completion</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+
+    <div class="analytics-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+        <div>
+          <div class="analytics-card-title">Breakdown Table</div>
+          <div class="analytics-card-sub" id="referralTableSub">—</div>
+        </div>
+        <div class="referral-table-search-wrap">
+          <input type="text" id="referralTableSearch" placeholder="Search…" oninput="filterReferralBreakdownTable()" />
+        </div>
+      </div>
+      <table class="patient-breakdown-table" id="referralBreakdownTable">
+        <thead>
+          <tr>
+            <th id="referralTableGroupHeader" data-sort="key" onclick="sortReferralTable('key')">Specialty</th>
+            <th data-sort="total" onclick="sortReferralTable('total')">Total</th>
+            <th data-sort="completed" onclick="sortReferralTable('completed')">Completed</th>
+            <th data-sort="completionRate" onclick="sortReferralTable('completionRate')">Completion Rate</th>
+            <th data-sort="avgDays" onclick="sortReferralTable('avgDays')">Avg. Days to Completion</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </div>
     <!-- ═══════════════════════════════════════════════════════
