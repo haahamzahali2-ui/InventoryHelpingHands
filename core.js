@@ -10,7 +10,7 @@ const SHEET_WRITE_URL_KEY = 'hh_sheet_write_url';
 
 const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYlTUFoW-CgUEw8qPUQEm7i5VxLkivuASa35gc97f-YWJiOmPK-OwmOl4U_dE7vZR1/exec';
 
-let db = { patients: {}, alerts: [], seenAlerts: [], stickies: {} };
+let db = { patients: {}, alerts: [], seenAlerts: [], stickies: {}, referrals: [] };
 let sheetId = localStorage.getItem(SHEET_ID_KEY) || '';
 
 // ✅ Always use the hardcoded URL — falls back to localStorage if not set
@@ -32,6 +32,7 @@ function loadDB() {
   if (!db.alerts) db.alerts = [];
   if (!db.seenAlerts) db.seenAlerts = [];
   if (!db.stickies) db.stickies = {};
+  if (!db.referrals) db.referrals = [];
   for (const pid in db.patients) {
     if (!db.patients[pid].medications) db.patients[pid].medications = [];
     db.patients[pid].medications.forEach(m => { if (!('endDate' in m)) m.endDate = ''; });
@@ -124,6 +125,15 @@ function parseBackendBundle(bundle) {
     db.patients[pid].famEnrollmentDate = normalizeDate(f.enrollmentDate);
     db.patients[pid].famProgramType = String(f.programType || '');
   });
+    db.referrals = (bundle.referrals || []).map(r => ({
+    referralId:    String(r.referralId || ''),
+    patientId:     String(r.patientId || ''),
+    specialty:     String(r.specialty || ''),
+    clinic:        String(r.clinic || ''),
+    dateSent:      normalizeDate(r.dateSent),
+    dateCompleted: normalizeDate(r.dateCompleted),
+    notes:         String(r.notes || '')
+  }));
   saveDB(); renderPatientsGrid(); renderHomeStats(); renderAlertsList();
 }
 
