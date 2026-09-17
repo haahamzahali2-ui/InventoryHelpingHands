@@ -2797,22 +2797,13 @@ body.dark-mode .pt-view-btn.active { background: #1E1A12; }
   flex-direction: column;
   gap: 6px;
 }
-/* ── Patient delete button ── */
-.pcard-delete-btn {
-  background: none;
-  border: 1px solid rgba(232,112,112,0.35);
-  color: #e87070;
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-}
 .pcard-delete-btn:hover {
+  background: rgba(232,112,112,0.12);
+  border-color: rgba(232,112,112,0.6);
+  transform: scale(1.05);
+}
 
-
-    .tracker-select-row {
+.tracker-select-row {
   display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
   max-width: 900px; margin: 0 auto;
 }
@@ -2851,7 +2842,3 @@ body.dark-mode .pt-view-btn.active { background: #1E1A12; }
   color: var(--gold-dim); font-size: 19px; transition: all 0.25s;
 }
 .tracker-box:hover .tracker-box-arrow { background: var(--gold); color: white; transform: translateX(4px); }
-  background: rgba(232,112,112,0.12);
-  border-color: rgba(232,112,112,0.6);
-  transform: scale(1.05);
-}
