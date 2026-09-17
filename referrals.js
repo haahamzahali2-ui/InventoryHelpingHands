@@ -4,6 +4,8 @@
 
 let currentReferralFilter = 'all';
 let editingReferralId = null;
+let referralListSpecialtyFilter = null;
+let referralListClinicFilter = null;
 
 // ═══════════════════════════════════
 // STATUS
@@ -13,7 +15,22 @@ function getReferralStatus(ref) {
 }
 
 // ═══════════════════════════════════
-// RENDER
+// TOPBAR STATS
+// ═══════════════════════════════════
+function updateReferralTopbarStats() {
+  const refs = db.referrals || [];
+  const pending = refs.filter(r => !r.dateCompleted).length;
+  const completed = refs.filter(r => r.dateCompleted).length;
+  const rate = refs.length ? Math.round((completed / refs.length) * 100) : 0;
+
+  const pendingEl = document.getElementById('stat-referrals-pending');
+  const rateEl = document.getElementById('stat-referral-rate');
+  if (pendingEl) pendingEl.textContent = pending;
+  if (rateEl) rateEl.textContent = refs.length ? `${rate}%` : '—';
+}
+
+// ═══════════════════════════════════
+// RENDER — referral list
 // ═══════════════════════════════════
 function renderReferrals(filter = '') {
   updateReferralTopbarStats();
@@ -21,6 +38,14 @@ function renderReferrals(filter = '') {
   if (!grid) return;
 
   let refs = [...(db.referrals || [])];
+
+  // Drill-down filters (AND)
+  if (referralListSpecialtyFilter) {
+    refs = refs.filter(r => (r.specialty || 'Unspecified') === referralListSpecialtyFilter);
+  }
+  if (referralListClinicFilter) {
+    refs = refs.filter(r => (r.clinic || 'Unspecified') === referralListClinicFilter);
+  }
 
   // Search filter (patient id, specialty, clinic)
   const search = filter.trim().toLowerCase();
@@ -46,6 +71,8 @@ function renderReferrals(filter = '') {
 
   const countEl = document.getElementById('referralCountLabel');
   if (countEl) countEl.textContent = `${refs.length} referral${refs.length !== 1 ? 's' : ''}`;
+
+  renderReferralActiveFilters();
 
   if (refs.length === 0) {
     grid.innerHTML = `<div class="patients-empty-state">
@@ -94,11 +121,40 @@ function formatDateShort(dateStr) {
 }
 
 // ═══════════════════════════════════
+// ACTIVE FILTER CHIPS (referral list page)
+// ═══════════════════════════════════
+function renderReferralActiveFilters() {
+  const el = document.getElementById('referralActiveFilters');
+  if (!el) return;
+  const chips = [];
+  if (referralListSpecialtyFilter) chips.push(`Specialty: ${escapeHtml(referralListSpecialtyFilter)}`);
+  if (referralListClinicFilter) chips.push(`Clinic: ${escapeHtml(referralListClinicFilter)}`);
+
+  if (chips.length === 0) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.style.display = 'flex';
+  el.innerHTML = `
+    <span class="referral-filter-chip-label">Filtered by:</span>
+    ${chips.map(c => `<span class="referral-filter-chip">${c}</span>`).join('')}
+    <button class="referral-filter-clear-btn" onclick="clearReferralListFilters()">Clear</button>
+  `;
+}
+
+function clearReferralListFilters() {
+  referralListSpecialtyFilter = null;
+  referralListClinicFilter = null;
+  renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
+}
+
+// ═══════════════════════════════════
 // FILTER / SEARCH
 // ═══════════════════════════════════
 function setReferralFilter(filter, btn) {
   currentReferralFilter = filter;
-  document.querySelectorAll('#page-referral-hub .pt-chip').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-referral-list .pt-chip').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
 }
@@ -206,35 +262,23 @@ function confirmDeleteReferral() {
   postToSheetBackend('delete_referral', { referralId: idToDelete })
     .catch(() => showToast('Referral deleted locally; Google Sheets write failed.'));
 }
-// ═══════════════════════════════════
-// TOPBAR STATS
-// ═══════════════════════════════════
-function updateReferralTopbarStats() {
-  const refs = db.referrals || [];
-  const pending = refs.filter(r => !r.dateCompleted).length;
-  const completed = refs.filter(r => r.dateCompleted).length;
-  const rate = refs.length ? Math.round((completed / refs.length) * 100) : 0;
 
-  const pendingEl = document.getElementById('stat-referrals-pending');
-  const rateEl = document.getElementById('stat-referral-rate');
-  if (pendingEl) pendingEl.textContent = pending;
-  if (rateEl) rateEl.textContent = refs.length ? `${rate}%` : '—';
-}
 // ═══════════════════════════════════
-// ANALYTICS
+// ANALYTICS — overview + drill-down
 // ═══════════════════════════════════
 let referralAnalyticsGroup = 'specialty';
 let referralGroupChartInst = null;
+let referralDrilldownGroup = null; // { dim: 'specialty'|'clinic', key: string } or null
 
 function setReferralAnalyticsGroup(group, btn) {
   referralAnalyticsGroup = group;
+  referralDrilldownGroup = null;
   document.querySelectorAll('#page-referral-analytics .breakdown-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderReferralAnalytics();
 }
 
-function computeReferralGroupStats(groupBy) {
-  const refs = db.referrals || [];
+function computeReferralGroupStats(refs, groupBy) {
   const groups = {};
   refs.forEach(r => {
     const key = (groupBy === 'clinic' ? r.clinic : r.specialty) || 'Unspecified';
@@ -265,8 +309,7 @@ function computeReferralGroupStats(groupBy) {
   });
 }
 
-function renderReferralAnalytics() {
-  const refs = db.referrals || [];
+function computeReferralKPIs(refs) {
   const total = refs.length;
   const completed = refs.filter(r => r.dateCompleted).length;
   const completionRate = total ? Math.round((completed / total) * 100) : 0;
@@ -283,34 +326,117 @@ function renderReferralAnalytics() {
     }
   });
   const avgDays = completedWithDays ? Math.round(totalDays / completedWithDays) : null;
+  return { total, completed, completionRate, avgDays, completedWithDays };
+}
 
+function renderReferralKPIs(refs) {
+  const { total, completed, completionRate, avgDays, completedWithDays } = computeReferralKPIs(refs);
   const kpiEl = document.getElementById('referralKPIs');
-  if (kpiEl) {
-    kpiEl.innerHTML = `
-      <div class="analytics-kpi gold">
-        <div class="kpi-val gold">${total}</div>
-        <div class="kpi-label">Total Referrals</div>
-      </div>
-      <div class="analytics-kpi green">
-        <div class="kpi-val green">${completionRate}%</div>
-        <div class="kpi-label">Completion Rate</div>
-        <div class="kpi-sub">${completed} of ${total} completed</div>
-      </div>
-      <div class="analytics-kpi amber">
-        <div class="kpi-val amber">${total - completed}</div>
-        <div class="kpi-label">Pending</div>
-      </div>
-      <div class="analytics-kpi gold">
-        <div class="kpi-val gold">${avgDays !== null ? avgDays : '—'}</div>
-        <div class="kpi-label">Avg. Days to Completion</div>
-        <div class="kpi-sub">${completedWithDays ? `across ${completedWithDays} completed` : 'no completed referrals yet'}</div>
-      </div>
+  if (!kpiEl) return;
+  kpiEl.innerHTML = `
+    <div class="analytics-kpi gold">
+      <div class="kpi-val gold">${total}</div>
+      <div class="kpi-label">Total Referrals</div>
+    </div>
+    <div class="analytics-kpi green">
+      <div class="kpi-val green">${completionRate}%</div>
+      <div class="kpi-label">Completion Rate</div>
+      <div class="kpi-sub">${completed} of ${total} completed</div>
+    </div>
+    <div class="analytics-kpi amber">
+      <div class="kpi-val amber">${total - completed}</div>
+      <div class="kpi-label">Pending</div>
+    </div>
+    <div class="analytics-kpi gold">
+      <div class="kpi-val gold">${avgDays !== null ? avgDays : '—'}</div>
+      <div class="kpi-label">Avg. Days to Completion</div>
+      <div class="kpi-sub">${completedWithDays ? `across ${completedWithDays} completed` : 'no completed referrals yet'}</div>
+    </div>
+  `;
+}
+
+// Main entry point — dispatches to overview or drill-down
+function renderReferralAnalytics() {
+  if (referralDrilldownGroup) {
+    renderReferralDrilldownView();
+  } else {
+    renderReferralAnalyticsOverview();
+  }
+}
+
+function renderReferralAnalyticsOverview() {
+  const breadcrumbEl = document.getElementById('referralDrilldownBreadcrumb');
+  if (breadcrumbEl) { breadcrumbEl.style.display = 'none'; breadcrumbEl.innerHTML = ''; }
+
+  const titleEl = document.getElementById('referralChartTitle');
+  const chartSubEl = document.getElementById('referralChartSub');
+  if (titleEl) titleEl.textContent = 'Completion Rate & Avg. Time to Completion';
+  if (chartSubEl) chartSubEl.textContent = 'Grouped by specialty or clinic — click a bar to drill in';
+
+  const refs = db.referrals || [];
+  renderReferralKPIs(refs);
+
+  const groupStats = computeReferralGroupStats(refs, referralAnalyticsGroup);
+  const headerLabel = referralAnalyticsGroup === 'clinic' ? 'Clinic' : 'Specialty';
+  renderReferralGroupChart(groupStats);
+  renderReferralBreakdownTable(groupStats, headerLabel);
+}
+
+function renderReferralDrilldownView() {
+  const { dim, key } = referralDrilldownGroup;
+  const oppositeDim = dim === 'specialty' ? 'clinic' : 'specialty';
+  const oppositeLabel = oppositeDim === 'clinic' ? 'Clinic' : 'Specialty';
+  const dimLabel = dim === 'clinic' ? 'Clinics' : 'Specialties';
+
+  const breadcrumbEl = document.getElementById('referralDrilldownBreadcrumb');
+  if (breadcrumbEl) {
+    breadcrumbEl.style.display = 'flex';
+    breadcrumbEl.innerHTML = `
+      <button class="back-btn" onclick="exitReferralDrilldown()">&#8592; All ${dimLabel}</button>
+      <span class="referral-drilldown-title">${escapeHtml(key)}</span>
     `;
   }
 
-  const groupStats = computeReferralGroupStats(referralAnalyticsGroup);
+  const titleEl = document.getElementById('referralChartTitle');
+  const chartSubEl = document.getElementById('referralChartSub');
+  if (titleEl) titleEl.textContent = `${key} — by ${oppositeLabel}`;
+  if (chartSubEl) chartSubEl.textContent = 'Click a bar to view those referrals';
+
+  const matched = (db.referrals || []).filter(r => ((dim === 'specialty' ? r.specialty : r.clinic) || 'Unspecified') === key);
+  renderReferralKPIs(matched);
+
+  const groupStats = computeReferralGroupStats(matched, oppositeDim);
   renderReferralGroupChart(groupStats);
-  renderReferralBreakdownTable(groupStats);
+  renderReferralBreakdownTable(groupStats, oppositeLabel);
+}
+
+function exitReferralDrilldown() {
+  referralDrilldownGroup = null;
+  renderReferralAnalytics();
+}
+
+// Single handler for both chart-bar clicks and table-row clicks.
+// Behavior depends on current state: overview click drills in; drilldown click navigates to the filtered referral list.
+function onReferralGroupClick(key) {
+  if (referralDrilldownGroup) {
+    const { dim, key: topKey } = referralDrilldownGroup;
+    if (dim === 'specialty') {
+      referralListSpecialtyFilter = topKey;
+      referralListClinicFilter = key;
+    } else {
+      referralListClinicFilter = topKey;
+      referralListSpecialtyFilter = key;
+    }
+    showPage('referral-list');
+    currentReferralFilter = 'all';
+    document.querySelectorAll('#page-referral-list .pt-chip').forEach(b => b.classList.remove('active'));
+    const allChip = document.querySelector('#page-referral-list .pt-chip');
+    if (allChip) allChip.classList.add('active');
+    renderReferrals(document.getElementById('referralSearch')?.value.trim() || '');
+  } else {
+    referralDrilldownGroup = { dim: referralAnalyticsGroup, key };
+    renderReferralAnalytics();
+  }
 }
 
 function renderReferralGroupChart(groupStats) {
@@ -335,6 +461,13 @@ function renderReferralGroupChart(groupStats) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length) {
+          const idx = elements[0].index;
+          const label = referralGroupChartInst.data.labels[idx];
+          onReferralGroupClick(label);
+        }
+      },
       scales: {
         yRate: { type: 'linear', position: 'left', beginAtZero: true, max: 100, title: { display: true, text: 'Completion Rate (%)' } },
         yDays: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Avg. Days' } }
@@ -343,12 +476,12 @@ function renderReferralGroupChart(groupStats) {
   });
 }
 
-function renderReferralBreakdownTable(groupStats) {
+function renderReferralBreakdownTable(groupStats, headerLabel) {
   const tbody = document.querySelector('#referralBreakdownTable tbody');
   const headerEl = document.getElementById('referralTableGroupHeader');
   const subEl = document.getElementById('referralTableSub');
-  if (headerEl) headerEl.textContent = referralAnalyticsGroup === 'clinic' ? 'Clinic' : 'Specialty';
-  if (subEl) subEl.textContent = referralAnalyticsGroup === 'clinic' ? 'By clinic' : 'By specialty';
+  if (headerEl) headerEl.textContent = headerLabel;
+  if (subEl) subEl.textContent = `By ${headerLabel.toLowerCase()} — click a row to drill in`;
   if (!tbody) return;
 
   if (groupStats.length === 0) {
@@ -357,7 +490,7 @@ function renderReferralBreakdownTable(groupStats) {
   }
 
   tbody.innerHTML = groupStats.map(g => `
-    <tr onclick="drillIntoReferralGroup('${g.key.replace(/'/g, "\\'")}')">
+    <tr onclick="onReferralGroupClick('${g.key.replace(/'/g, "\\'")}')">
       <td>${escapeHtml(g.key)}</td>
       <td>${g.total}</td>
       <td>${g.completed}</td>
@@ -365,18 +498,4 @@ function renderReferralBreakdownTable(groupStats) {
       <td>${g.avgDays !== null ? g.avgDays + ' days' : '—'}</td>
     </tr>
   `).join('');
-// ═══════════════════════════════════
-// DRILL-DOWN — click a group to view its referrals
-// ═══════════════════════════════════
-function drillIntoReferralGroup(groupKey) {
-  showPage('referral-list');
-  const searchInput = document.getElementById('referralSearch');
-  if (searchInput) {
-    searchInput.value = groupKey;
-  }
-  currentReferralFilter = 'all';
-  document.querySelectorAll('#page-referral-list .pt-chip').forEach(b => b.classList.remove('active'));
-  const allChip = document.querySelector('#page-referral-list .pt-chip');
-  if (allChip) allChip.classList.add('active');
-  renderReferrals(groupKey);
 }
