@@ -145,14 +145,43 @@
 </div><!-- /page-chronic-hub -->
 
 <!-- ═══════════════════════════════════════════════════════
-     REFERRAL TRACKER
+   <!-- ═══════════════════════════════════════════════════════
+     REFERRAL HUB — landing page with two options
 ════════════════════════════════════════════════════════ -->
 <div class="page" id="page-referral-hub">
+  <div class="section-header">
+    <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
+    <h2>Referral Tracker</h2>
+  </div>
+  <div class="home-cards" style="max-width:1200px;">
+    <div class="home-card" onclick="showPage('referral-list')">
+      <div class="home-card-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <h2>View &amp; Add Referrals</h2>
+      <p>Browse all referrals, search by patient or specialty, and add or update entries.</p>
+      <div class="home-card-arrow">&#8594;</div>
+    </div>
+    <div class="home-card" onclick="showPage('referral-analytics')">
+      <div class="home-card-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 18l6-6 4 4 8-8"/><path d="M16 6h6v6"/></svg>
+      </div>
+      <h2>Analytics</h2>
+      <p>Completion rates, pending vs. completed breakdown, and referral trends over time.</p>
+      <div class="home-card-arrow">&#8594;</div>
+    </div>
+  </div>
+</div><!-- /page-referral-hub -->
+
+<!-- ═══════════════════════════════════════════════════════
+     REFERRAL LIST — the existing view/add/edit page
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-referral-list">
   <div class="pt-page-header">
     <div class="pt-page-header-left">
-      <button class="back-btn" onclick="showPage('home')">&#8592; Home</button>
+      <button class="back-btn" onclick="showPage('referral-hub')">&#8592; Referral Tracker</button>
       <div>
-        <h2 class="pt-page-title">Referral Tracker</h2>
+        <h2 class="pt-page-title">View &amp; Add Referrals</h2>
         <div class="pt-page-subtitle" id="referralCountLabel">Loading…</div>
       </div>
     </div>
@@ -181,7 +210,20 @@
   </div>
 
   <div class="referrals-grid" id="referralsGrid"></div>
-</div><!-- /page-referral-hub -->
+</div><!-- /page-referral-list -->
+
+<!-- ═══════════════════════════════════════════════════════
+     REFERRAL ANALYTICS — placeholder, built out next
+════════════════════════════════════════════════════════ -->
+<div class="page" id="page-referral-analytics">
+  <div class="section-header">
+    <button class="back-btn" onclick="showPage('referral-hub')">&#8592; Referral Tracker</button>
+    <h2>Referral Analytics</h2>
+  </div>
+  <div class="empty-state">
+    🚧 Referral analytics coming soon.
+  </div>
+</div><!-- /page-referral-analytics -->
     <!-- ═══════════════════════════════════════════════════════
          PATIENTS PAGE
     ════════════════════════════════════════════════════════ -->
