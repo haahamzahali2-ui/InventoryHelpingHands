@@ -12,31 +12,28 @@
 <body>
 
 <!-- TOPBAR -->
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-logo">HH</div>
-    <div class="topbar-wordmark">
-      <div class="topbar-title">Helping Hands</div>
-      <div class="topbar-subtitle">Patient Care Portal</div>
-    </div>
-  </div>
-  <div class="topbar-right">
-    <div class="topbar-stat">
-  <div class="topbar-stat-val" id="stat-referrals-pending">—</div>
-  <div class="topbar-stat-lbl">Pending Referrals</div>
-</div>
-<div class="topbar-stat">
-  <div class="topbar-stat-val" id="stat-referral-rate">—</div>
-  <div class="topbar-stat-lbl">Referral Completion</div>
-</div>
-    </div>
-    <div class="topbar-stat">
-      <div class="topbar-stat-val" id="stat-readings">—</div>
-      <div class="topbar-stat-lbl">Readings</div>
-    </div>
-    <div class="topbar-stat" style="cursor:pointer" onclick="openAlertsModal()">
-      <div class="topbar-stat-val" id="stat-alerts" style="color:#e87070">—</div>
-      <div class="topbar-stat-lbl">Alerts</div>
+<div class="topbar-right">
+    <div class="topbar-stats-group">
+      <div class="topbar-stat">
+        <div class="topbar-stat-val" id="stat-patients">—</div>
+        <div class="topbar-stat-lbl">Patients</div>
+      </div>
+      <div class="topbar-stat">
+        <div class="topbar-stat-val" id="stat-readings">—</div>
+        <div class="topbar-stat-lbl">Readings</div>
+      </div>
+      <div class="topbar-stat" style="cursor:pointer" onclick="openAlertsModal()">
+        <div class="topbar-stat-val" id="stat-alerts" style="color:#e87070">—</div>
+        <div class="topbar-stat-lbl">Alerts</div>
+      </div>
+      <div class="topbar-stat">
+        <div class="topbar-stat-val" id="stat-referrals-pending">—</div>
+        <div class="topbar-stat-lbl">Pending Referrals</div>
+      </div>
+      <div class="topbar-stat">
+        <div class="topbar-stat-val" id="stat-referral-rate">—</div>
+        <div class="topbar-stat-lbl">Referral Completion</div>
+      </div>
     </div>
     <div class="topbar-clock">
       <div class="topbar-clock-time" id="topbarClock">--:--</div>
@@ -48,8 +45,6 @@
     </div>
     <button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" id="darkToggleBtn">🌙</button>
   </div>
-</div>
-
 <!-- EASTER EGG -->
 <div class="easter-egg-overlay" id="easterEggOverlay">
   <div class="easter-egg-text">💛 Helping Hands 💛</div>
