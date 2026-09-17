@@ -2962,3 +2962,45 @@ body.dark-mode .referral-card-notes { border-top-color: #2A2218; }
 }
 .referral-filter-clear-btn:hover { background: var(--cream); }
 #referralGroupChart { cursor: pointer; }
+.referral-chart-scroll {
+  max-height: 560px;
+  overflow-y: auto;
+}
+.referral-table-search-wrap input {
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-dark);
+  outline: none;
+  transition: all 0.2s;
+  min-width: 200px;
+}
+.referral-table-search-wrap input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(201,168,76,0.12);
+}
+.patient-breakdown-table th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 18px;
+}
+.patient-breakdown-table th[data-sort]:hover { color: var(--gold-dim); }
+.patient-breakdown-table th[data-sort].sorted-asc::after,
+.patient-breakdown-table th[data-sort].sorted-desc::after {
+  content: '';
+  position: absolute;
+  right: 4px; top: 50%;
+  border: 4px solid transparent;
+}
+.patient-breakdown-table th[data-sort].sorted-asc::after {
+  border-bottom-color: var(--gold-dim);
+  transform: translateY(-6px);
+}
+.patient-breakdown-table th[data-sort].sorted-desc::after {
+  border-top-color: var(--gold-dim);
+  transform: translateY(2px);
+}
