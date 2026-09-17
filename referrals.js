@@ -205,7 +205,20 @@ function confirmDeleteReferral() {
   postToSheetBackend('delete_referral', { referralId: idToDelete })
     .catch(() => showToast('Referral deleted locally; Google Sheets write failed.'));
 }
+// ═══════════════════════════════════
+// TOPBAR STATS
+// ═══════════════════════════════════
+function updateReferralTopbarStats() {
+  const refs = db.referrals || [];
+  const pending = refs.filter(r => !r.dateCompleted).length;
+  const completed = refs.filter(r => r.dateCompleted).length;
+  const rate = refs.length ? Math.round((completed / refs.length) * 100) : 0;
 
+  const pendingEl = document.getElementById('stat-referrals-pending');
+  const rateEl = document.getElementById('stat-referral-rate');
+  if (pendingEl) pendingEl.textContent = pending;
+  if (rateEl) rateEl.textContent = refs.length ? `${rate}%` : '—';
+}
 // ═══════════════════════════════════
 // ANALYTICS
 // ═══════════════════════════════════
